@@ -52,11 +52,16 @@ mongoose.set(
 
 export class MongoService implements MongooseOptionsFactory {
   createMongooseOptions(): Promise<MongooseModuleOptions> | MongooseModuleOptions {
-    return {
+    const options: any = {
       uri: MONGO_URI,
       user: MONGO_USER,
-      pass: MONGO_PASSWORD,
-      sslCA: MONGO_SSL_CA_PATH as any
+      pass: MONGO_PASSWORD
     }
+
+    if (MONGO_SSL_CA_PATH) {
+      options.sslCA = MONGO_SSL_CA_PATH
+    }
+
+    return options
   }
 }

@@ -6,7 +6,7 @@ import { nanoid } from '@kyndform/utils'
 @Schema({
   timestamps: true
 })
-export class ProjectModel extends Document {
+export class ProjectModel extends Document<string> {
   @Prop({ default: () => nanoid(8) })
   _id: string
 

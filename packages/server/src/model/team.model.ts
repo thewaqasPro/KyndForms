@@ -9,7 +9,7 @@ import { date, nanoid } from '@kyndform/utils'
 @Schema({
   timestamps: true
 })
-export class TeamModel extends Document {
+export class TeamModel extends Document<string> {
   @Prop({ default: () => nanoid(8) })
   _id: string
 

@@ -21,7 +21,7 @@ import { helper, nanoid, parseJson } from '@kyndform/utils'
     virtuals: true
   }
 })
-export class FormModel extends Document {
+export class FormModel extends Document<string> {
   @Prop({ default: () => nanoid(8) })
   _id: string
 

@@ -5,7 +5,7 @@ import { Document } from 'mongoose'
 import { nanoid } from '@kyndform/utils'
 
 @Schema()
-export class BrandKitModel extends Document {
+export class BrandKitModel extends Document<string> {
   @Prop({ default: () => nanoid(8) })
   _id: string
 
