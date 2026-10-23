@@ -7,8 +7,6 @@ import { hasInvitationCookie, useRouter } from '@/utils'
 import { Form, Input } from '@/components'
 import { isRegistrationDisabled } from '@/consts'
 
-import SocialLogin from './SocialLogin'
-
 const Login = () => {
   const { t } = useTranslation()
   const router = useRouter()

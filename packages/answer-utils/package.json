@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest",
+    "test": "vitest run",
     "cov": "vitest run --coverage",
     "type-check": "tsc --pretty --noEmit",
     "clean": "rimraf dist",

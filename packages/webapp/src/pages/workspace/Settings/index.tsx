@@ -1,7 +1,5 @@
 import { useTranslation } from 'react-i18next'
 
-import { AnchorNavigation } from '@/components'
-
 import BrandKitModal from './BrandKitModal'
 import WorkspaceBranding from './Branding'
 import WorkspaceDeletion from './Deletion'

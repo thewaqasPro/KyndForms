@@ -84,7 +84,6 @@ const api = {
 
 if (typeof window !== 'undefined') {
   ;(window as any).KyndForm = api
-  ;(window as any).KyndForm = api
 }
 
 // Import the library after the element

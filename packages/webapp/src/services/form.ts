@@ -89,13 +89,17 @@ export class FormService {
     projectId: string
     name: string
     nameSchema?: string[]
-    interactiveMode: InteractiveModeEnum
-    kind: FormKindEnum
+    interactiveMode?: InteractiveModeEnum
+    kind?: FormKindEnum
   }) {
     return apollo.mutate({
       mutation: CREATE_FORM_GQL,
       variables: {
-        input
+        input: {
+          interactiveMode: InteractiveModeEnum.GENERAL,
+          kind: FormKindEnum.SURVEY,
+          ...input
+        }
       }
     })
   }
@@ -156,6 +160,45 @@ export class FormService {
         }
       }
     })
+  }
+
+  static async importFromJSON(projectId: string, formJson: string): Promise<string> {
+    const parsed = typeof formJson === 'string' ? JSON.parse(formJson) : formJson
+    const formId = await this.create({
+      projectId,
+      name: parsed.name || 'Imported Form',
+      interactiveMode: parsed.interactiveMode || InteractiveModeEnum.GENERAL,
+      kind: parsed.kind || FormKindEnum.SURVEY
+    })
+
+    if (parsed.fields && Array.isArray(parsed.fields)) {
+      await this.updateFormSchemas({
+        formId,
+        drafts: parsed.fields,
+        version: 1
+      })
+    }
+
+    if (parsed.logics && Array.isArray(parsed.logics)) {
+      await this.updateLogics(formId, parsed.logics)
+    }
+
+    if (parsed.variables && Array.isArray(parsed.variables)) {
+      await this.updateVariables(formId, parsed.variables)
+    }
+
+    if (parsed.hiddenFields && Array.isArray(parsed.hiddenFields)) {
+      await this.updateHiddenFields(formId, parsed.hiddenFields)
+    }
+
+    if (parsed.theme) {
+      await this.updateTheme({
+        formId,
+        theme: parsed.theme
+      })
+    }
+
+    return formId
   }
 
   static async analytic(formId: string, range: string) {

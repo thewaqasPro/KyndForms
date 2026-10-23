@@ -72,12 +72,7 @@ const SocialLogin: FC<SocialLoginProps> = ({ isSignUp }) => {
     <>
       <div className={providers.length === 1 ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-2 gap-4'}>
         {providers.map(provider => (
-          <Button
-            key={provider.id}
-            variant="outline"
-            className="w-full"
-            onClick={() => handleConnect(provider.id)}
-          >
+          <Button key={provider.id} className="w-full" onClick={() => handleConnect(provider.id)}>
             {provider.icon}
             <span>{provider.label}</span>
           </Button>

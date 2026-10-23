@@ -223,7 +223,7 @@ const InputComponent: FC<InputProps> = ({
         {...restProps}
         data-slot="input"
         data-type={type}
-        onInput={handleChange}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}
@@ -440,7 +440,7 @@ const TextArea: FC<TextAreaProps> = ({
         data-slot="textarea"
         value={helper.isNil(value) ? '' : value}
         disabled={disabled}
-        onInput={handleChange}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}

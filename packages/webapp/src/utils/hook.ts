@@ -174,5 +174,5 @@ export function useKey(key: string, callback: (event: KeyboardEvent) => void) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [handleKeyDown])
 }

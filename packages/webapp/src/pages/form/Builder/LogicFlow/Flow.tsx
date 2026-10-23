@@ -71,7 +71,7 @@ export const Flow = () => {
       nodes={nodes}
       edges={edges}
       connectionLineType={ConnectionLineType.SimpleBezier}
-      connectionLineComponent={ConnectionLine}
+      connectionLineComponent={ConnectionLine as any}
       snapGrid={snapGrid}
       snapToGrid={true}
       fitView={true}

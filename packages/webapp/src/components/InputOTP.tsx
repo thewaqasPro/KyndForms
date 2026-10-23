@@ -49,7 +49,7 @@ const InputOTPSlot: FC<ComponentProps & { index: number }> = ({
   index,
   ...restProps
 }) => {
-  const inputOTPContext = useContext(OTPInputContext)
+  const inputOTPContext = useContext(OTPInputContext as any) as any
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
 
   return (

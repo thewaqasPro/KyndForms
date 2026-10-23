@@ -53,7 +53,7 @@ export default function OAuth() {
           <IconDots className="text-input h-6 w-6" />
 
           <div className="after:border-accent-light relative h-12 w-12 p-1 after:absolute after:inset-0 after:rounded-lg after:border">
-            <Image className="h-full w-full rounded-lg object-cover" src={app?.avatar} />
+            <Image className="h-full w-full rounded-lg object-cover" src={app?.icon} />
           </div>
         </div>
 

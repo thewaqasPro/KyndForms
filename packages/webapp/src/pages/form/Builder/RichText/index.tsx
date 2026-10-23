@@ -253,7 +253,7 @@ export const RichText: FC<RichTextProps> = ({
       <div
         ref={innerRef}
         className={cn('rich-text', className)}
-        placeholder={placeholder}
+        data-placeholder={placeholder}
         contentEditable={true}
         suppressContentEditableWarning={true}
         tabIndex={0}

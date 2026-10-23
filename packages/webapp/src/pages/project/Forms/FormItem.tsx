@@ -76,8 +76,8 @@ const FormItemLink: FC<FormItemLinkProps> = ({
     return <div {...restProps}>{children}</div>
   } else {
     return (
-      <Link to={to} {...restProps}>
-        {children}
+      <Link to={to} {...(restProps as any)}>
+        {children as any}
       </Link>
     )
   }
