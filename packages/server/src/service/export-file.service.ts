@@ -55,6 +55,42 @@ export class ExportFileService {
         )
       }))
 
+    const knownAnswerIds = new Set(selectedFormFields.map(field => field.id))
+    const knownHiddenIds = new Set(selectedHiddenFields.map(hiddenField => hiddenField.id))
+
+    const extraAnswerFields: { id: string; label: string }[] = []
+    const seenExtraAnswerIds = new Set<string>()
+
+    const extraHiddenFields: { id: string; label: string }[] = []
+    const seenExtraHiddenIds = new Set<string>()
+
+    for (const submission of submissions) {
+      for (const answer of submission.answers || []) {
+        if (answer?.id && !knownAnswerIds.has(answer.id) && !seenExtraAnswerIds.has(answer.id)) {
+          seenExtraAnswerIds.add(answer.id)
+          const rawTitle = answer.title || answer.id
+          extraAnswerFields.push({
+            id: answer.id,
+            label: neutralizeSpreadsheetFormula(
+              helper.isArray(rawTitle)
+                ? htmlUtils.serialize(rawTitle as any)
+                : String(rawTitle || '')
+            )
+          })
+        }
+      }
+      for (const hf of submission.hiddenFields || []) {
+        if (hf?.id && !knownHiddenIds.has(hf.id) && !seenExtraHiddenIds.has(hf.id)) {
+          seenExtraHiddenIds.add(hf.id)
+          const rawName = hf.name || hf.id
+          extraHiddenFields.push({
+            id: hf.id,
+            label: neutralizeSpreadsheetFormula(String(rawName || ''))
+          })
+        }
+      }
+    }
+
     const fields: FieldInfo<SubmissionModel>[] = [
       {
         label: FIELD_ID_KEY,
@@ -63,7 +99,17 @@ export class ExportFileService {
       ...selectedFormFields.map(field => ({
         label: field.title,
         value: (submission: SubmissionModel) => {
-          const answer = submission.answers.find(answer => answer.id === field.id)
+          const answer = submission.answers?.find(answer => answer.id === field.id)
+
+          return helper.isEmpty(answer)
+            ? ''
+            : neutralizeSpreadsheetFormula(this.parseAnswer(answer))
+        }
+      })),
+      ...extraAnswerFields.map(field => ({
+        label: field.label,
+        value: (submission: SubmissionModel) => {
+          const answer = submission.answers?.find(answer => answer.id === field.id)
 
           return helper.isEmpty(answer)
             ? ''
@@ -73,9 +119,17 @@ export class ExportFileService {
       ...selectedHiddenFields.map(hiddenField => ({
         label: neutralizeSpreadsheetFormula(hiddenField.name),
         value: (submission: SubmissionModel) => {
-          const value = submission.hiddenFields.find(answer => answer.id === hiddenField.id)?.value
+          const value = submission.hiddenFields?.find(answer => answer.id === hiddenField.id)?.value
 
-          return helper.isString(value) ? neutralizeSpreadsheetFormula(value) : value
+          return helper.isString(value) ? neutralizeSpreadsheetFormula(value) : (value ?? '')
+        }
+      })),
+      ...extraHiddenFields.map(hiddenField => ({
+        label: hiddenField.label,
+        value: (submission: SubmissionModel) => {
+          const value = submission.hiddenFields?.find(answer => answer.id === hiddenField.id)?.value
+
+          return helper.isString(value) ? neutralizeSpreadsheetFormula(value) : (value ?? '')
         }
       })),
       {

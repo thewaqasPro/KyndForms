@@ -184,9 +184,11 @@ export class MailService {
     options: SubmissionNotificationOptions,
     locale?: string
   ) {
-    const logoBlock = options.logo
-      ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${escapeHtml(options.logo)}" alt="${escapeHtml(options.workspaceName || options.formName)}" style="max-height: 52px; max-width: 200px; object-fit: contain; display: inline-block;" /></div>`
-      : ''
+    const safeLogo = options.logo ? safeEmailLink(options.logo) : ''
+    const logoBlock =
+      safeLogo && safeLogo !== '#'
+        ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${escapeHtml(safeLogo)}" alt="${escapeHtml(options.workspaceName || options.formName)}" style="max-height: 52px; max-width: 200px; object-fit: contain; display: inline-block;" /></div>`
+        : ''
 
     await this.addQueue(
       'submission_notification',

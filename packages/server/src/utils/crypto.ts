@@ -82,6 +82,13 @@ export async function comparePassword(plaintext: string, encrypted: string): Pro
   return bcrypt.compare(plaintext, encrypted)
 }
 
+export async function passwordVerify(plaintext: string, encrypted: string): Promise<boolean> {
+  if (isPasswordHash(encrypted)) {
+    return comparePassword(plaintext, encrypted)
+  }
+  return plaintext === encrypted
+}
+
 export function isPasswordHash(value: unknown): value is string {
   return typeof value === 'string' && BCRYPT_HASH_PATTERN.test(value)
 }

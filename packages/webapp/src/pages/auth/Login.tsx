@@ -7,6 +7,8 @@ import { hasInvitationCookie, useRouter } from '@/utils'
 import { Form, Input } from '@/components'
 import { isRegistrationDisabled } from '@/consts'
 
+import SocialLogin from './SocialLogin'
+
 const Login = () => {
   const { t } = useTranslation()
   const router = useRouter()
@@ -40,7 +42,7 @@ const Login = () => {
         )}
       </div>
 
-      {/* <SocialLogin /> */}
+      <SocialLogin />
 
       <Form.Simple
         className="space-y-4"

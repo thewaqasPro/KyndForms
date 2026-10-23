@@ -44,7 +44,7 @@ function renderAnswerHtml(answer: Answer): string {
     switch (answer.kind) {
       case FieldKindEnum.FILE_UPLOAD: {
         const file = parser.fileUpload(answer)
-        if (!file?.url) {
+        if (!file?.url || !/^https?:\/\//i.test(file.url)) {
           return `<span style="color: #0f172a;">${escapeHtmlText(file?.filename || '')}</span>`
         }
 
@@ -76,7 +76,10 @@ function renderAnswerHtml(answer: Answer): string {
       case FieldKindEnum.SIGNATURE: {
         const signatureUrl =
           typeof answer.value === 'string' ? answer.value : answer.value?.url || ''
-        if (!signatureUrl) {
+        const isSafeSignature =
+          typeof signatureUrl === 'string' &&
+          (/^https?:\/\//i.test(signatureUrl) || signatureUrl.startsWith('data:image/png;base64,'))
+        if (!signatureUrl || !isSafeSignature) {
           return '<span style="color: #94a3b8; font-style: italic;">No signature</span>'
         }
 
@@ -101,8 +104,10 @@ function renderAnswerHtml(answer: Answer): string {
       case FieldKindEnum.URL: {
         const url = String(answer.value).trim()
         const isSafeScheme = /^https?:\/\//i.test(url)
-        const safeHref = isSafeScheme ? url : `http://${url}`
-        return `<a href="${escapeHtmlText(safeHref)}" target="_blank" style="color: #2563eb; text-decoration: underline; word-break: break-all;">${escapeHtmlText(url)}</a>`
+        if (!isSafeScheme) {
+          return `<span style="color: #0f172a; word-break: break-all;">${escapeHtmlText(url)}</span>`
+        }
+        return `<a href="${escapeHtmlText(url)}" target="_blank" style="color: #2563eb; text-decoration: underline; word-break: break-all;">${escapeHtmlText(url)}</a>`
       }
 
       case FieldKindEnum.FULL_NAME: {

@@ -14,7 +14,7 @@ import {
   IconTrash
 } from '@tabler/icons-react'
 import { useBoolean, useRequest } from 'ahooks'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SubmissionService } from '@/services'
@@ -106,6 +106,11 @@ export default function FormSubmissions() {
   )
 
   const [submissionFields, setSubmissionFields] = useState<FormField[]>([])
+
+  useEffect(() => {
+    setSubmissionFields([])
+    setSelectedRowKeys([])
+  }, [formId])
 
   const fields = useMemo(() => {
     const submitDateField = {

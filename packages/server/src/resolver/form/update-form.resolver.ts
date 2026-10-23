@@ -46,7 +46,9 @@ export class UpdateFormResolver {
       ['allowArchive', 'settings.allowArchive'],
       ['requirePassword', 'settings.requirePassword'],
       ['enableEmailNotification', 'settings.enableEmailNotification'],
-      ['layoutMode', 'settings.layoutMode']
+      ['layoutMode', 'settings.layoutMode'],
+      ['defaultRedirectUrl', 'settings.defaultRedirectUrl'],
+      ['autoCreateFields', 'settings.autoCreateFields']
     ])
 
     if (helper.isValid(input.password)) {
@@ -73,6 +75,15 @@ export class UpdateFormResolver {
 
     if (hasLanguagesInput) {
       updates['settings.languages'] = normalizeTranslationLanguages(input.languages)
+    }
+
+    const hasAllowedDomainsInput =
+      Object.prototype.hasOwnProperty.call(input, 'allowedDomains') ||
+      helper.isNull(input.allowedDomains) ||
+      helper.isArray(input.allowedDomains)
+
+    if (hasAllowedDomainsInput) {
+      updates['settings.allowedDomains'] = input.allowedDomains || []
     }
 
     if (helper.isValidArray(input.languages)) {

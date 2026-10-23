@@ -39,10 +39,11 @@ import {
   FormReportService,
   FormService,
   IntegrationService,
+  RedisService,
   SubmissionIpLimitService,
   SubmissionService
 } from '@service'
-import { ClientInfo, HttpClient, assertFormIsAcceptingSubmissions } from '@utils'
+import { ClientInfo, HttpClient, assertFormIsAcceptingSubmissions, passwordVerify } from '@utils'
 
 const SYSTEM_CONTROL_KEYS = new Set([
   '_next',
@@ -54,6 +55,7 @@ const SYSTEM_CONTROL_KEYS = new Set([
   '_replyto',
   '_email',
   '_captcha',
+  '_password',
   'g-recaptcha-response',
   'cf-turnstile-response'
 ])
@@ -91,10 +93,10 @@ function getFieldPlainTitle(field: FormField): string {
   return field.label || ''
 }
 
-function inferFieldKind(key: string, value: any): FieldKindEnum {
+function inferFieldKind(key: string, value: any, isUploadedFile = false): FieldKindEnum {
   const lowerKey = key.toLowerCase()
 
-  if (value && typeof value === 'object' && value.filename && value.url) {
+  if (isUploadedFile) {
     return FieldKindEnum.FILE_UPLOAD
   }
 
@@ -206,6 +208,38 @@ function isValidRedirectUrl(url: string): boolean {
   }
 }
 
+function isRedirectAllowed(targetUrl: string, allowedDomains: string[] = []): boolean {
+  if (!isValidRedirectUrl(targetUrl)) {
+    return false
+  }
+  try {
+    const target = new URL(targetUrl)
+    const appOrigin = new URL(APP_HOMEPAGE_URL).origin.toLowerCase()
+    if (target.origin.toLowerCase() === appOrigin) {
+      return true
+    }
+
+    return allowedDomains.some(domain => {
+      if (!domain || typeof domain !== 'string') return false
+      const trimmed = domain.trim().toLowerCase()
+      if (trimmed === '*') return true
+      try {
+        const parsedDomain = trimmed.includes('://')
+          ? new URL(trimmed)
+          : new URL(`https://${trimmed}`)
+        return (
+          parsedDomain.origin.toLowerCase() === target.origin.toLowerCase() ||
+          parsedDomain.hostname.toLowerCase() === target.hostname.toLowerCase()
+        )
+      } catch {
+        return false
+      }
+    })
+  } catch {
+    return false
+  }
+}
+
 @Controller()
 export class HeadlessFormController {
   constructor(
@@ -214,7 +248,8 @@ export class HeadlessFormController {
     private readonly endpointService: EndpointService,
     private readonly submissionIpLimitService: SubmissionIpLimitService,
     private readonly formReportService: FormReportService,
-    private readonly integrationService: IntegrationService
+    private readonly integrationService: IntegrationService,
+    private readonly redisService: RedisService
   ) {}
 
   private setCorsHeaders(form: FormModel | null, req: Request, res: Response): void {
@@ -246,7 +281,7 @@ export class HeadlessFormController {
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
     res.setHeader(
       'Access-Control-Allow-Headers',
-      'Content-Type, Accept, X-Requested-With, Authorization, x-anonymous-id, x-device-id'
+      'Content-Type, Accept, X-Requested-With, Authorization, x-anonymous-id, x-device-id, x-form-password'
     )
     res.setHeader('Access-Control-Max-Age', '86400')
   }
@@ -307,6 +342,22 @@ export class HeadlessFormController {
       throw new BadRequestException('The form is not active')
     }
 
+    // Form Password verification if required
+    if (form.settings?.requirePassword) {
+      const providedPassword =
+        (req.body?._password as string) || (req.headers['x-form-password'] as string)
+      if (
+        !providedPassword ||
+        !form.settings.password ||
+        !(await passwordVerify(providedPassword, form.settings.password))
+      ) {
+        if (isJson) {
+          return res.status(400).json({ success: false, error: 'The password does not match' })
+        }
+        throw new BadRequestException('The password does not match')
+      }
+    }
+
     const now = timestamp()
     try {
       assertFormIsAcceptingSubmissions(form.settings, now)
@@ -335,36 +386,41 @@ export class HeadlessFormController {
 
     // Merge request body and uploaded files
     const rawBody: Record<string, any> = { ...(req.body || {}) }
+    const uploadedFieldNames = new Set<string>()
 
     // Process file uploads
     if (helper.isValidArray(files) && files.length > 0) {
+      await this.redisService.throttler(`upload:form:${form.id}`, 300, '1h')
       for (const file of files) {
-        if (isUploadFileContentValid(file)) {
-          const savedFile = await saveUploadedFile(file)
-          let fileUrl: string =
-            APP_HOMEPAGE_URL.replace(/\/+$/, '') +
-            `/static/upload/${encodeURIComponent(savedFile.filename)}`
+        if (!isUploadFileContentValid(file)) {
+          throw new BadRequestException(`Invalid file content for ${file.originalname || 'upload'}`)
+        }
 
-          if (savedFile.location) {
-            fileUrl = savedFile.location
-          }
+        const fieldname = file.fieldname || 'file'
+        uploadedFieldNames.add(fieldname)
+        const savedFile = await saveUploadedFile(file)
+        let fileUrl: string =
+          APP_HOMEPAGE_URL.replace(/\/+$/, '') +
+          `/static/upload/${encodeURIComponent(savedFile.filename)}`
 
-          const fileValue = {
-            filename: savedFile.originalname,
-            size: savedFile.size,
-            url: fileUrl
-          }
+        if (savedFile.location) {
+          fileUrl = savedFile.location
+        }
 
-          const fieldname = file.fieldname || 'file'
-          if (rawBody[fieldname]) {
-            if (Array.isArray(rawBody[fieldname])) {
-              rawBody[fieldname].push(fileValue)
-            } else {
-              rawBody[fieldname] = [rawBody[fieldname], fileValue]
-            }
+        const fileValue = {
+          filename: savedFile.originalname,
+          size: savedFile.size,
+          url: fileUrl
+        }
+
+        if (rawBody[fieldname]) {
+          if (Array.isArray(rawBody[fieldname])) {
+            rawBody[fieldname].push(fileValue)
           } else {
-            rawBody[fieldname] = fileValue
+            rawBody[fieldname] = [rawBody[fieldname], fileValue]
           }
+        } else {
+          rawBody[fieldname] = fileValue
         }
       }
     }
@@ -418,6 +474,18 @@ export class HeadlessFormController {
         continue
       }
 
+      const isUploadedFile = uploadedFieldNames.has(key)
+      let formattedValue = value
+      // Treat non-file objects with filename/url as text so attackers cannot spoof file upload URLs in notification emails
+      if (
+        !isUploadedFile &&
+        value &&
+        typeof value === 'object' &&
+        ('filename' in value || 'url' in value)
+      ) {
+        formattedValue = JSON.stringify(value)
+      }
+
       // Check if matching field already exists in form.fields
       const lowerKey = key.toLowerCase().trim()
       let existingField = formFields.find(f => {
@@ -435,22 +503,37 @@ export class HeadlessFormController {
       })
 
       if (!existingField) {
-        const fieldKind = inferFieldKind(key, value)
-        const fieldTitle = formatFieldTitle(key)
-        const fieldId = nanoid(8)
+        if (
+          key.length <= 100 &&
+          formFields.length < 100 &&
+          newFormFields.length < 25 &&
+          (form.settings as any)?.autoCreateFields !== false
+        ) {
+          const fieldKind = inferFieldKind(key, formattedValue, isUploadedFile)
+          const fieldTitle = formatFieldTitle(key)
+          const fieldId = nanoid(8)
 
-        existingField = {
-          id: fieldId,
-          title: fieldTitle,
-          label: fieldTitle,
-          kind: fieldKind
+          existingField = {
+            id: fieldId,
+            title: fieldTitle,
+            label: fieldTitle,
+            kind: fieldKind
+          }
+
+          newFormFields.push(existingField)
+          formFields.push(existingField)
+        } else {
+          const fieldKind = inferFieldKind(key, formattedValue, isUploadedFile)
+          const fieldTitle = formatFieldTitle(key)
+          existingField = {
+            id: nanoid(8),
+            title: fieldTitle,
+            label: fieldTitle,
+            kind: fieldKind
+          }
         }
-
-        newFormFields.push(existingField)
-        formFields.push(existingField)
       }
 
-      let formattedValue = value
       if (existingField.kind === FieldKindEnum.FULL_NAME && typeof value === 'string') {
         const parts = value.trim().split(/\s+/)
         formattedValue = {
@@ -459,37 +542,65 @@ export class HeadlessFormController {
         }
       }
 
+      const answerKind =
+        !isUploadedFile && existingField.kind === FieldKindEnum.FILE_UPLOAD
+          ? FieldKindEnum.SHORT_TEXT
+          : existingField.kind
+
       answers.push({
         id: existingField.id,
         title:
           typeof existingField.title === 'string'
             ? existingField.title
             : getFieldPlainTitle(existingField) || formatFieldTitle(key),
-        kind: existingField.kind,
+        kind: answerKind,
         properties: existingField.properties || {},
         value: formattedValue
       })
     }
 
-    // If new dynamic fields or hidden fields were discovered, update form schema
-    const updatePayload: Record<string, any> = {
-      fieldsUpdatedAt: now
-    }
-    let shouldUpdateForm = false
+    // If new dynamic fields or hidden fields were discovered, update form schema with Redis lock
+    if (newFormFields.length > 0 || newHiddenFields.length > 0) {
+      await this.redisService.withLock(`headless-schema:${form.id}`, '10s', async () => {
+        const currentForm = await this.formService.findById(form.id)
+        if (!currentForm) {
+          return
+        }
 
-    if (newFormFields.length > 0 && (form.settings as any)?.autoCreateFields !== false) {
-      updatePayload.fields = formFields
-      updatePayload._drafts = JSON.stringify(formFields)
-      shouldUpdateForm = true
-    }
+        const updatePayload: Record<string, any> = {
+          fieldsUpdatedAt: now
+        }
+        let shouldUpdate = false
 
-    if (newHiddenFields.length > 0) {
-      updatePayload.hiddenFields = formHiddenFields
-      shouldUpdateForm = true
-    }
+        if (newFormFields.length > 0 && (currentForm.settings as any)?.autoCreateFields !== false) {
+          const currentFields = [...(currentForm.fields || [])]
+          for (const newField of newFormFields) {
+            if (!currentFields.some(f => f.id === newField.id || f.label === newField.label)) {
+              currentFields.push(newField)
+            }
+          }
+          updatePayload.fields = currentFields
+          if (!currentForm._drafts || currentForm._drafts === JSON.stringify(currentForm.fields)) {
+            updatePayload._drafts = JSON.stringify(currentFields)
+          }
+          shouldUpdate = true
+        }
 
-    if (shouldUpdateForm) {
-      await this.formService.update(form.id, updatePayload)
+        if (newHiddenFields.length > 0) {
+          const currentHidden = [...(currentForm.hiddenFields || [])]
+          for (const newHf of newHiddenFields) {
+            if (!currentHidden.some(h => h.id === newHf.id || h.name === newHf.name)) {
+              currentHidden.push(newHf)
+            }
+          }
+          updatePayload.hiddenFields = currentHidden
+          shouldUpdate = true
+        }
+
+        if (shouldUpdate) {
+          await this.formService.update(form.id, updatePayload)
+        }
+      })
     }
 
     // Akismet spam check if enabled
@@ -548,13 +659,27 @@ export class HeadlessFormController {
     }
 
     // HTML Form Redirection
-    const redirectUrl =
-      rawBody._next ||
-      rawBody._redirect ||
-      (form.settings as any)?.defaultRedirectUrl ||
-      form.settings?.redirectUrl
+    let redirectUrl: string | undefined
 
-    if (helper.isValid(redirectUrl) && isValidRedirectUrl(redirectUrl)) {
+    const userRedirect = rawBody._next || rawBody._redirect
+    if (helper.isValid(userRedirect) && typeof userRedirect === 'string') {
+      if (isRedirectAllowed(userRedirect, form.settings?.allowedDomains)) {
+        redirectUrl = userRedirect
+      }
+    }
+
+    if (!redirectUrl) {
+      const ownerRedirect = (form.settings as any)?.defaultRedirectUrl || form.settings?.redirectUrl
+      if (
+        helper.isValid(ownerRedirect) &&
+        typeof ownerRedirect === 'string' &&
+        isValidRedirectUrl(ownerRedirect)
+      ) {
+        redirectUrl = ownerRedirect
+      }
+    }
+
+    if (redirectUrl) {
       return res.redirect(302, redirectUrl)
     }
 

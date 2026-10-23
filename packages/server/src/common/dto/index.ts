@@ -19,6 +19,7 @@ import {
   isPrivateAddress
 } from '../../utils/outbound-url'
 import { APP_HOMEPAGE_URL, S3_ENDPOINT, S3_PUBLIC_URL } from '@environments'
+import { TRUSTED_UPLOAD_ORIGINS } from '@utils'
 
 function getHostname(url?: string): string | undefined {
   if (!url) {
@@ -44,17 +45,28 @@ function getOrigin(url?: string): string | undefined {
   }
 }
 
-export const FIRST_PARTY_IMAGE_HOSTS = [
-  getHostname(APP_HOMEPAGE_URL),
-  getHostname(S3_PUBLIC_URL),
-  getHostname(S3_ENDPOINT)
-].filter(Boolean) as string[]
+export const FIRST_PARTY_IMAGE_HOSTS = Array.from(
+  new Set(
+    [
+      getHostname(APP_HOMEPAGE_URL),
+      getHostname(S3_PUBLIC_URL),
+      getHostname(S3_ENDPOINT),
+      ...TRUSTED_UPLOAD_ORIGINS.map(getHostname)
+    ].filter(Boolean) as string[]
+  )
+)
 
-export const FIRST_PARTY_IMAGE_ORIGINS = [
-  getOrigin(APP_HOMEPAGE_URL),
-  getOrigin(S3_PUBLIC_URL),
-  getOrigin(S3_ENDPOINT)
-].filter(Boolean) as string[]
+export const FIRST_PARTY_IMAGE_ORIGINS = Array.from(
+  new Set(
+    [
+      getOrigin(APP_HOMEPAGE_URL),
+      getOrigin(S3_PUBLIC_URL),
+      getOrigin(S3_ENDPOINT),
+      ...TRUSTED_UPLOAD_ORIGINS.map(getOrigin),
+      ...TRUSTED_UPLOAD_ORIGINS
+    ].filter(Boolean) as string[]
+  )
+)
 
 export const ALLOWED_IMAGE_HOSTS = [
   'secure.gravatar.com',

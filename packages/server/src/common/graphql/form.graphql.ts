@@ -594,6 +594,21 @@ export class UpdateFormInput extends FormDetailInput {
   @Field({ nullable: true })
   @IsOptional()
   layoutMode?: string
+
+  @Field(type => [String], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  allowedDomains?: string[]
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsUrl()
+  defaultRedirectUrl?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  autoCreateFields?: boolean
 }
 
 @InputType()
@@ -1014,6 +1029,15 @@ export class FormSettingType {
 
   @Field({ nullable: true })
   layoutMode?: string
+
+  @Field(type => [String], { nullable: true })
+  allowedDomains?: string[]
+
+  @Field({ nullable: true })
+  defaultRedirectUrl?: string
+
+  @Field({ nullable: true })
+  autoCreateFields?: boolean
 }
 
 @ObjectType()
