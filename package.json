@@ -20,6 +20,8 @@
     "lint": "node scripts/run-oxlint.js packages",
     "type-check": "pnpm -r run type-check",
     "test": "pnpm --filter ./packages/utils test && pnpm --filter ./packages/answer-utils test",
+    "verify:fork": "node scripts/verify-fork-integrity.js",
+    "sync:upstream": "bash scripts/sync-upstream.sh",
     "postinstall": "simple-git-hooks"
   },
   "simple-git-hooks": {
@@ -58,16 +60,12 @@
       "got": "11.8.5",
       "react-i18next": "^11.18.6",
       "@babel/traverse": "^7.24.1",
-      "node-fetch": "2.6.7",
-      "lodash": "4.17.21",
-      "qs": "^6.12.0",
-      "busboy": "1.6.0",
-      "fast-xml-parser": "5.3.8",
-      "axios": "1.6.8",
-      "minimist": "^1.2.6",
-      "nanoid": "3.3.11",
-      "react": "^19.0.0",
-      "react-dom": "^19.0.0"
+      "vite": "^5.4.14",
+      "@svgr/rollup": "^8.1.0",
+      "vite-plugin-svgr": "^4.3.0",
+      "mongoose": "^8.8.4",
+      "bull": "^4.16.5",
+      "lodash": "^4.17.21"
     }
   }
 }
