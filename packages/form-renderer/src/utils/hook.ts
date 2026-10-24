@@ -8,12 +8,23 @@ export function useTranslation(overrideLng?: string) {
   const { t: _t, i18n } = useReactTranslation()
   const { state } = useStore()
 
-  const t = useCallback((key: string, options?: AnyMap) => {
-    return _t(key, {
-      ...options,
-      lng: overrideLng || state.locale
-    })
-  }, [])
+  const t = useCallback(
+    (key: string, options?: AnyMap) => {
+      let result = _t(key, {
+        ...options,
+        lng: overrideLng || state?.locale
+      })
+      if (typeof result === 'string' && options) {
+        for (const [optKey, optVal] of Object.entries(options)) {
+          if (optKey !== 'lng' && optVal !== undefined && optVal !== null) {
+            result = result.replace(new RegExp(`{{\\s*${optKey}\\s*}}`, 'g'), String(optVal))
+          }
+        }
+      }
+      return result
+    },
+    [overrideLng, state?.locale, _t]
+  )
 
   return { t, i18n }
 }

@@ -9,6 +9,7 @@ import { Async } from '@/components'
 import '@/styles/render.scss'
 
 import { Renderer } from './components/Renderer'
+import './i18n'
 
 const LANGUAGES = ['en', 'de', 'fr', 'pl', 'pt-br', 'ja', 'zh-cn', 'zh-tw']
 
