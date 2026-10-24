@@ -1,4 +1,9 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  PutObjectCommand,
+  S3Client
+} from '@aws-sdk/client-s3'
 import { promises as fs } from 'fs'
 import { memoryStorage } from 'multer'
 import { basename, extname, resolve } from 'path'
@@ -325,4 +330,78 @@ export async function saveUploadedFile(file: {
     path,
     size: file.buffer.length
   }
+}
+
+export async function deleteUploadedFile(key: string): Promise<boolean> {
+  if (!key) {
+    return false
+  }
+
+  if (isS3Configured()) {
+    try {
+      await getS3Client().send(
+        new DeleteObjectCommand({
+          Bucket: S3_BUCKET,
+          Key: key
+        })
+      )
+      return true
+    } catch (err) {
+      console.error(`Failed to delete S3 file ${key}:`, err)
+      return false
+    }
+  }
+
+  try {
+    const path = resolve(UPLOAD_DIR, basename(key))
+    await fs.unlink(path)
+    return true
+  } catch (err: any) {
+    if (err && err.code === 'ENOENT') {
+      return true
+    }
+    console.error(`Failed to delete local file ${key}:`, err)
+    return false
+  }
+}
+
+export async function deleteUploadedFiles(keys: string[]): Promise<number> {
+  const validKeys = (keys || []).filter(k => Boolean(k && typeof k === 'string'))
+  if (validKeys.length === 0) {
+    return 0
+  }
+
+  if (isS3Configured()) {
+    try {
+      const chunkSize = 1000
+      let deletedCount = 0
+      for (let i = 0; i < validKeys.length; i += chunkSize) {
+        const chunk = validKeys.slice(i, i + chunkSize)
+        const response = await getS3Client().send(
+          new DeleteObjectsCommand({
+            Bucket: S3_BUCKET,
+            Delete: {
+              Objects: chunk.map(Key => ({ Key })),
+              Quiet: true
+            }
+          })
+        )
+        const errorsCount = response.Errors?.length || 0
+        deletedCount += chunk.length - errorsCount
+      }
+      return deletedCount
+    } catch (err) {
+      console.error('Failed to batch delete S3 files:', err)
+      return 0
+    }
+  }
+
+  let deletedCount = 0
+  for (const key of validKeys) {
+    const success = await deleteUploadedFile(key)
+    if (success) {
+      deletedCount++
+    }
+  }
+  return deletedCount
 }
