@@ -16,15 +16,18 @@ import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/utils'
 
+import { useFormStore, useWorkspaceStore } from '@/store'
+
 import { Avatar } from './Avatar'
 import { Button } from './Button'
 import { GradientPicker } from './GradientPicker'
 import { ImageProps } from './Image'
+import { MediaPicker } from './MediaPicker'
 import { Tabs } from './Tabs'
 import { UnsplashPicker } from './UnsplashPicker'
 import { Uploader } from './Uploader'
 
-type TabType = 'image' | 'unsplash' | 'gradient'
+type TabType = 'image' | 'library' | 'unsplash' | 'gradient'
 
 interface ImagePickerProps extends Pick<ImageProps, 'resize'>, DOMProps {
   ref?: Ref<ImagePickerRef>
@@ -45,7 +48,7 @@ export const ImageFormPicker: FC<ImageFormPickerProps> = ({
   className,
   value,
   fallback,
-  tabs = ['image'],
+  tabs = ['image', 'library'],
   resize,
   ...restProps
 }) => {
@@ -78,6 +81,19 @@ export const ImagePicker: FC<ImagePickerProps> = ({
   const { t } = useTranslation()
   const [isOpen, setOpen] = useState(false)
 
+  const formState = useFormStore(state => state.form)
+  const currentWorkspaceId = useWorkspaceStore(state => state.currentWorkspaceId)
+  const currentProjectId = useWorkspaceStore(state => state.currentProjectId)
+
+  const defaultUploadContext = useMemo(
+    () => ({
+      workspaceId: formState?.teamId || currentWorkspaceId,
+      projectId: formState?.projectId || currentProjectId,
+      formId: formState?.id
+    }),
+    [formState?.teamId, formState?.projectId, formState?.id, currentWorkspaceId, currentProjectId]
+  )
+
   const handleChange = useCallback(
     (value?: string) => {
       setOpen(false)
@@ -91,8 +107,28 @@ export const ImagePicker: FC<ImagePickerProps> = ({
       {
         value: 'image',
         label: t('components.imagePicker.image'),
-        content: <Uploader {...tabConfigs.image} onChange={handleChange} />
+        content: (
+          <Uploader
+            context={tabConfigs.image?.context || defaultUploadContext}
+            {...tabConfigs.image}
+            onChange={handleChange}
+          />
+        )
       },
+      {
+        value: 'library',
+        label: t('components.imagePicker.library.title', 'Library'),
+        content: (
+          <MediaPicker
+            workspaceId={tabConfigs.library?.workspaceId || defaultUploadContext.workspaceId}
+            projectId={tabConfigs.library?.projectId || defaultUploadContext.projectId}
+            {...tabConfigs.library}
+            className="scrollbar h-full px-4 pt-4"
+            onChange={handleChange}
+          />
+        )
+      },
+
       {
         value: 'gradient',
         label: t('components.imagePicker.gradient.title'),
@@ -116,7 +152,14 @@ export const ImagePicker: FC<ImagePickerProps> = ({
         )
       }
     ],
-    [handleChange, t, tabConfigs.image, tabConfigs.unsplash]
+    [
+      handleChange,
+      t,
+      tabConfigs.image,
+      tabConfigs.library,
+      tabConfigs.gradient,
+      tabConfigs.unsplash
+    ]
   )
   const tabs = useMemo(
     () => configs.filter(tab => rawTabs.includes(tab.value as TabType)),

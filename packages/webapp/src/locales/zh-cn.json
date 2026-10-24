@@ -428,6 +428,14 @@
     },
     "imagePicker": {
       "image": "图片",
+      "library": {
+        "title": "媒体库",
+        "search": "搜索库中的图片...",
+        "currentProject": "当前项目",
+        "allWorkspace": "整个工作区",
+        "emptyState": "未找到图片",
+        "emptyDescription": "在此项目中上传的图片将显示在此处以方便重用。"
+      },
       "unsplash": {
         "title": "Unsplash",
         "search": "搜索 Unsplash 图片",
@@ -437,6 +445,7 @@
         "title": "渐变"
       }
     },
+
     "datePicker": {
       "time": "时间"
     },

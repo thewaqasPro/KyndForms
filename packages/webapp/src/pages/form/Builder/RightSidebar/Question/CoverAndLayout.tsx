@@ -68,7 +68,7 @@ export default function CoverAndLayout() {
 
         <div className="flex items-center gap-2">
           <ImagePicker
-            tabs={['image', 'unsplash']}
+            tabs={['image', 'library', 'unsplash']}
             onChange={value => handleChange('mediaUrl', value)}
           >
             <Button.Ghost size="sm">

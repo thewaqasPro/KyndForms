@@ -178,7 +178,7 @@ export default function LinkSettings() {
 
       <ImagePicker
         ref={imagePickerRef}
-        tabs={['image']}
+        tabs={['image', 'library']}
         tabConfigs={{
           image: {
             title: t('form.share.settings.preview.uploadTitle'),

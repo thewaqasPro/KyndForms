@@ -429,6 +429,14 @@
     },
     "imagePicker": {
       "image": "Image",
+      "library": {
+        "title": "Library",
+        "search": "Search library images...",
+        "currentProject": "Current Project",
+        "allWorkspace": "All Workspace",
+        "emptyState": "No images found",
+        "emptyDescription": "Images uploaded in this project will appear here for easy reuse."
+      },
       "unsplash": {
         "title": "Unsplash",
         "search": "Search Unsplash images",
@@ -438,6 +446,7 @@
         "title": "Gradient"
       }
     },
+
     "datePicker": {
       "time": "Time"
     },
