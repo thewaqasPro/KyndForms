@@ -4,6 +4,7 @@ import { Process, Processor } from '@nestjs/bull'
 import {
   FormService,
   MailService,
+  MediaService,
   SocialLoginService,
   SubmissionService,
   TeamService,
@@ -20,7 +21,8 @@ export class DeleteUserAccountSchedule extends BaseQueue {
     private readonly teamService: TeamService,
     private readonly formService: FormService,
     private readonly submissionService: SubmissionService,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+    private readonly mediaService?: MediaService
   ) {
     super()
   }
@@ -49,6 +51,10 @@ export class DeleteUserAccountSchedule extends BaseQueue {
               })
               await this.submissionService.deleteAll(formIds)
               await this.formService.delete(formIds)
+            }
+
+            if (this.mediaService) {
+              await this.mediaService.deleteByTeam(teamId)
             }
 
             await this.teamService.deleteAllMemberInTeam(teamId)

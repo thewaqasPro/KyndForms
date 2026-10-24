@@ -5,7 +5,14 @@ import { Auth, Team, TeamGuard, User } from '@decorator'
 import { DissolveTeamInput } from '@graphql'
 import { TeamModel, UserModel } from '@model'
 import { Args, Mutation, Resolver } from '@nestjs/graphql'
-import { AuthService, FormService, MailService, SubmissionService, TeamService } from '@service'
+import {
+  AuthService,
+  FormService,
+  MailService,
+  MediaService,
+  SubmissionService,
+  TeamService
+} from '@service'
 
 @Resolver()
 @Auth()
@@ -15,7 +22,8 @@ export class DissolveTeamResolver {
     private readonly teamService: TeamService,
     private readonly formService: FormService,
     private readonly submissionService: SubmissionService,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+    private readonly mediaService?: MediaService
   ) {}
 
   @Mutation(returns => Boolean)
@@ -46,6 +54,10 @@ export class DissolveTeamResolver {
       })
       await this.submissionService.deleteAll(formIds)
       await this.formService.delete(formIds)
+    }
+
+    if (this.mediaService) {
+      await this.mediaService.deleteByTeam(team.id)
     }
 
     await this.teamService.deleteAllMemberInTeam(team.id)

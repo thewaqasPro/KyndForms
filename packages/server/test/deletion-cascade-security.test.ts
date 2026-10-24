@@ -122,6 +122,12 @@ async function testProjectDeletionDisablesAndPurgesFormsBeforeProject() {
       projectDeletionAlert: () => {
         events.push('send alert')
       }
+    } as any,
+    {
+      deleteByProject: async (projectId: string) => {
+        assert.strictEqual(projectId, 'project_1')
+        events.push('delete project media')
+      }
     } as any
   )
 
@@ -138,6 +144,7 @@ async function testProjectDeletionDisablesAndPurgesFormsBeforeProject() {
     'disable forms',
     'delete submissions',
     'delete forms',
+    'delete project media',
     'delete project members',
     'delete project',
     'send alert'
@@ -183,6 +190,12 @@ async function testWorkspaceDeletionDisablesAndPurgesFormsBeforeWorkspace() {
       teamDeletionAlert: () => {
         events.push('send alert')
       }
+    } as any,
+    {
+      deleteByTeam: async (teamId: string) => {
+        assert.strictEqual(teamId, 'team_1')
+        events.push('delete workspace media')
+      }
     } as any
   )
 
@@ -198,6 +211,7 @@ async function testWorkspaceDeletionDisablesAndPurgesFormsBeforeWorkspace() {
     'disable forms',
     'delete submissions',
     'delete forms',
+    'delete workspace media',
     'delete workspace members',
     'delete workspace',
     'send alert'
@@ -257,6 +271,11 @@ async function testAccountDeletionCleansOwnedWorkspaceBeforeUser() {
       accountDeletionAlert: async () => {
         events.push('send alert')
       }
+    } as any,
+    {
+      deleteByTeam: async (_teamId: string) => {
+        events.push('delete workspace media')
+      }
     } as any
   )
 
@@ -267,6 +286,7 @@ async function testAccountDeletionCleansOwnedWorkspaceBeforeUser() {
     'disable forms',
     'delete submissions',
     'delete forms',
+    'delete workspace media',
     'delete workspace members',
     'delete workspace',
     'leave joined workspace',

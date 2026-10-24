@@ -5,7 +5,14 @@ import { Auth, Project, ProjectGuard, Team, User } from '@decorator'
 import { DeleteProjectInput } from '@graphql'
 import { ProjectModel, TeamModel, UserModel } from '@model'
 import { Args, Mutation, Resolver } from '@nestjs/graphql'
-import { AuthService, FormService, MailService, ProjectService, SubmissionService } from '@service'
+import {
+  AuthService,
+  FormService,
+  MailService,
+  MediaService,
+  ProjectService,
+  SubmissionService
+} from '@service'
 
 @Resolver()
 @Auth()
@@ -15,7 +22,8 @@ export class DeleteProjectResolver {
     private readonly projectService: ProjectService,
     private readonly formService: FormService,
     private readonly submissionService: SubmissionService,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+    private readonly mediaService?: MediaService
   ) {}
 
   @ProjectGuard()
@@ -47,6 +55,10 @@ export class DeleteProjectResolver {
       })
       await this.submissionService.deleteAll(formIds)
       await this.formService.delete(formIds)
+    }
+
+    if (this.mediaService) {
+      await this.mediaService.deleteByProject(project.id)
     }
 
     await this.projectService.deleteAllMemberInProject(project.id)
