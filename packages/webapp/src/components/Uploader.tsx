@@ -3,7 +3,7 @@ import { useRequest } from 'ahooks'
 import { ChangeEvent, DragEvent, FC, MouseEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { UploadService } from '@/services'
+import { UploadContext, UploadService } from '@/services'
 import { cn } from '@/utils'
 import { formatBytes, parseBytes } from '@kyndform/utils'
 
@@ -14,6 +14,7 @@ export interface UploaderProps extends Omit<ComponentProps, 'onChange'> {
   description?: string
   accept?: string[]
   maxSize?: string
+  context?: UploadContext
   onChange?: (value?: string) => void
 }
 
@@ -26,6 +27,7 @@ export const Uploader: FC<UploaderProps> = ({
   maxSize = MAX_SIZE,
   title,
   description,
+  context,
   onChange
 }) => {
   const { t } = useTranslation()
@@ -44,7 +46,7 @@ export const Uploader: FC<UploaderProps> = ({
         return
       }
 
-      return (await UploadService.upload(file)).url
+      return (await UploadService.upload(file, context)).url
     },
     {
       manual: true,

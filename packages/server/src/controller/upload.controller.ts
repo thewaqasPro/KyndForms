@@ -18,7 +18,14 @@ import {
 } from '@config'
 import { APP_HOMEPAGE_URL, UPLOAD_FILE_SIZE } from '@environments'
 import { helper, timestamp } from '@kyndform/utils'
-import { AuthService, EndpointService, FormService, RedisService } from '@service'
+import {
+  AuthService,
+  EndpointService,
+  FormService,
+  MediaService,
+  ProjectService,
+  RedisService
+} from '@service'
 import { isAllowedUploadField, md5 } from '@utils'
 
 function getUploadContextValue(
@@ -40,7 +47,9 @@ export class UploadController {
     private readonly authService: AuthService,
     private readonly endpointService: EndpointService,
     private readonly formService: FormService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly mediaService?: MediaService,
+    private readonly projectService?: ProjectService
   ) {}
 
   @Post('/api/upload')
@@ -75,6 +84,42 @@ export class UploadController {
 
     if (savedFile.location) {
       url = savedFile.location
+    }
+
+    const sessionId = await this.getAuthenticatedSessionId(req)
+    if (sessionId && this.mediaService) {
+      let workspaceId = req.get('x-kyndform-workspace-id') || req.get('x-kyndform-team-id')
+      let projectId = req.get('x-kyndform-project-id')
+      const formId = req.get('x-kyndform-form-id') || (req.query?.formId as string)
+
+      if (formId && (!projectId || !workspaceId)) {
+        const form = await this.formService.findById(formId)
+        if (form) {
+          projectId = projectId || form.projectId
+          workspaceId = workspaceId || form.teamId
+        }
+      }
+
+      if (projectId && !workspaceId && this.projectService) {
+        const project = await this.projectService.findById(projectId)
+        if (project) {
+          workspaceId = project.teamId
+        }
+      }
+
+      if (workspaceId && projectId) {
+        await this.mediaService.create({
+          teamId: workspaceId,
+          projectId,
+          formId,
+          userId: sessionId,
+          filename: savedFile.originalname,
+          key: savedFile.key || savedFile.filename,
+          url,
+          size: savedFile.size,
+          mimeType: savedFile.mimetype
+        })
+      }
     }
 
     return {

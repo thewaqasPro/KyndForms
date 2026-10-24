@@ -184,29 +184,15 @@ export function sanitizeUploadFilename(filename: unknown): string {
 }
 
 export function getUploadType(filename: unknown, mimeType: unknown): UploadType | undefined {
-  const extension = extname(String(filename || '')).toLowerCase()
-
-  // 1. Prioritize finding by file extension (handles mismatched or generic MIME types like text/plain for CSV)
-  if (extension) {
-    const entryByExt = Object.entries(UPLOAD_TYPES).find(([_, type]) =>
-      type.extensions.includes(extension)
-    )
-    if (entryByExt) {
-      return entryByExt[1]
-    }
-  }
-
-  // 2. Fallback to MIME type lookup (handles blobs or files without extensions)
   const normalizedMimeType = normalizeMimeType(mimeType)
   const uploadType = UPLOAD_TYPES[normalizedMimeType]
+  const extension = extname(String(filename || '')).toLowerCase()
 
-  if (uploadType) {
-    if (!extension || uploadType.extensions.includes(extension)) {
-      return uploadType
-    }
+  if (!uploadType || !uploadType.extensions.includes(extension)) {
+    return undefined
   }
 
-  return undefined
+  return uploadType
 }
 
 export function isUploadFileContentValid(file: {
