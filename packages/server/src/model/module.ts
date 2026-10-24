@@ -21,6 +21,8 @@ import {
   FormSchema,
   IntegrationModel,
   IntegrationSchema,
+  MediaModel,
+  MediaSchema,
   ProjectGroupModel,
   ProjectGroupSchema,
   ProjectMemberModel,
@@ -78,5 +80,6 @@ export const ModelModule = MongooseModule.forFeature([
   { name: ProjectModel.name, schema: ProjectSchema },
   { name: ProjectGroupModel.name, schema: ProjectGroupSchema },
   { name: ProjectMemberModel.name, schema: ProjectMemberSchema },
-  { name: BrandKitModel.name, schema: BrandKitSchema }
+  { name: BrandKitModel.name, schema: BrandKitSchema },
+  { name: MediaModel.name, schema: MediaSchema }
 ])
