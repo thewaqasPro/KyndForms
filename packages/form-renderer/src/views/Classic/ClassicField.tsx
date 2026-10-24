@@ -302,9 +302,13 @@ export const ClassicField: FC<ClassicFieldProps> = ({ field, index, error, onCha
   return (
     <div
       id={`field-${field.id}`}
-      className={clsx('kyndform-classic-field', {
-        'has-error': !!error
-      })}
+      className={clsx(
+        'kyndform-classic-field',
+        field.kind ? `kyndform-${field.kind.replace(/_/g, '-')}` : undefined,
+        {
+          'has-error': !!error
+        }
+      )}
     >
       <label className="kyndform-classic-label">
         <span className="kyndform-classic-number">{index + 1}.</span>

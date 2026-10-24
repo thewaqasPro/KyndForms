@@ -115,6 +115,11 @@ export default ({ mode }: ConfigEnv) => {
           target: env.VITE_PROXY_TARGET,
           secure: false,
           changeOrigin: true
+        },
+        '/f/': {
+          target: env.VITE_PROXY_TARGET,
+          secure: false,
+          changeOrigin: true
         }
       }
     }

@@ -91,7 +91,8 @@ export const ChoiceRadio: FC<ChoiceRadioProps> = ({
       className={clsx(
         'kyndform-radio',
         {
-          'kyndform-radio-selected': isChecked
+          'kyndform-radio-selected': isChecked,
+          'kyndform-radio-has-image': enableImage
         },
         className
       )}

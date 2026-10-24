@@ -280,10 +280,20 @@ const ModalComponent = () => {
                   <div className="flex min-h-full flex-col items-center justify-center">
                     <div className="kyndform-block kyndform-short-text">
                       <div className="mb-10">
-                        <div className="rich-text kyndform-block-title">
+                        <label className="kyndform-block-number">
+                          {t('settings.branding.brandKitPreview.number')}{' '}
+                          <span className="text-error">*</span>
+                        </label>
+                        <div
+                          className="rich-text kyndform-block-title"
+                          data-placeholder={t('settings.branding.brandKitPreview.title')}
+                        >
                           {t('settings.branding.brandKitPreview.title')}
                         </div>
-                        <div className="rich-text kyndform-block-description">
+                        <div
+                          className="rich-text kyndform-block-description"
+                          data-placeholder={t('settings.branding.brandKitPreview.description')}
+                        >
                           {t('settings.branding.brandKitPreview.description')}
                         </div>
                       </div>

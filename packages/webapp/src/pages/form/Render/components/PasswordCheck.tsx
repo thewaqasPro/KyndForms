@@ -1,4 +1,4 @@
-import { useTranslation } from '@kyndform/form-renderer/src'
+import { useTranslation } from '@kyndform/form-renderer'
 import { FormModel } from '@kyndform/shared-types-enums'
 import clsx from 'clsx'
 import Form, { Field } from 'rc-field-form'

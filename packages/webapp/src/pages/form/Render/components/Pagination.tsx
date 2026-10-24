@@ -1,4 +1,4 @@
-import { useTranslation } from '@kyndform/form-renderer/src'
+import { useTranslation } from '@kyndform/form-renderer'
 import clsx from 'clsx'
 import type { FC } from 'react'
 import { useMemo } from 'react'

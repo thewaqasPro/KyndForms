@@ -49,11 +49,29 @@ const computeState = (state: WorkspaceStoreType): ComputedStoreType => {
   let project: ProjectType | undefined
   let members: MemberType[] = []
   let forms: FormType[] = []
-  const websiteUrl =
-    (window as any).kyndform?.websiteURL ||
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0' ||
+      window.location.hostname === '[::1]' ||
+      window.location.hostname.endsWith('.localhost'))
+
+  let websiteUrl =
     (window as any).kyndform?.websiteURL ||
     WEBSITE_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '') ||
     ''
+
+  if (isLocalhost || import.meta.env.DEV) {
+    websiteUrl = typeof window !== 'undefined' ? window.location.origin : websiteUrl
+  } else if (
+    typeof window !== 'undefined' &&
+    (websiteUrl.includes('localhost') || websiteUrl.includes('127.0.0.1'))
+  ) {
+    websiteUrl = window.location.origin
+  }
+
   let sharingURLPrefix = websiteUrl.replace(/\/+$/, '')
 
   const workspace = state.workspaces.find(w => w.id === state.currentWorkspaceId)

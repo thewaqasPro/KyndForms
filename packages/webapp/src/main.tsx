@@ -70,6 +70,18 @@ async function loadRuntimeConfig() {
     if (response.ok) {
       const config = await response.json()
 
+      const isLocalhost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          window.location.hostname === '0.0.0.0' ||
+          window.location.hostname === '[::1]' ||
+          window.location.hostname.endsWith('.localhost'))
+
+      if (isLocalhost || import.meta.env.DEV) {
+        config.websiteURL = window.location.origin
+      }
+
       window.kyndform = {
         ...(window.kyndform || {}),
         ...config

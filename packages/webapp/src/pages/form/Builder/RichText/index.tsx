@@ -211,8 +211,22 @@ export const RichText: FC<RichTextProps> = ({
       }
     }
 
+    cleanIfEmpty()
     handleUpdateCallback()
   }
+
+  const cleanIfEmpty = useCallback(() => {
+    if (innerRef.current) {
+      const text = innerRef.current.textContent?.trim() || ''
+      const hasSpecial = innerRef.current.querySelector(
+        'img, [data-variable], [data-mention], [data-hiddenfield]'
+      )
+
+      if (!text && !hasSpecial && innerRef.current.innerHTML !== '') {
+        innerRef.current.innerHTML = ''
+      }
+    }
+  }, [innerRef])
 
   const handleCompositionCallback = useCallback(handleComposition, [])
   const handleKeyDownCallback = useCallback(handleKeyDown, [isCompositing])
@@ -227,7 +241,8 @@ export const RichText: FC<RichTextProps> = ({
     isCompositing,
     isMentionOpen,
     isToolbarOpen,
-    triggerSelection
+    triggerSelection,
+    cleanIfEmpty
   ])
   const handlePasteCallback = useCallback(handlePaste, [isToolbarOpen])
   const handleToolbarSelectionChangeCallback = useCallback(handleToolbarSelectionChange, [innerRef])
@@ -264,6 +279,7 @@ export const RichText: FC<RichTextProps> = ({
         onInput={handleInputCallback}
         onPaste={handlePasteCallback}
         onMouseUp={handleToolbarSelectionChangeCallback}
+        onBlur={cleanIfEmpty}
         {...restProps}
       />
 

@@ -100,8 +100,12 @@
     max-width: 45rem;
     min-height: 3.75rem;
 
+    .kyndform-block-number {
+      @apply text-xs;
+    }
+
     .kyndform-block-title {
-      @apply mb-0 flex-1 truncate text-xl;
+      @apply mb-0 ml-4 flex-1 truncate text-xl;
     }
   }
 
@@ -259,9 +263,13 @@
     color: var(--kyndform-answer-color);
 
     &:before {
-      content: attr(placeholder);
+      content: attr(data-placeholder);
       color: var(--kyndform-answer-opacity-30-color);
       @apply pointer-events-none absolute hidden truncate text-2xl;
+    }
+
+    &[placeholder]:before {
+      content: attr(placeholder);
     }
 
     &:empty:before {
@@ -352,12 +360,21 @@
 
     &:empty:before {
       @apply pointer-events-none absolute opacity-70;
+      content: attr(data-placeholder);
+    }
+
+    &[placeholder]:empty:before {
       content: attr(placeholder);
     }
 
     a {
       color: var(--kyndform-answer-color);
     }
+  }
+
+  .kyndform-block-number {
+    @apply mb-1 text-base;
+    color: var(--kyndform-label-color);
   }
 
   .kyndform-submit-container {

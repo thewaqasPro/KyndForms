@@ -1,8 +1,8 @@
-import { FieldLayoutAlignEnum } from '@kyndform/shared-types-enums'
+import { FieldLayoutAlignEnum, QUESTION_FIELD_KINDS } from '@kyndform/shared-types-enums'
 import clsx from 'clsx'
 import { FC, WheelEvent, useEffect, useMemo, useRef, useState } from 'react'
 
-import { removeHeading, replaceHTML } from '../utils'
+import { questionNumber, removeHeading, replaceHTML, useTranslation } from '../utils'
 import { htmlUtils } from '@kyndform/answer-utils'
 import { helper } from '@kyndform/utils'
 
@@ -159,6 +159,7 @@ export const Block: FC<BlockProps> = ({
   ...restProps
 }) => {
   const { state, dispatch } = useStore()
+  const { t } = useTranslation()
   const { values, fields, query, variables } = state
   const bodyRef = useRef<HTMLDivElement>(null)
 
@@ -175,6 +176,7 @@ export const Block: FC<BlockProps> = ({
     [fields, query, rawField, values, variables]
   )
 
+  const isQuestion = QUESTION_FIELD_KINDS.includes(field.kind)
   const isInlineLayout = field.layout?.align === FieldLayoutAlignEnum.INLINE
   const isSplitLayout = SPLIT_LAYOUTS.includes(field.layout?.align as FieldLayoutAlignEnum)
 
@@ -341,6 +343,11 @@ export const Block: FC<BlockProps> = ({
         {field.parent && (
           <div className="kyndform-block-group">
             <div className="kyndform-block-group-container">
+              <div className="kyndform-block-number">
+                {t('Question {{number}}', {
+                  number: questionNumber(field.parent!.index)
+                })}
+              </div>
               <h2 className="kyndform-block-title">
                 {htmlUtils.plain(field.parent.title as string)}
               </h2>
@@ -372,6 +379,22 @@ export const Block: FC<BlockProps> = ({
                 <div className="kyndform-block-main">
                   <div className="kyndform-block-wrapper">
                     <div className="kyndform-block-header">
+                      {isQuestion && (
+                        <div
+                          className={clsx(
+                            'kyndform-block-number',
+                            `kyndform-block-number-${questionNumber(
+                              field.index,
+                              field.parent?.index
+                            )}`
+                          )}
+                        >
+                          {t('Question {{number}}', {
+                            number: questionNumber(field.index, field.parent?.index)
+                          })}{' '}
+                          {field.validations?.required && <span className="text-red-700">*</span>}
+                        </div>
+                      )}
                       {field.title && (
                         <h1
                           className="kyndform-block-title"

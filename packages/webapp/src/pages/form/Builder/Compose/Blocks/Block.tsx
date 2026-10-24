@@ -1,4 +1,5 @@
-import { FieldLayoutAlignEnum } from '@kyndform/shared-types-enums'
+import { questionNumber } from '@kyndform/form-renderer'
+import { FieldLayoutAlignEnum, QUESTION_FIELD_KINDS } from '@kyndform/shared-types-enums'
 import type { FC } from 'react'
 import { RefObject, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -126,15 +127,26 @@ function sanitizeRichTextNodes(nodes: unknown[]): any[] {
 }
 
 function sanitizeRichTextHTML(value: unknown): string {
+  if (!value) {
+    return ''
+  }
+
+  let result = ''
+
   if (Array.isArray(value)) {
-    return htmlUtils.serialize(sanitizeRichTextNodes(value))
+    result = htmlUtils.serialize(sanitizeRichTextNodes(value))
+  } else if (typeof value === 'string') {
+    result = htmlUtils.serialize(sanitizeRichTextNodes(htmlUtils.parse(value)))
   }
 
-  if (typeof value === 'string') {
-    return htmlUtils.serialize(sanitizeRichTextNodes(htmlUtils.parse(value)))
+  if (
+    !htmlUtils.plain(result).trim() &&
+    !/<(img|span[^>]*data-(mention|variable|hiddenfield))/i.test(result)
+  ) {
+    return ''
   }
 
-  return ''
+  return result
 }
 
 export interface BlockProps extends ComponentProps {
@@ -146,7 +158,7 @@ export interface BlockProps extends ComponentProps {
 export const Block: FC<BlockProps> = ({
   className,
   field,
-  locale: _locale,
+  locale,
   parentField,
   children,
   ...restProps
@@ -157,6 +169,7 @@ export const Block: FC<BlockProps> = ({
   const titleRef = useRef<HTMLDivElement>(undefined)
   const descriptionRef = useRef<HTMLDivElement>(undefined)
 
+  const isLabelShow = QUESTION_FIELD_KINDS.includes(field.kind)
   const isCoverShow = helper.isValid(field.layout?.mediaUrl)
   const isImageCover = helper.isURL(field.layout?.mediaUrl)
 
@@ -208,6 +221,12 @@ export const Block: FC<BlockProps> = ({
       {parentField && (
         <div className="kyndform-block-group rounded-t-lg">
           <div className="kyndform-block-group-container">
+            <label className="kyndform-block-number">
+              {t('Question {{number}}', {
+                number: questionNumber(parentField!.index),
+                lng: locale
+              })}
+            </label>
             <div className="kyndform-block-title">
               {htmlUtils.plain(parentField.title as string)}
             </div>
@@ -223,6 +242,15 @@ export const Block: FC<BlockProps> = ({
         <div className="flex min-h-full flex-col items-center justify-center">
           <div className={cn('kyndform-block', className)} {...restProps}>
             <div className="mb-10">
+              {isLabelShow && (
+                <label className="kyndform-block-number">
+                  {t('Question {{number}}', {
+                    number: questionNumber(field.index, parentField?.index),
+                    lng: locale
+                  })}{' '}
+                  {field.validations?.required && <span className="text-error">*</span>}
+                </label>
+              )}
               <RichText
                 className="kyndform-block-title"
                 innerRef={titleRef as RefObject<HTMLDivElement>}

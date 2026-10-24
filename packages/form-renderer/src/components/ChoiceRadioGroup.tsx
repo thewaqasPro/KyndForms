@@ -126,7 +126,8 @@ export const ChoiceRadioGroup: FC<ChoiceRadioGroupProps> = ({
         'kyndform-radio-group',
         {
           'kyndform-radio-group-disabled': isDisabled,
-          'kyndform-radio-group-horizontal': helper.isFalse(verticalAlignment)
+          'kyndform-radio-group-horizontal': helper.isFalse(verticalAlignment),
+          'kyndform-radio-group-image': enableImage
         },
         className
       )}

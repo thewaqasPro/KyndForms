@@ -4,7 +4,7 @@ import {
   getThemeStyle,
   getWebFontURL,
   sendMessageToParent
-} from '@kyndform/form-renderer/src'
+} from '@kyndform/form-renderer'
 import {
   CaptchaKindEnum,
   FieldKindEnum,
