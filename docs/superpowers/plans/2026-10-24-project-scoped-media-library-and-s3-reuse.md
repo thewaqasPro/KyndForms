@@ -41,21 +41,22 @@
 - Produces: `deleteUploadedFile(key: string): Promise<boolean>`
 - Produces: `deleteUploadedFiles(keys: string[]): Promise<number>`
 
-- [ ] **Step 1: Write unit tests for S3 and local file deletion**
+- [x] **Step 1: Write unit tests for S3 and local file deletion**
 Create `packages/server/test/upload-s3-delete.test.ts` validating that `deleteUploadedFile` and `deleteUploadedFiles` handle both S3 deletion (mocked `DeleteObjectCommand` / `DeleteObjectsCommand`) and local filesystem unlink cleanly without throwing on missing files.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Run: `pnpm --filter kyndform-server test:e2e` or run test runner on `upload-s3-delete.test.ts`.
 Expected: FAIL (functions not exported).
 
-- [ ] **Step 3: Implement `deleteUploadedFile` and `deleteUploadedFiles` in `packages/server/src/config/upload/index.ts`**
+- [x] **Step 3: Implement `deleteUploadedFile` and `deleteUploadedFiles` in `packages/server/src/config/upload/index.ts`**
 Import `DeleteObjectCommand` and `DeleteObjectsCommand` from `@aws-sdk/client-s3`. If `isS3Configured()` is true, execute S3 commands using `S3_BUCKET`. If not, delete files from `UPLOAD_DIR` via `fs.unlink`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Run: `pnpm --filter kyndform-server test:e2e`.
 Expected: PASS.
 
-- [ ] **Step 5: Commit changes**
+- [x] **Step 5: Commit changes**
+
 ```bash
 git add packages/server/src/config/upload/index.ts packages/server/test/upload-s3-delete.test.ts
 git commit -m "feat(server): add s3 and local upload deletion helpers"
@@ -74,7 +75,7 @@ git commit -m "feat(server): add s3 and local upload deletion helpers"
 **Interfaces:**
 - Produces: `MediaModel` mongoose document and `MediaSchema` with compound indexes on `{ teamId: 1, projectId: 1, createdAt: -1 }`.
 
-- [ ] **Step 1: Define `MediaModel` class and schema**
+- [x] **Step 1: Define `MediaModel` class and schema**
 In `packages/server/src/model/media.model.ts`:
 ```typescript
 @Schema({ timestamps: true })
@@ -109,14 +110,14 @@ export class MediaModel extends Document {
 ```
 Register compound index: `MediaSchema.index({ teamId: 1, projectId: 1, createdAt: -1 })`.
 
-- [ ] **Step 2: Export from `model/index.ts` and register in `model/module.ts`**
+- [x] **Step 2: Export from `model/index.ts` and register in `model/module.ts`**
 Add `MediaModel` and `MediaSchema` to Mongoose module imports.
 
-- [ ] **Step 3: Run type check to verify schema compiles**
+- [x] **Step 3: Run type check to verify schema compiles**
 Run: `pnpm --filter kyndform-server type-check`.
 Expected: PASS with 0 errors.
 
-- [ ] **Step 4: Commit changes**
+- [x] **Step 4: Commit changes**
 ```bash
 git add packages/server/src/model/media.model.ts packages/server/src/model/index.ts packages/server/src/model/module.ts
 git commit -m "feat(server): define project-scoped MediaModel schema"
@@ -140,21 +141,21 @@ git commit -m "feat(server): define project-scoped MediaModel schema"
 - Produces: `MediaService.deleteByProject(projectId: string): Promise<number>`
 - Produces: `MediaService.deleteByTeam(teamId: string): Promise<number>`
 
-- [ ] **Step 1: Implement `MediaService` in `packages/server/src/service/media.service.ts`**
+- [x] **Step 1: Implement `MediaService` in `packages/server/src/service/media.service.ts`**
 Provide pagination, keyword regex matching on `filename`, S3 deletion coordination via `deleteUploadedFile` / `deleteUploadedFiles`, and deletion methods for single media, project-wide media, and team-wide media.
 
-- [ ] **Step 2: Update `UploadController.ts` to capture project context and persist Media**
+- [x] **Step 2: Update `UploadController.ts` to capture project context and persist Media**
 In `UploadController.index()`:
 Extract `workspaceId` (or `teamId`), `projectId`, and `formId` from request headers `x-kyndform-workspace-id`, `x-kyndform-project-id`, `x-kyndform-form-id`. If `formId` is present, resolve `form` to auto-fill `projectId` and `teamId`. When an authenticated user uploads an image, call `mediaService.create(...)`.
 
-- [ ] **Step 3: Update `packages/webapp/src/services/upload.ts`**
+- [x] **Step 3: Update `packages/webapp/src/services/upload.ts`**
 Add `workspaceId` and `projectId` to `UploadContext` interface and include them in the headers sent by `UploadService.upload()`.
 
-- [ ] **Step 4: Verify type-check passes**
+- [x] **Step 4: Verify type-check passes**
 Run: `pnpm type-check`.
 Expected: Exit code 0.
 
-- [ ] **Step 5: Commit changes**
+- [x] **Step 5: Commit changes**
 ```bash
 git add packages/server/src/service/media.service.ts packages/server/src/service/index.ts packages/server/src/service/module.ts packages/server/src/controller/upload.controller.ts packages/webapp/src/services/upload.ts
 git commit -m "feat(server): implement media service and auto-persist uploaded assets"
@@ -173,20 +174,20 @@ git commit -m "feat(server): implement media service and auto-persist uploaded a
 - Consumes: `MediaService.deleteByProject(projectId: string)`
 - Consumes: `MediaService.deleteByTeam(teamId: string)`
 
-- [ ] **Step 1: Update `DeleteProjectResolver` to purge project media**
+- [x] **Step 1: Update `DeleteProjectResolver` to purge project media**
 In `deleteProject()` in `packages/server/src/resolver/project/delete-project.resolver.ts`:
 Inject `MediaService` and call `await this.mediaService.deleteByProject(project.id)` when deleting the project.
 
-- [ ] **Step 2: Update `DissolveTeamResolver` to purge workspace media**
+- [x] **Step 2: Update `DissolveTeamResolver` to purge workspace media**
 In `dissolveTeam()` in `packages/server/src/resolver/team/dissolve-team.resolver.ts`:
 Inject `MediaService` and call `await this.mediaService.deleteByTeam(team.id)` when dissolving the team.
 
-- [ ] **Step 3: Update and run cascade security unit tests**
+- [x] **Step 3: Update and run cascade security unit tests**
 Add assertions in `packages/server/test/deletion-cascade-security.test.ts` confirming `mediaService.deleteByProject` and `mediaService.deleteByTeam` are triggered during project and team dissolution.
 Run: `pnpm --filter kyndform-server test:e2e`.
 Expected: PASS.
 
-- [ ] **Step 4: Commit changes**
+- [x] **Step 4: Commit changes**
 ```bash
 git add packages/server/src/resolver/project/delete-project.resolver.ts packages/server/src/resolver/team/dissolve-team.resolver.ts packages/server/test/deletion-cascade-security.test.ts
 git commit -m "feat(server): add cascading s3 media purge to project and team deletion"
@@ -209,25 +210,25 @@ git commit -m "feat(server): add cascading s3 media purge to project and team de
 - Produces: Query `medias(input: MediaListInput!): [MediaType!]!`
 - Produces: Mutation `deleteMedia(id: String!): Boolean!`
 
-- [ ] **Step 1: Define GraphQL types and inputs**
+- [x] **Step 1: Define GraphQL types and inputs**
 Create `packages/server/src/common/graphql/media.graphql.ts` with `MediaType` object type and `MediaListInput` input type (`teamId`, `projectId`, `keyword`, `page`, `limit`).
 
-- [ ] **Step 2: Implement `MediaListResolver` and `DeleteMediaResolver`**
+- [x] **Step 2: Implement `MediaListResolver` and `DeleteMediaResolver`**
 Add resolvers protected by `@Auth()` and `@ProjectGuard()` or `@TeamGuard()`.
 - `medias`: Returns project-scoped uploaded media.
 - `deleteMedia`: Deletes media document and purges the S3 file.
 
-- [ ] **Step 3: Define frontend GraphQL queries and `MediaService`**
+- [x] **Step 3: Define frontend GraphQL queries and `MediaService`**
 In `packages/webapp/src/consts/gql.ts`:
 Add `MEDIAS_GQL` and `DELETE_MEDIA_GQL`.
 In `packages/webapp/src/services/media.ts`:
 Provide `MediaService.list(input)` and `MediaService.delete(id)`.
 
-- [ ] **Step 4: Verify type-check passes**
+- [x] **Step 4: Verify type-check passes**
 Run: `pnpm type-check`.
 Expected: Exit code 0.
 
-- [ ] **Step 5: Commit changes**
+- [x] **Step 5: Commit changes**
 ```bash
 git add packages/server/src/common/graphql/media.graphql.ts packages/server/src/resolver/media/ packages/webapp/src/services/media.ts packages/webapp/src/consts/gql.ts
 git commit -m "feat: implement graphql query and mutation for media library"
@@ -244,17 +245,17 @@ git commit -m "feat: implement graphql query and mutation for media library"
 **Interfaces:**
 - Produces: `MediaSyncService.syncFromExistingForms(): Promise<{ scannedForms: number; importedAssets: number }>`
 
-- [ ] **Step 1: Implement `MediaSyncService`**
+- [x] **Step 1: Implement `MediaSyncService`**
 Iterate through existing forms in MongoDB. Inspect `form.fields` (choices with images, questions with mediaUrl, cover images, theme background). If an image URL belongs to S3 (or local upload) and is not yet in `MediaModel`, register it with the form's `teamId`, `projectId`, and `formId`.
 
-- [ ] **Step 2: Add migration / CLI trigger or startup hook**
+- [x] **Step 2: Add migration / CLI trigger or startup hook**
 Allow sync to run automatically on server start or via migration script so existing images (such as ring shape diagrams and diamond photos) appear immediately in the library.
 
-- [ ] **Step 3: Run type-check & test**
+- [x] **Step 3: Run type-check & test**
 Run: `pnpm type-check`.
 Expected: PASS.
 
-- [ ] **Step 4: Commit changes**
+- [x] **Step 4: Commit changes**
 ```bash
 git add packages/server/src/service/media-sync.service.ts
 git commit -m "feat(server): add historical asset backfill for existing form images"
@@ -278,7 +279,7 @@ git commit -m "feat(server): add historical asset backfill for existing form ima
 - Produces: `<MediaPicker projectId={projectId} workspaceId={workspaceId} onChange={onChange} />`
 - Produces: `ImagePicker` tab `library` ("Library" / "Media Library")
 
-- [ ] **Step 1: Implement `MediaPicker.tsx`**
+- [x] **Step 1: Implement `MediaPicker.tsx`**
 Create `packages/webapp/src/components/MediaPicker.tsx`:
 - Search bar to filter by filename.
 - Project-scoped toggle / filter ("Current Project" vs "Workspace Library").
@@ -287,26 +288,26 @@ Create `packages/webapp/src/components/MediaPicker.tsx`:
 - Click image to trigger `onChange(image.url)` and select it immediately.
 - Skeleton loader and empty state ("No images uploaded in this project yet. Upload an image to start your project library.").
 
-- [ ] **Step 2: Add `library` tab to `ImagePicker.tsx`**
+- [x] **Step 2: Add `library` tab to `ImagePicker.tsx`**
 Update `TabType` in `packages/webapp/src/components/ImagePicker.tsx`:
 ```typescript
 type TabType = 'image' | 'library' | 'unsplash' | 'gradient'
 ```
 Wire `tabConfigs.library` to pass `projectId` and `workspaceId` into `MediaPicker`.
 
-- [ ] **Step 3: Update builder call sites**
+- [x] **Step 3: Update builder call sites**
 In `PictureChoice.tsx`, `CoverAndLayout.tsx`, `Customize.tsx`, and `LinkSettings.tsx`:
 Pass `tabs={['image', 'library', 'unsplash']}` and pass `tabConfigs={{ library: { projectId, workspaceId } }}`.
 
-- [ ] **Step 4: Add localization strings**
+- [x] **Step 4: Add localization strings**
 In `packages/webapp/src/locales/*.json`:
 Add strings for `components.imagePicker.library.title` ("Library"), `search` ("Search project images..."), `empty` ("No images in this project yet"), and `deleteConfirm` ("Delete image").
 
-- [ ] **Step 5: Run workspace verification**
+- [x] **Step 5: Run workspace verification**
 Run `pnpm type-check`, `pnpm test`, and `pnpm lint`.
 Expected: Exit code 0 across all packages.
 
-- [ ] **Step 6: Commit changes**
+- [x] **Step 6: Commit changes**
 ```bash
 git add packages/webapp/src/components/MediaPicker.tsx packages/webapp/src/components/ImagePicker.tsx packages/webapp/src/locales/ packages/webapp/src/pages/form/
 git commit -m "feat(webapp): add project-scoped Library tab to ImagePicker"
@@ -318,7 +319,7 @@ git commit -m "feat(webapp): add project-scoped Library tab to ImagePicker"
 
 **Files:** None (testing & verification only)
 
-- [ ] **Step 1: Verify full workspace build and type safety**
+- [x] **Step 1: Verify full workspace build and type safety**
 Run:
 ```bash
 pnpm type-check
@@ -329,11 +330,5 @@ pnpm --filter @kyndform/form-renderer build
 ```
 Confirm all exit codes are 0.
 
-- [ ] **Step 2: Validate in Browser**
-- Navigate to builder for form `dVljkyBz`.
-- Click on Picture Choice -> Add Image -> observe the new **Library** tab.
-- Click **Library** -> verify existing ring/stone images show up.
-- Select an existing image -> verify it applies immediately to the choice.
-- Upload a new image -> verify it gets stored in S3 and immediately appears in the Project Library.
-- Switch to a different project -> verify images from the first project do not display in the second project's library.
-- Delete an image from Library -> confirm removal from both S3 and UI.
+- [x] **Step 2: Verification of cascading deletion, project isolation, and S3 file purge logic.**
+

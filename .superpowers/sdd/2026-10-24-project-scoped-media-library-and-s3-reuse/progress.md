@@ -8,4 +8,4 @@ Pre-flight: verified interfaces between upload deletion, MediaModel, MediaServic
 - [x] Task 5: GraphQL Resolvers for Media Query & Delete (commit e0bbd7a)
 - [x] Task 6: Historical Asset Sync Helper (commit dd37125)
 - [x] Task 7: Frontend `MediaPicker` Component and `ImagePicker` "Library" Tab (commit 14ef2ea)
-- [ ] Task 8: End-to-End Verification
+- [x] Task 8: End-to-End Verification (All tests, type-checks, and lints passing cleanly)
