@@ -94,3 +94,6 @@ export { UseTemplateResolver } from './template/use-template.resolver'
 
 export { UnsplashSearchResolver } from './unsplash/unsplash-search.resolver'
 export { UnsplashTrackDownloadResolver } from './unsplash/unsplash-track-download.resolver'
+
+export { MediaListResolver } from './media/media-list.resolver'
+export { DeleteMediaResolver } from './media/delete-media.resolver'

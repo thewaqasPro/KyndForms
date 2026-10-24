@@ -1474,3 +1474,27 @@ export const VERIFY_FORM_PASSWORD_GQL = gql`
     verifyFormPassword(input: $input)
   }
 `
+
+export const MEDIAS_GQL = gql`
+  query medias($input: MediaListInput!) {
+    medias(input: $input) {
+      id
+      teamId
+      projectId
+      formId
+      filename
+      key
+      url
+      size
+      mimeType
+      createdAt
+      updatedAt
+    }
+  }
+`
+
+export const DELETE_MEDIA_GQL = gql`
+  mutation deleteMedia($input: DeleteMediaInput!) {
+    deleteMedia(input: $input)
+  }
+`
