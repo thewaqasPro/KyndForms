@@ -79,7 +79,8 @@ const api = {
   toggleModal,
   openPopup,
   closePopup,
-  togglePopup
+  togglePopup,
+  init: main
 }
 
 if (typeof window !== 'undefined') {
@@ -90,4 +91,6 @@ if (typeof window !== 'undefined') {
 main()
 
 // Import the library before the element
-window.addEventListener('DOMContentLoaded', main)
+if (typeof document !== 'undefined' && document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', main)
+}

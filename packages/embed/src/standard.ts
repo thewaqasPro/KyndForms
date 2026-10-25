@@ -20,7 +20,14 @@ export class Standard<T extends StandardSettings> {
   constructor(config: EmbedConfig<T>) {
     const { formId, type, container, settings, hiddenFields } = config
 
-    this.formUrl = buildUrl(settings.customUrl.replace(/\/+$/, `/${formId}?`), {
+    let targetUrl = settings.customUrl
+    if (!targetUrl) {
+      targetUrl = `/form/${formId}`
+    } else if (!targetUrl.includes(formId)) {
+      targetUrl = `${targetUrl.replace(/\/+$/, '')}/form/${formId}`
+    }
+
+    this.formUrl = buildUrl(targetUrl, {
       ...settings,
       ...hiddenFields
     })

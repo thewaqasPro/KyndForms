@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 
 import { useParam } from '@/utils'
 
-import { Button, Modal, Tabs } from '@/components'
+import { Button, CodeBlock, Modal, Tabs } from '@/components'
 import { useModal, useWorkspaceStore } from '@/store'
 
 export default function HeadlessModal() {
@@ -181,11 +181,8 @@ export default function ContactForm() {
       value: 'html',
       label: 'HTML Form',
       content: (
-        <div className="mt-4 space-y-3">
-          <pre className="bg-primary text-foreground overflow-x-auto rounded-lg p-4 font-mono text-xs leading-5">
-            <code>{htmlSnippet}</code>
-          </pre>
-          <Button.Copy text={htmlSnippet} />
+        <div className="mt-4">
+          <CodeBlock code={htmlSnippet} language="html" title="HTML Form Example" />
         </div>
       )
     },
@@ -193,11 +190,12 @@ export default function ContactForm() {
       value: 'nextjs',
       label: 'Next.js (React)',
       content: (
-        <div className="mt-4 space-y-3">
-          <pre className="bg-primary text-foreground overflow-x-auto rounded-lg p-4 font-mono text-xs leading-5">
-            <code>{nextjsSnippet}</code>
-          </pre>
-          <Button.Copy text={nextjsSnippet} />
+        <div className="mt-4">
+          <CodeBlock
+            code={nextjsSnippet}
+            language="javascript"
+            title="components/ContactForm.tsx"
+          />
         </div>
       )
     },
@@ -205,11 +203,8 @@ export default function ContactForm() {
       value: 'astro',
       label: 'Astro.js',
       content: (
-        <div className="mt-4 space-y-3">
-          <pre className="bg-primary text-foreground overflow-x-auto rounded-lg p-4 font-mono text-xs leading-5">
-            <code>{astroSnippet}</code>
-          </pre>
-          <Button.Copy text={astroSnippet} />
+        <div className="mt-4">
+          <CodeBlock code={astroSnippet} language="astro" title="components/ContactForm.astro" />
         </div>
       )
     },
@@ -217,11 +212,8 @@ export default function ContactForm() {
       value: 'curl',
       label: 'cURL / API',
       content: (
-        <div className="mt-4 space-y-3">
-          <pre className="bg-primary text-foreground overflow-x-auto rounded-lg p-4 font-mono text-xs leading-5">
-            <code>{curlSnippet}</code>
-          </pre>
-          <Button.Copy text={curlSnippet} />
+        <div className="mt-4">
+          <CodeBlock code={curlSnippet} language="curl" title="Terminal cURL Request" />
         </div>
       )
     }

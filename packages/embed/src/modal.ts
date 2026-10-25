@@ -82,6 +82,7 @@ export class Modal<T extends ModalSettings> extends Standard<T> {
       logger.info('Open event', this.settings.openTrigger)
 
       switch (this.settings.openTrigger) {
+        case 'load':
         case 'loaded':
           return this.onLoaded()
 
@@ -97,7 +98,7 @@ export class Modal<T extends ModalSettings> extends Standard<T> {
     }
 
     if (this.settings.hideAfterSubmit) {
-      window.onmessage = ({ data }: MessageEvent) => {
+      window.addEventListener('message', ({ data }: MessageEvent) => {
         if (!isPlainObject(data) || data.source !== 'KYNDFORM') {
           return
         }
@@ -114,13 +115,24 @@ export class Modal<T extends ModalSettings> extends Standard<T> {
               (this.settings.autoClose || 0) * 1_000
             )
         }
-      }
+      })
     }
   }
 
   protected onLoaded() {
-    window.onload = () => {
+    if (
+      typeof document !== 'undefined' &&
+      (document.readyState === 'complete' || document.readyState === 'interactive')
+    ) {
       this.open()
+    } else {
+      window.addEventListener(
+        'load',
+        () => {
+          this.open()
+        },
+        { once: true }
+      )
     }
   }
 
@@ -131,22 +143,24 @@ export class Modal<T extends ModalSettings> extends Standard<T> {
   }
 
   protected onExit() {
-    window.onmouseout = (e: any) => {
-      if (!e.toElement || !e.relatedTarget) {
+    window.addEventListener('mouseout', (e: any) => {
+      if (!e.toElement && !e.relatedTarget) {
         this.open()
       }
-    }
+    })
   }
 
   protected onScroll() {
-    window.onscroll = () => {
+    const scrollHandler = () => {
       const scrollPercent =
         ((window.scrollY + window.innerHeight) / document.body.clientHeight) * 100
 
       if (scrollPercent >= this.settings.openScrollPercent! / 100) {
         this.open()
-        window.onscroll = null
+        window.removeEventListener('scroll', scrollHandler)
       }
     }
+
+    window.addEventListener('scroll', scrollHandler)
   }
 }

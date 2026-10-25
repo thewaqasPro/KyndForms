@@ -17,7 +17,7 @@ export interface StandardSettings extends FullPageSettings {
 
 export interface ModalSettings extends Omit<FullPageSettings, 'transparentBackground'> {
   size?: 'large' | 'medium' | 'small'
-  openTrigger?: 'click' | 'loaded' | 'delay' | 'exit' | 'scroll'
+  openTrigger?: 'click' | 'load' | 'loaded' | 'delay' | 'exit' | 'scroll'
   openDelay?: number
   openScrollPercent?: number
   triggerBackground?: string

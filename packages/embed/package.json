@@ -9,7 +9,7 @@
     "./src"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && node scripts/copy-dist.js",
     "type-check": "tsc --pretty --noEmit"
   },
   "dependencies": {

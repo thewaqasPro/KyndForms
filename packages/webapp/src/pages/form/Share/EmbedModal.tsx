@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useParam } from '@/utils'
 import { helper } from '@kyndform/utils'
 
-import { Button, ColorPicker, Input, Modal, Select, Switch } from '@/components'
+import { Button, CodeBlock, ColorPicker, Input, Modal, Select, Switch } from '@/components'
 import { FORM_EMBED_OPTIONS } from '@/consts'
 import { useAppStore, useFormStore, useModal, useWorkspaceStore } from '@/store'
 
@@ -359,15 +359,20 @@ const EmbedComponent = () => {
       return [...prev, `${name}="${embedConfig[key]}"`]
     }, [] as string[])
 
+    const baseUrl =
+      sharingURLPrefix && !sharingURLPrefix.startsWith('/')
+        ? sharingURLPrefix.replace(/\/+$/, '')
+        : window.location.origin
+
     return `<div
 \tdata-kyndform-id="${formId}"
 \tdata-kyndform-type="${embedType}"
-\tdata-kyndform-custom-url="${sharingURLPrefix}/form/${formId}"
+\tdata-kyndform-custom-url="${baseUrl}/form/${formId}"
 \t${attributes.join('\n\t')}
 >
-  ${embedType === 'modal' ? `<button class="kyndform__trigger-button" type="button" onclick="KyndForm.openModal('${formId}Modal')">${embedConfig.triggerText}</button>` : ''}
+  ${embedType === 'modal' ? `<button class="kyndform__trigger-button" type="button" onclick="KyndForm.openModal('${formId}')">${embedConfig.triggerText}</button>` : ''}
 </div>
-<script src="https://www.unpkg.com/@kyndform/embed@latest/dist/index.umd.js"></script>
+<script src="${baseUrl}/static/embed.js"></script>
 `
   }, [embedConfig, embedType, formId, sharingURLPrefix])
 
@@ -437,11 +442,9 @@ function CodeModal() {
         }}
         onOpenChange={onOpenChange}
       >
-        <pre className="bg-primary text-foreground my-6 overflow-x-auto rounded p-4 text-sm">
-          <code>{payload?.code}</code>
-        </pre>
-
-        <Button.Copy text={payload?.code} />
+        <div className="my-6">
+          <CodeBlock code={payload?.code || ''} language="html" title="HTML Embed Code" />
+        </div>
       </Modal.Simple>
     </>
   )

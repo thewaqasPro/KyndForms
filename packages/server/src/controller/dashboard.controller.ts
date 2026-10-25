@@ -45,6 +45,10 @@ export class DashboardController {
   @Redirect('/static/favicon.ico', 302)
   favicon() {}
 
+  @Get('/embed.js')
+  @Redirect('/static/embed.js', 302)
+  embedJs() {}
+
   @Get('/sign-up')
   signUp(@Req() req: Request, @Res() res: Response) {
     if (APP_DISABLE_REGISTRATION && !req.cookies?.[COOKIE_INVITATION_NAME]) {
