@@ -33,15 +33,14 @@ Every agent must consult [docs/FORK_ENHANCEMENTS_REGISTRY.md](file:///Users/waqa
 - **NEVER** run `pnpm install` inside a subpackage directory (`packages/server`, `packages/webapp`, etc.) without the workspace context.
 - **NEVER** commit nested `pnpm-lock.yaml` files inside `packages/*`.
 
-### Rule 2.3: Upstream Git Remote Configuration
-The local git configuration maintains two remotes:
-- `origin`: `https://github.com/thewaqasPro/heyform.git` (Downstream KyndForm fork)
-- `upstream`: `https://github.com/heyform/heyform.git` (Official HeyForm repository)
+### Rule 2.3: Standalone Repository & Upstream Reference
+The primary repository is maintained as an independent standalone codebase:
+- `origin`: `https://github.com/thewaqasPro/kyndform.git` (Primary KyndForm repository)
 
-When syncing upstream changes:
-1. Always fetch from `upstream` (`git fetch upstream`).
-2. Never perform blind fast-forwards or automatic merges without reviewing `git diff` against the [Fork Enhancements Registry](file:///Users/waqas/Development/2026/kyndForms/docs/FORK_ENHANCEMENTS_REGISTRY.md).
-3. If conflicts arise, preserve **BOTH** the upstream bugfix/feature AND the KyndForm enhancement.
+If optional bugfix backports from upstream HeyForm (`https://github.com/heyform/heyform.git`) are ever performed:
+1. Review `git diff` against the [Fork Enhancements Registry](file:///Users/waqas/Development/2026/kyndForms/docs/FORK_ENHANCEMENTS_REGISTRY.md).
+2. If conflicts arise, preserve all KyndForm enhancements.
+3. Never regress KyndForm branding or architecture.
 
 ### Rule 2.4: Rebranding Integrity
 - KyndForm is fully rebranded. **DO NOT** reintroduce HeyForm strings, logos, copyright notices, or domains (`heyform.com`) into KyndForm components, renderer templates, or views unless interfacing with legacy third-party webhooks explicitly requiring compatibility headers.
