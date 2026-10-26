@@ -20,8 +20,7 @@
     "lint": "node scripts/run-oxlint.js packages",
     "type-check": "pnpm -r run type-check",
     "test": "pnpm --filter ./packages/utils test && pnpm --filter ./packages/answer-utils test",
-    "verify:fork": "node scripts/verify-fork-integrity.js",
-    "sync:upstream": "bash scripts/sync-upstream.sh",
+    "verify:integrity": "node scripts/verify-integrity.js",
     "postinstall": "simple-git-hooks"
   },
   "simple-git-hooks": {

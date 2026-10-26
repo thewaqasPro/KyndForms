@@ -179,8 +179,8 @@ Before clicking **Deploy** in Dokploy, complete these checks:
 ### Step 2: Configure Source Code
 1. In the **Source** tab:
    - **Provider:** GitHub (or Git).
-   - **Repository:** `thewaqasPro/heyform` (or your repository).
-   - **Branch:** `next`.
+   - **Repository:** `thewaqasPro/KyndForms` (or your repository).
+   - **Branch:** `main`.
    - **Build Type:** `Dockerfile`.
    - **Dockerfile Path:** `./Dockerfile`.
    - **Context Path:** `/`.

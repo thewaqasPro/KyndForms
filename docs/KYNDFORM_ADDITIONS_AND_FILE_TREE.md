@@ -1,11 +1,11 @@
 # KyndForm Enhancements & File Tree Documentation
 
-> **Base Project:** `heyform/heyform` (Tag: `v3.0.1`)  
-> **Downstream Fork:** `KyndForm` (`thewaqasPro/heyform`)  
-> **Active Development Branch:** `next`  
+> **Project:** `KyndForm` (`thewaqasPro/KyndForms`)  
+> **Origin Base:** Evolved from open-source HeyForm (v3.0.1)  
+> **Repository Status:** Fully detached standalone application  
 > **Documentation Date:** October 2026
 
-This document provides a comprehensive breakdown of all features, architectural changes, bug fixes, and tools added on top of upstream HeyForm, along with an exact visual file tree of all new and modified files.
+This document provides a comprehensive breakdown of all custom features, architectural systems, bug fixes, and extensions built into KyndForm, along with a visual file tree of all custom and modified modules.
 
 ---
 
@@ -32,9 +32,9 @@ graph TD
     D --> D3["OAuth App Integration Helpers"]
     D --> D4["Modern Sass Compiler & React 19 Fixes"]
 
-    E --> E1["Fork Integrity Checker (pnpm verify:fork)"]
-    E --> E2["Safe Upstream Sync Protocol (pnpm sync:upstream)"]
-    E --> E3["Dokploy Production Launch Plan"]
+    E --> E1["Architecture Integrity Checker (pnpm verify:integrity)"]
+    E --> E2["Dokploy Production Launch Plan"]
+    E --> E3["Standalone Architecture Specification"]
 ```
 
 ---
@@ -98,18 +98,14 @@ graph TD
 
 ---
 
-### D. Upstream Sync & Verification Framework
-1. **Fork Integrity Script (`pnpm run verify:fork`)**:
-   - Programmatically tests 13 critical areas of the codebase to confirm that no custom fork enhancements are accidentally broken or erased.
-2. **Safe Upstream Sync Script (`pnpm run sync:upstream`)**:
-   - Fetches upstream commits from `heyform/heyform`.
-   - Creates a timestamped local backup branch before merging.
-   - Runs `verify:fork`, `type-check`, `test`, and `build` after merging.
-3. **Fork Registries & Dokploy Launch Docs**:
-   - `docs/FORK_ENHANCEMENTS_REGISTRY.md`: Technical catalog of all custom logic and overlapping files.
-   - `docs/UPSTREAM_SYNC_GUIDE.md`: Step-by-step conflict resolution manual.
+### D. Architecture Integrity & Verification Framework
+1. **Architecture Integrity Script (`pnpm run verify:integrity`)**:
+   - Programmatically tests 14 critical areas of the codebase to confirm that headless endpoints, answer-utils, media library, CodeBlock syntax highlighting, and monorepo configurations remain intact.
+2. **Architecture Registries & Production Runbooks**:
+   - `docs/KYNDFORM_ARCHITECTURE_SPEC.md`: Technical specification cataloging all architectural capabilities, custom schemas, and endpoints.
+   - `docs/STANDALONE_ARCHITECTURE_GUIDE.md`: Developer guide detailing monorepo package topology and extension guidelines.
    - `docs/DOKPLOY_LAUNCH_PLAN.md`: Complete production deployment runbook with all environment variables.
-   - `AGENTS.md`: Hard rules instructing AI agents never to delete or overwrite custom fork features.
+   - `AGENTS.md`: Mandatory developer rules for preserving custom features and enforcing verification protocols.
 
 ---
 
@@ -117,21 +113,20 @@ graph TD
 
 ```text
 kyndForms/
-├── AGENTS.md                                     [NEW] Agent preservation rules & fork constraints
+├── AGENTS.md                                     [MODIFIED] Standalone repository rules & verification protocols
 ├── Dockerfile                                    [MODIFIED] Multi-stage build with port 8000 & unified runner
-├── package.json                                  [MODIFIED] Added root scripts (verify:fork, sync:upstream, test)
+├── package.json                                  [MODIFIED] Added root scripts (verify:integrity, test)
 ├── pnpm-lock.yaml                                [MODIFIED] Consolidated single root lockfile
 ├── pnpm-workspace.yaml                           [MODIFIED] Includes packages/answer-utils
 │
 ├── docs/
 │   ├── DOKPLOY_LAUNCH_PLAN.md                    [NEW] Dokploy deployment guide & production env variables
-│   ├── FORK_ENHANCEMENTS_REGISTRY.md             [NEW] Catalog of all fork enhancements & overlapping files
+│   ├── KYNDFORM_ARCHITECTURE_SPEC.md             [NEW] Technical catalog of custom architecture & schemas
 │   ├── KYNDFORM_ADDITIONS_AND_FILE_TREE.md       [NEW] This comprehensive documentation
-│   └── UPSTREAM_SYNC_GUIDE.md                    [NEW] Safe upstream sync and conflict resolution guide
+│   └── STANDALONE_ARCHITECTURE_GUIDE.md          [NEW] Standalone developer architecture & extension guide
 │
 ├── scripts/
-│   ├── sync-upstream.sh                          [NEW] Automated upstream sync script with safety backup
-│   └── verify-fork-integrity.js                  [NEW] Automated 13-point fork integrity test script
+│   └── verify-integrity.js                       [NEW] Automated 14-point architecture integrity test script
 │
 ├── packages/
 │   ├── answer-utils/                             [NEW PACKAGE] Custom utility package for form answers
@@ -221,4 +216,4 @@ kyndForms/
 | **Lockfile Architecture** | Multiple fragmented lockfiles | Single root `pnpm-lock.yaml` with strict workspace linking |
 | **Containerization** | Separate web/server setup on port 9157 | Unified multi-stage Docker container on port `8000` |
 | **SSRF Security** | Standard HTTP requests | Private subnet filtering (`outbound-url.ts`) |
-| **Integrity & Sync Tools**| None | `pnpm run verify:fork` & `pnpm run sync:upstream` |
+| **Integrity & Verification**| None | Automated 14-point check (`pnpm run verify:integrity`) |

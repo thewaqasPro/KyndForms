@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * KyndForm Fork Integrity Verification
+ * KyndForm Architecture Integrity Verification
  *
- * Verifies that all custom KyndForm fork enhancements cataloged in
- * docs/FORK_ENHANCEMENTS_REGISTRY.md remain present and intact.
- * Run after any upstream sync, merge, or rebase:
- *   pnpm run verify:fork
+ * Verifies that all custom KyndForm core enhancements and architectural features
+ * remain present and fully intact.
+ * Run:
+ *   pnpm run verify:integrity
  */
 
 const fs = require('fs')
@@ -40,7 +40,7 @@ function fileContains(relPath, snippet) {
   return content.includes(snippet)
 }
 
-console.log('\n🔍 Verifying KyndForm Fork Integrity...\n')
+console.log('\n🔍 Verifying KyndForm Architecture Integrity...\n')
 
 // 1. Single Root Lockfile Policy
 check('No nested lockfiles in sub-packages', () => {
@@ -60,7 +60,7 @@ check('No nested lockfiles in sub-packages', () => {
   return true
 })
 
-// 2. New Workspace Package: @kyndform/answer-utils
+// 2. Workspace Package: @kyndform/answer-utils
 check('Workspace package packages/answer-utils exists and is configured', () => {
   return (
     fileExists('packages/answer-utils/package.json') &&
@@ -115,7 +115,7 @@ check(
   }
 )
 
-// 7. Headless Share Modal in Webapp
+// 7. Headless Share Modal & CodeBlock in Webapp
 check(
   'Headless share modal exists in packages/webapp/src/pages/form/Share/HeadlessModal.tsx',
   () => {
@@ -127,26 +127,30 @@ check('Headless share modal is mounted in packages/webapp/src/pages/form/Share/i
   return fileContains('packages/webapp/src/pages/form/Share/index.tsx', 'HeadlessModal')
 })
 
+check('CodeBlock component exists in packages/webapp/src/components/CodeBlock.tsx', () => {
+  return fileExists('packages/webapp/src/components/CodeBlock.tsx')
+})
+
 // 8. Documentation & Agent Rules
-check('AGENTS.md preservation rules exist', () => {
+check('AGENTS.md rules exist', () => {
   return fileExists('AGENTS.md')
 })
 
-check('docs/FORK_ENHANCEMENTS_REGISTRY.md exists', () => {
-  return fileExists('docs/FORK_ENHANCEMENTS_REGISTRY.md')
+check('Architecture specification document exists', () => {
+  return fileExists('docs/KYNDFORM_ARCHITECTURE_SPEC.md')
 })
 
 // Summary
 if (errors.length > 0) {
-  console.error('\n❌ Fork integrity check FAILED:')
+  console.error('\n❌ Architecture integrity check FAILED:')
   errors.forEach(err => console.error(`  - ${err}`))
   console.error(
-    '\nPlease consult docs/FORK_ENHANCEMENTS_REGISTRY.md to restore missing fork enhancements.\n'
+    '\nPlease consult docs/KYNDFORM_ARCHITECTURE_SPEC.md to restore missing features.\n'
   )
   process.exit(1)
 } else {
   console.log(
-    `✅ All ${passedChecks} fork integrity checks PASSED! Custom fork enhancements are fully intact.\n`
+    `✅ All ${passedChecks} architecture integrity checks PASSED! KyndForm core features are fully intact.\n`
   )
   process.exit(0)
 }
