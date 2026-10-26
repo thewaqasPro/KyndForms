@@ -95,7 +95,52 @@ class PricePropertyInput {
 }
 
 @InputType()
+export class EndScreenButtonInput {
+  @Field()
+  id: string
+
+  @Field()
+  text: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  url?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  action?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  variant?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  newTab?: boolean
+}
+
+@InputType()
 class SharedPropertyInput {
+  @Field({ nullable: true })
+  @IsOptional()
+  screenVariant?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  align?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  imagePosition?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  imageSize?: string
+
+  @Field(type => [EndScreenButtonInput], { nullable: true })
+  @IsOptional()
+  buttons?: EndScreenButtonInput[]
+
   @Field({ nullable: true })
   showButton?: boolean
 
@@ -908,6 +953,54 @@ export class PropertyType {
 
   @Field({ nullable: true })
   score?: number
+
+  @Field({ nullable: true })
+  buttonLinkUrl?: string
+
+  @Field({ nullable: true })
+  redirectUrl?: string
+
+  @Field({ nullable: true })
+  redirectOnCompletion?: boolean
+
+  @Field({ nullable: true })
+  redirectDelay?: number
+
+  @Field({ nullable: true })
+  screenVariant?: string
+
+  @Field({ nullable: true })
+  align?: string
+
+  @Field({ nullable: true })
+  imagePosition?: string
+
+  @Field({ nullable: true })
+  imageSize?: string
+
+  @Field(type => [EndScreenButtonType], { nullable: true })
+  buttons?: EndScreenButtonType[]
+}
+
+@ObjectType()
+export class EndScreenButtonType {
+  @Field()
+  id: string
+
+  @Field()
+  text: string
+
+  @Field({ nullable: true })
+  url?: string
+
+  @Field({ nullable: true })
+  action?: string
+
+  @Field({ nullable: true })
+  variant?: string
+
+  @Field({ nullable: true })
+  newTab?: boolean
 }
 
 @ObjectType()

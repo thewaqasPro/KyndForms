@@ -166,11 +166,25 @@ export interface Property {
   enableShareIcon?: boolean
   enableCompleteTime?: boolean
 
-  // Thank You
+  // Thank You & Rich End Screen
   buttonLinkUrl?: string
   redirectUrl?: string
   redirectOnCompletion?: boolean
   redirectDelay?: number
+  screenVariant?: 'default' | 'rich'
+  align?: 'left' | 'center' | 'right'
+  imagePosition?: 'top' | 'center' | 'bottom'
+  imageSize?: 'small' | 'medium' | 'large' | 'full'
+  buttons?: EndScreenButton[]
+}
+
+export interface EndScreenButton {
+  id: string
+  text: string
+  url?: string
+  action?: 'url' | 'reload'
+  variant?: 'primary' | 'secondary'
+  newTab?: boolean
 }
 
 export interface Validation {
