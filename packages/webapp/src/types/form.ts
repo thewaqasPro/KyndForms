@@ -26,9 +26,14 @@ export interface IntegratedAppType extends AppType {
 }
 
 export interface IntegrationType {
+  id?: string
+  formId?: string
   appId: string
   config?: AnyMap
   status: number
+  lastFailureAt?: string | Date
+  consecutiveFailures?: number
+  lastErrorMessage?: string
 }
 
 export interface FormFieldType extends FormField {

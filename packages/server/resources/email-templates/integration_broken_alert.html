@@ -1,0 +1,29 @@
+---
+title: ⚠️ KyndForm Alert: {appName} integration broken on {formName}
+---
+
+<p>Hello,</p>
+
+<p>
+  Your <strong>{appName}</strong> integration on form <strong>{formName}</strong> encountered repeated delivery errors and requires your attention.
+</p>
+
+<div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin: 16px 0; border-radius: 4px;">
+  <p style="margin: 0 0 6px 0; color: #991b1b; font-weight: bold;">Delivery Failure Details:</p>
+  <p style="margin: 0 0 4px 0; font-family: monospace; font-size: 13px; color: #7f1d1d;"><strong>Endpoint:</strong> {endpointUrl}</p>
+  <p style="margin: 0; font-family: monospace; font-size: 13px; color: #7f1d1d;"><strong>Reason:</strong> {errorMessage}</p>
+</div>
+
+<p>
+  Don't worry — all submission responses are safely preserved in your KyndForm database. No respondent answers were lost.
+</p>
+
+<p>
+  To inspect the delivery logs, view the request payloads, and replay failed deliveries, click the button below:
+</p>
+
+<p style="margin: 24px 0;">
+  <a href="{link}" style="display: inline-block; padding: 10px 20px; background-color: #ef4444; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+    Inspect Logs & Retry Delivery
+  </a>
+</p>

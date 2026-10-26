@@ -1316,6 +1316,9 @@ export class FormReportType {
 @ObjectType()
 export class FormIntegrationType {
   @Field({ nullable: true })
+  id?: string
+
+  @Field({ nullable: true })
   formId: string
 
   @Field()
@@ -1326,6 +1329,15 @@ export class FormIntegrationType {
 
   @Field(type => Number)
   status: IntegrationStatusEnum
+
+  @Field({ nullable: true })
+  lastFailureAt?: Date
+
+  @Field({ nullable: true })
+  consecutiveFailures?: number
+
+  @Field({ nullable: true })
+  lastErrorMessage?: string
 }
 
 @InputType()

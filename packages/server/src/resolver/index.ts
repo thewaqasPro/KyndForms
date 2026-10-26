@@ -38,6 +38,8 @@ export { AppsResolver } from './apps/apps.resolver'
 export { UpdateIntegrationSettingsResolver } from './integration/update-integration-settings.resolver'
 export { DeleteIntegrationSettingsResolver } from './integration/delete-integration-settings.resolver'
 export { UpdateIntegrationStatusResolver } from './integration/update-integration-status.resolver'
+export { GetIntegrationLogsResolver } from './integration/get-integration-logs.resolver'
+export { RetryIntegrationDeliveryResolver } from './integration/retry-integration-delivery.resolver'
 
 export { FormsResolver } from './form/forms.resolver'
 export { SearchFormsResolver } from './form/search-forms.resolver'

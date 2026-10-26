@@ -750,11 +750,45 @@ export const UPDATE_FORM_THEME_GQL = gql`
 export const FORM_INTEGRATIONS_GQL = gql`
   query formIntegrations($input: FormDetailInput!) {
     formIntegrations(input: $input) {
+      id
       formId
       appId
       config
       status
+      lastFailureAt
+      consecutiveFailures
+      lastErrorMessage
     }
+  }
+`
+
+export const GET_INTEGRATION_LOGS_GQL = gql`
+  query getIntegrationLogs($input: GetIntegrationLogsInput!) {
+    getIntegrationLogs(input: $input) {
+      logs {
+        id
+        formId
+        integrationId
+        appId
+        submissionId
+        endpointUrl
+        responseStatus
+        responseBody
+        executionDurationMs
+        errorMessage
+        attempts
+        status
+        isAlertSent
+        createdAt
+      }
+      total
+    }
+  }
+`
+
+export const RETRY_INTEGRATION_DELIVERY_GQL = gql`
+  mutation retryIntegrationDelivery($input: RetryIntegrationDeliveryInput!) {
+    retryIntegrationDelivery(input: $input)
   }
 `
 

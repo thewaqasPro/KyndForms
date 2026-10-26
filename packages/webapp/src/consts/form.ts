@@ -507,7 +507,9 @@ export enum APP_STATUS_ENUM {
 export enum INTEGRATION_STATUS_ENUM {
   PERMITTED = 0,
   ACTIVE = 1,
-  DISABLED
+  DISABLED = 2,
+  BROKEN = 3,
+  DEGRADED = 4
 }
 
 export const FORM_THEMES = [

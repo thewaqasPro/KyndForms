@@ -1,4 +1,10 @@
-import { IconArrowLeft, IconSettings, IconShield, IconUsers } from '@tabler/icons-react'
+import {
+  IconActivity,
+  IconArrowLeft,
+  IconSettings,
+  IconShield,
+  IconUsers
+} from '@tabler/icons-react'
 import { FC, PropsWithChildren } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 
@@ -18,6 +24,7 @@ export const AdminLayout: FC<PropsWithChildren> = ({ children }) => {
 
   const isSettings = location.pathname.startsWith('/admin/settings')
   const isUsers = location.pathname.startsWith('/admin/users')
+  const isStatus = location.pathname.startsWith('/admin/status')
 
   return (
     <div className="bg-background text-primary min-h-screen">
@@ -45,6 +52,18 @@ export const AdminLayout: FC<PropsWithChildren> = ({ children }) => {
           </div>
 
           <nav className="flex items-center gap-2">
+            {isStatus ? (
+              <Button size="sm" onClick={() => router.redirect('/admin/status')}>
+                <IconActivity className="mr-1.5 h-4 w-4" />
+                Status
+              </Button>
+            ) : (
+              <Button.Ghost size="sm" onClick={() => router.redirect('/admin/status')}>
+                <IconActivity className="mr-1.5 h-4 w-4" />
+                Status
+              </Button.Ghost>
+            )}
+
             {isSettings ? (
               <Button size="sm" onClick={() => router.redirect('/admin/settings')}>
                 <IconSettings className="mr-1.5 h-4 w-4" />

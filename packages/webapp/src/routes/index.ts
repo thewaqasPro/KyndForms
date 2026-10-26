@@ -6,6 +6,7 @@ import { hasInvitationCookie } from '@/utils'
 import { isRegistrationDisabled } from '@/consts'
 import { AuthLayout, BaseLayout, WorkspaceGuard, WorkspaceLayout } from '@/layouts'
 import AdminSettings from '@/pages/admin/Settings'
+import AdminStatus from '@/pages/admin/SystemStatus'
 import AdminUsers from '@/pages/admin/Users'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Login from '@/pages/auth/Login'
@@ -247,6 +248,14 @@ const routes = [
     options: {
       loginRequired: true,
       title: 'Admin Settings'
+    }
+  },
+  {
+    path: '/admin/status',
+    component: AdminStatus,
+    options: {
+      loginRequired: true,
+      title: 'System Status'
     }
   },
   {

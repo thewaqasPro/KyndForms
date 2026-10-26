@@ -7,6 +7,7 @@ import {
   DELETE_INTEGRATION_SETTINGS_GQL,
   DROPBOX_FOLDERS_GQL,
   DROPBOX_OAUTH_GQL,
+  GET_INTEGRATION_LOGS_GQL,
   GITHUB_ASSIGNEES_GQL,
   GITHUB_LABELS_GQL,
   GITHUB_MILESTONES_GQL,
@@ -34,6 +35,7 @@ import {
   MONDAY_OAUTH_GQL,
   NOTION_DATABASES_GQL,
   NOTION_OAUTH_GQL,
+  RETRY_INTEGRATION_DELIVERY_GQL,
   SLACK_CHANNELS_GQL,
   SLACK_OAUTH_GQL,
   SUPPORTPAL_DEPARTMENTS_GQL,
@@ -566,6 +568,51 @@ export class IntegrationService {
         input: {
           formId,
           appId
+        }
+      }
+    })
+  }
+
+  static async getLogs(formId: string, integrationId?: string, limit = 50, skip = 0) {
+    return apollo.query<{
+      logs: Array<{
+        id: string
+        formId: string
+        integrationId: string
+        appId: string
+        submissionId: string
+        endpointUrl?: string
+        responseStatus?: number
+        responseBody?: string
+        executionDurationMs?: number
+        errorMessage?: string
+        attempts: number
+        status: string
+        isAlertSent: boolean
+        createdAt: string
+      }>
+      total: number
+    }>({
+      query: GET_INTEGRATION_LOGS_GQL,
+      fetchPolicy: 'no-cache',
+      variables: {
+        input: {
+          formId,
+          integrationId,
+          limit,
+          skip
+        }
+      }
+    })
+  }
+
+  static async retryDelivery(formId: string, logId: string) {
+    return apollo.mutate<boolean>({
+      mutation: RETRY_INTEGRATION_DELIVERY_GQL,
+      variables: {
+        input: {
+          formId,
+          logId
         }
       }
     })

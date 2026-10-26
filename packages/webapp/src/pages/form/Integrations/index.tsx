@@ -1,9 +1,12 @@
+import { IconFileText } from '@tabler/icons-react'
+
 import { AppService, FormService } from '@/services'
 import { useParam } from '@/utils'
 
-import { Async, Repeat } from '@/components'
-import { useFormStore } from '@/store'
+import { Async, Button, Repeat } from '@/components'
+import { useAppStore, useFormStore } from '@/store'
 
+import DeliveryLogsModal from './DeliveryLogsModal'
 import IntegrationItem from './IntegrationItem'
 import IntegrationSettingsModal from './IntegrationSettingsModal'
 
@@ -32,6 +35,7 @@ const Skeleton = (
 export default function FormIntegrations() {
   const { formId } = useParam()
   const { integratedApps, setApps, setIntegrations } = useFormStore()
+  const { openModal } = useAppStore()
 
   async function fetch() {
     const [apps, integrations] = await Promise.all([
@@ -45,9 +49,29 @@ export default function FormIntegrations() {
     return true
   }
 
+  function handleViewAllLogs() {
+    openModal('DeliveryLogsModal', { formId })
+  }
+
   return (
     <>
-      <div className="mt-10 space-y-12 px-6">
+      <div className="mt-8 space-y-6 px-6">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-4 dark:border-gray-800">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              Integrations & Webhooks
+            </h1>
+            <p className="text-secondary mt-1 text-xs">
+              Connect external apps, automatically receive Zapier-style failure alerts, and replay
+              failed submissions.
+            </p>
+          </div>
+          <Button.Ghost size="sm" onClick={handleViewAllLogs} className="flex items-center gap-1.5">
+            <IconFileText className="h-4 w-4" />
+            View Delivery Logs
+          </Button.Ghost>
+        </div>
+
         <Async fetch={fetch} refreshDeps={[formId]} loader={Skeleton}>
           <ul className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {integratedApps.map(app => (
@@ -58,6 +82,7 @@ export default function FormIntegrations() {
       </div>
 
       <IntegrationSettingsModal />
+      <DeliveryLogsModal />
     </>
   )
 }

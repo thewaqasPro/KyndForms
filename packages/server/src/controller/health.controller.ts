@@ -2,7 +2,7 @@ import { Controller, Get, ServiceUnavailableException } from '@nestjs/common'
 import { InjectConnection } from '@nestjs/mongoose'
 import { Connection } from 'mongoose'
 
-import { RedisService } from '@service'
+import { RedisService, StatusService, SystemStatusReport } from '@service'
 
 interface HealthResponse {
   status: 'ok' | 'down'
@@ -22,8 +22,14 @@ interface ReadinessResponse extends HealthResponse {
 export class HealthController {
   constructor(
     private readonly redisService: RedisService,
+    private readonly statusService: StatusService,
     @InjectConnection() private readonly mongoConnection: Connection
   ) {}
+
+  @Get('/api/system/status')
+  async systemStatus(): Promise<SystemStatusReport> {
+    return this.statusService.getStatusReport()
+  }
 
   @Get('/health')
   index(): HealthResponse {

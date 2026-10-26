@@ -56,6 +56,14 @@ interface UserSecurityAlertOptions {
   loginAt: string
 }
 
+export interface IntegrationBrokenAlertOptions {
+  appName: string
+  formName: string
+  endpointUrl: string
+  errorMessage: string
+  link: string
+}
+
 const HTML_EXT = '.html'
 const TEMPLATE_META_REGEX = /^---([\s\S]*?)---[\n\s\S]\n/
 const DEFAULT_LOCALE = 'en'
@@ -234,6 +242,14 @@ export class MailService {
 
   async userSecurityAlert(to: string, options: UserSecurityAlertOptions) {
     await this.addQueue('user_security_alert', to, options)
+  }
+
+  async integrationBrokenAlert(
+    to: string,
+    options: IntegrationBrokenAlertOptions,
+    locale?: string
+  ) {
+    await this.addQueue('integration_broken_alert', to, options, undefined, locale)
   }
 
   private init() {

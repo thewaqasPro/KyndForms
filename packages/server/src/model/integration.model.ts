@@ -4,7 +4,9 @@ import { Document } from 'mongoose'
 export enum IntegrationStatusEnum {
   PENDING = 0,
   ACTIVE = 1,
-  DISABLED = 2
+  DISABLED = 2,
+  BROKEN = 3,
+  DEGRADED = 4
 }
 
 @Schema({
@@ -29,6 +31,18 @@ export class IntegrationModel extends Document {
     default: IntegrationStatusEnum.ACTIVE
   })
   status: IntegrationStatusEnum
+
+  @Prop()
+  lastFailureAt?: Date
+
+  @Prop({ default: 0 })
+  consecutiveFailures?: number
+
+  @Prop()
+  lastErrorMessage?: string
+
+  @Prop()
+  lastAlertSentAt?: Date
 }
 
 export const IntegrationSchema = SchemaFactory.createForClass(IntegrationModel)

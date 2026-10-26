@@ -98,20 +98,71 @@ export class IntegrationService {
 
     const integrations = await this.integrationModel.find({
       formId: form.id,
-      status: IntegrationStatusEnum.ACTIVE
+      status: {
+        $in: [
+          IntegrationStatusEnum.ACTIVE,
+          IntegrationStatusEnum.DEGRADED,
+          IntegrationStatusEnum.BROKEN
+        ]
+      }
     })
 
     for (const integration of integrations) {
       const app = apps[integration.appId]
 
       if (app) {
-        this.integrationQueue.add({
-          appId: integration.appId,
-          formId: form.id,
-          integrationId: integration.id,
-          submissionId
-        })
+        this.integrationQueue.add(
+          {
+            appId: integration.appId,
+            formId: form.id,
+            integrationId: integration.id,
+            submissionId
+          },
+          {
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 60_000
+            },
+            removeOnComplete: true
+          }
+        )
       }
     }
+  }
+
+  public async retryDelivery(
+    form: FormModel,
+    submissionId: string,
+    integrationId: string
+  ): Promise<boolean> {
+    const integration = await this.integrationModel.findById(integrationId)
+    if (!integration) {
+      return false
+    }
+
+    const app = apps[integration.appId]
+    if (!app) {
+      return false
+    }
+
+    await this.integrationQueue.add(
+      {
+        appId: integration.appId,
+        formId: form.id,
+        integrationId: integration.id,
+        submissionId
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 60_000
+        },
+        removeOnComplete: true
+      }
+    )
+
+    return true
   }
 }

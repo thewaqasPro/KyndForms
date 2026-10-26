@@ -74,4 +74,43 @@ export class AdminService {
       }
     })
   }
+
+  static async getSystemStatus(): Promise<SystemStatusReport> {
+    const res = await fetch('/api/system/status', {
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json'
+      }
+    })
+    if (!res.ok) {
+      throw new Error(`Failed to fetch system status: ${res.statusText}`)
+    }
+    return res.json()
+  }
+}
+
+export interface SubsystemStatus {
+  status: 'up' | 'down' | 'degraded'
+  latencyMs?: number
+  message?: string
+  details?: Record<string, any>
+}
+
+export interface SystemStatusReport {
+  status: 'operational' | 'degraded' | 'down'
+  timestamp: string
+  uptimeSeconds: number
+  services: {
+    database: SubsystemStatus
+    redis: SubsystemStatus
+    queues: SubsystemStatus
+    mailer: SubsystemStatus
+    storage: SubsystemStatus
+  }
+  integrations24h: {
+    totalDelivered: number
+    totalFailed: number
+    successRate: number
+    avgLatencyMs: number
+  }
 }
