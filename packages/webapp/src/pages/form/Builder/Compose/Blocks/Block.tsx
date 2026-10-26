@@ -34,6 +34,8 @@ const ALLOWED_TAGS = [
 const ALLOWED_ATTRIBUTES = [
   'href',
   'class',
+  'style',
+  'align',
   'data-mention',
   'data-variable',
   'data-hiddenfield',
@@ -79,6 +81,29 @@ function sanitizeAttributes(attributes: Record<string, any> = {}): Record<string
     const value = String(attributes[key] || '')
 
     if (key === 'href' && isUnsafeUrlProtocol(value)) {
+      continue
+    }
+
+    if (key === 'style') {
+      const parts = value.split(';')
+      const safe: string[] = []
+      for (const p of parts) {
+        const [prop, v] = p.split(':').map(s => s.trim().toLowerCase())
+        if (prop === 'text-align' && ['left', 'center', 'right', 'justify'].includes(v)) {
+          safe.push(`text-align: ${v};`)
+        }
+      }
+      if (safe.length > 0) {
+        result[key] = escapeAttribute(safe.join(' '))
+      }
+      continue
+    }
+
+    if (key === 'align') {
+      const v = value.trim().toLowerCase()
+      if (['left', 'center', 'right', 'justify'].includes(v)) {
+        result[key] = escapeAttribute(v)
+      }
       continue
     }
 
