@@ -182,6 +182,9 @@ export const Block: FC<BlockProps> = ({
     state.questionCount || state.fields.filter(f => QUESTION_FIELD_KINDS.includes(f.kind)).length
   const isInlineLayout = field.layout?.align === FieldLayoutAlignEnum.INLINE
   const isSplitLayout = SPLIT_LAYOUTS.includes(field.layout?.align as FieldLayoutAlignEnum)
+  const imagePosition = field.properties?.imagePosition || 'bottom'
+  const imageSize = field.properties?.imageSize || 'medium'
+  const align = field.properties?.align
 
   const titleHtml = useMemo(
     () => (field.title ? removeHeading(field.title as string) : ''),
@@ -379,7 +382,8 @@ export const Block: FC<BlockProps> = ({
               !isActiveBlock &&
               !isStandaloneActive &&
               !(helper.isValid(paymentBlockIndex) && paymentBlockIndex === state.scrollIndex),
-            [`kyndform-block-${field.layout?.align}`]: field.layout?.align
+            [`kyndform-block-${field.layout?.align}`]: field.layout?.align,
+            [`kyndform-align-${align}`]: align
           })}
         >
           <div className="kyndform-block-scroll">
@@ -389,7 +393,13 @@ export const Block: FC<BlockProps> = ({
             <div className="kyndform-scroll-wrapper" onScroll={handleScroll}>
               <div className="kyndform-scroll-container">
                 <div className="kyndform-block-main">
-                  <div className="kyndform-block-wrapper">
+                  <div
+                    className={clsx('kyndform-block-wrapper', align && `kyndform-align-${align}`)}
+                  >
+                    {isInlineLayout && imagePosition === 'top' && (
+                      <Layout {...field.layout} className={`kyndform-image-${imageSize}`} />
+                    )}
+
                     <div className="kyndform-block-header">
                       {isQuestion && currentQuestionNumber && (
                         <div
@@ -438,6 +448,9 @@ export const Block: FC<BlockProps> = ({
                           )}
                         </h1>
                       )}
+                      {isInlineLayout && imagePosition === 'center' && (
+                        <Layout {...field.layout} className={`kyndform-image-${imageSize}`} />
+                      )}
                       {descriptionHtml && (
                         <div
                           className="kyndform-block-description"
@@ -446,7 +459,9 @@ export const Block: FC<BlockProps> = ({
                       )}
                     </div>
 
-                    {isInlineLayout && <Layout {...field.layout} />}
+                    {isInlineLayout && imagePosition === 'bottom' && (
+                      <Layout {...field.layout} className={`kyndform-image-${imageSize}`} />
+                    )}
 
                     {children}
                   </div>

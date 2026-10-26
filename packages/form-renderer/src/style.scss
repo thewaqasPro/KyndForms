@@ -910,15 +910,35 @@ button.button-icon-only {
   }
 }
 
-.kyndform-block-inline {
-  .kyndform-layout-inline {
-    @apply relative mb-8;
+.kyndform-layout-inline,
+.kyndform-block-inline .kyndform-layout-inline {
+  @apply relative mb-8;
+  position: relative !important;
 
-    img {
-      @apply inline-block h-auto w-auto rounded-none;
-      max-width: 75%;
-      max-height: 20rem;
-    }
+  img {
+    @apply inline-block h-auto w-auto rounded-xl;
+    max-width: 75%;
+    max-height: 20rem;
+  }
+
+  &.kyndform-image-small img {
+    max-width: 140px;
+    max-height: 140px;
+  }
+
+  &.kyndform-image-medium img {
+    max-width: 280px;
+    max-height: 280px;
+  }
+
+  &.kyndform-image-large img {
+    max-width: 440px;
+    max-height: 380px;
+  }
+
+  &.kyndform-image-full img {
+    max-width: 100%;
+    max-height: 480px;
   }
 }
 
@@ -1021,6 +1041,66 @@ button.button-icon-only {
 
   .kyndform-submit-container {
     @apply justify-start;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Alignments & Action Buttons
+.kyndform-align-left {
+  text-align: left;
+  .kyndform-block-title,
+  .kyndform-block-description,
+  .kyndform-layout-inline {
+    text-align: left;
+  }
+  .kyndform-action-buttons-group {
+    justify-content: flex-start;
+  }
+}
+
+.kyndform-align-center {
+  text-align: center;
+  .kyndform-block-title,
+  .kyndform-block-description,
+  .kyndform-layout-inline {
+    text-align: center;
+  }
+  .kyndform-action-buttons-group {
+    justify-content: center;
+  }
+}
+
+.kyndform-align-right {
+  text-align: right;
+  .kyndform-block-title,
+  .kyndform-block-description,
+  .kyndform-layout-inline {
+    text-align: right;
+  }
+  .kyndform-action-buttons-group {
+    justify-content: flex-end;
+  }
+}
+
+.kyndform-action-buttons-group {
+  @apply mt-6 flex flex-wrap items-center gap-3;
+
+  .kyndform-action-btn {
+    @apply inline-flex items-center justify-center font-medium transition-all shadow-sm;
+    padding: 0.625rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    min-height: 2.75rem;
+
+    &:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 }
 
