@@ -149,7 +149,7 @@
   - Action Buttons Manager (Add, edit, remove buttons with labels, actions, links, target, and style variants).
   - Live builder preview of buttons and image positions in `Compose/Blocks/ThankYou.tsx`.
 
-- [ ] **Step 1: Expand `RightSidebar/Question/ThankYou.tsx`**
+- [x] **Step 1: Expand `RightSidebar/Question/ThankYou.tsx`**
   Implement:
   - Variant Selector: Default Screen vs. Rich Custom End Screen.
   - Overall Content Alignment: Left / Center / Right.
@@ -159,17 +159,17 @@
     - Add Button button (max 4).
   - Retain existing redirect on completion settings.
 
-- [ ] **Step 2: Update `CoverAndLayout.tsx` for Thank You Image Positioning**
+- [x] **Step 2: Update `CoverAndLayout.tsx` for Thank You Image Positioning**
   Provide image placement options for Thank You screens: Top (above title), Inline Below (below text), Float Left, Float Right, Split Left, Split Right, Full Cover.
 
-- [ ] **Step 3: Update `Compose/Blocks/ThankYou.tsx` & `Block.tsx`**
+- [x] **Step 3: Update `Compose/Blocks/ThankYou.tsx` & `Block.tsx`**
   Render the live preview of action buttons, custom alignments, and image placements directly inside the builder canvas.
 
-- [ ] **Step 4: Verify webapp type-check and build**
+- [x] **Step 4: Verify webapp type-check and build**
   Run: `pnpm --filter ./packages/webapp type-check && pnpm --filter ./packages/webapp build`
   Expected: Clean build in < 10s.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   ```bash
   git add packages/webapp/src/pages/form/Builder/RightSidebar/Question/ packages/webapp/src/pages/form/Builder/Compose/
   git commit -m "feat(builder): add end screen variant switcher, image positioning, and button management"
@@ -191,7 +191,7 @@
   - Action buttons: Interactive buttons executing URL navigation (same/new tab) or form restart (`setIsStarted: false`, reset answers).
   - Works consistently in both Conversational and Classic form layouts.
 
-- [ ] **Step 1: Update `packages/form-renderer/src/blocks/ThankYou.tsx`**
+- [x] **Step 1: Update `packages/form-renderer/src/blocks/ThankYou.tsx`**
   - Read `field.properties?.buttons`, `field.properties?.align`, `field.properties?.imagePosition`.
   - Render action buttons row:
     - Primary and Secondary styled buttons.
@@ -199,16 +199,16 @@
     - Click handler for "Restart Form" dispatching reset action to store.
   - Retain existing completion redirect behavior.
 
-- [ ] **Step 2: Update `packages/form-renderer/src/blocks/Block.tsx` & `style.scss`**
+- [x] **Step 2: Update `packages/form-renderer/src/blocks/Block.tsx` & `style.scss`**
   - Support `imagePosition: 'top'` (render above the title/header).
   - Remove forced left alignment from `.kyndform-empty-state` so `field.properties?.align` applies correctly.
   - Add responsive styles for `.kyndform-action-buttons-group` (flex row on desktop, stack on mobile).
 
-- [ ] **Step 3: Verify form-renderer builds cleanly**
+- [x] **Step 3: Verify form-renderer builds cleanly**
   Run: `pnpm --filter @kyndform/form-renderer build`
   Expected: Clean build with 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
   ```bash
   git add packages/form-renderer/
   git commit -m "feat(renderer): render rich end screen with custom image positioning and action buttons"
@@ -218,18 +218,18 @@
 
 ### Task 6: Full Verification Protocol
 
-- [ ] **Step 1: Verify architectural integrity**
+- [x] **Step 1: Verify architectural integrity**
   Run: `pnpm run verify:integrity`
   Expected: 14/14 checks pass.
 
-- [ ] **Step 2: Type check entire workspace**
+- [x] **Step 2: Type check entire workspace**
   Run: `pnpm run type-check`
   Expected: Clean pass across all 7 workspace packages.
 
-- [ ] **Step 3: Run all unit tests**
+- [x] **Step 3: Run all unit tests**
   Run: `pnpm test`
   Expected: All unit tests pass cleanly.
 
-- [ ] **Step 4: Verify linting**
+- [x] **Step 4: Verify linting**
   Run: `pnpm run lint`
   Expected: 0 errors.
