@@ -80,9 +80,9 @@ export const SystemStatus: FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+        <div className="border-accent-light flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+            <h1 className="hf-page-title flex items-center gap-2.5">
               <IconActivity className="text-primary h-7 w-7" />
               System Status &amp; Diagnostics
             </h1>
@@ -103,7 +103,7 @@ export const SystemStatus: FC = () => {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400">
             <IconAlertCircle className="h-5 w-5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -146,7 +146,7 @@ export const SystemStatus: FC = () => {
                     )}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold capitalize text-gray-900 dark:text-gray-100">
+                    <h2 className="text-primary text-xl font-bold capitalize">
                       {report.status === 'operational'
                         ? 'All Systems Operational'
                         : report.status === 'degraded'
@@ -161,20 +161,16 @@ export const SystemStatus: FC = () => {
                   </div>
                 </div>
 
-                <div className="text-secondary flex items-center gap-6 border-t border-gray-200 pt-3 text-xs md:border-l md:border-t-0 md:pl-6 md:pt-0 dark:border-gray-800">
+                <div className="border-accent-light text-secondary flex items-center gap-6 border-t pt-3 text-xs md:border-l md:border-t-0 md:pl-6 md:pt-0">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                      Uptime
-                    </div>
-                    <div className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <div className="hf-label-muted">Uptime</div>
+                    <div className="text-primary mt-0.5 text-sm font-semibold">
                       {formatUptime(report.uptimeSeconds)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                      Last Check
-                    </div>
-                    <div className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <div className="hf-label-muted">Last Check</div>
+                    <div className="text-primary mt-0.5 text-sm font-semibold">
                       {new Date(report.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
@@ -185,23 +181,23 @@ export const SystemStatus: FC = () => {
             {/* Subsystems Telemetry Grid */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {/* MongoDB */}
-              <div className="hf-card border-input space-y-3 rounded-xl border p-5">
+              <div className="hf-card space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                       <IconDatabase className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">MongoDB Database</h3>
+                      <h3 className="text-primary text-sm font-semibold">MongoDB Database</h3>
                       <p className="text-secondary text-[11px]">Primary Document Store</p>
                     </div>
                   </div>
                   {renderBadge(report.services.database.status)}
                 </div>
-                <div className="text-secondary space-y-1 border-t border-gray-100 pt-2 text-xs dark:border-gray-800">
+                <div className="border-accent-light text-secondary space-y-1.5 border-t pt-3 text-xs">
                   <div className="flex justify-between">
                     <span>Round-trip latency:</span>
-                    <span className="font-mono font-medium text-gray-800 dark:text-gray-200">
+                    <span className="text-primary font-mono font-medium">
                       {report.services.database.latencyMs !== undefined
                         ? `${report.services.database.latencyMs}ms`
                         : '—'}
@@ -210,7 +206,7 @@ export const SystemStatus: FC = () => {
                   {report.services.database.details?.databaseName && (
                     <div className="flex justify-between">
                       <span>Database:</span>
-                      <span className="font-mono text-gray-700 dark:text-gray-300">
+                      <span className="text-primary font-mono">
                         {report.services.database.details.databaseName}
                       </span>
                     </div>
@@ -219,23 +215,23 @@ export const SystemStatus: FC = () => {
               </div>
 
               {/* Redis Broker */}
-              <div className="hf-card border-input space-y-3 rounded-xl border p-5">
+              <div className="hf-card space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
                       <IconServer className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">Redis Memory Broker</h3>
+                      <h3 className="text-primary text-sm font-semibold">Redis Memory Broker</h3>
                       <p className="text-secondary text-[11px]">Queue &amp; Ephemeral Cache</p>
                     </div>
                   </div>
                   {renderBadge(report.services.redis.status)}
                 </div>
-                <div className="text-secondary space-y-1 border-t border-gray-100 pt-2 text-xs dark:border-gray-800">
+                <div className="border-accent-light text-secondary space-y-1.5 border-t pt-3 text-xs">
                   <div className="flex justify-between">
                     <span>Ping latency:</span>
-                    <span className="font-mono font-medium text-gray-800 dark:text-gray-200">
+                    <span className="text-primary font-mono font-medium">
                       {report.services.redis.latencyMs !== undefined
                         ? `${report.services.redis.latencyMs}ms`
                         : '—'}
@@ -243,41 +239,43 @@ export const SystemStatus: FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Heartbeat:</span>
-                    <span className="font-medium text-emerald-600">PONG received</span>
+                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                      PONG received
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Bull Queue Workers */}
-              <div className="hf-card border-input space-y-3 rounded-xl border p-5">
+              <div className="hf-card space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
                       <IconClock className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">Bull Queue Workers</h3>
+                      <h3 className="text-primary text-sm font-semibold">Bull Queue Workers</h3>
                       <p className="text-secondary text-[11px]">Async Job Pipelines</p>
                     </div>
                   </div>
                   {renderBadge(report.services.queues.status)}
                 </div>
-                <div className="text-secondary space-y-1 border-t border-gray-100 pt-2 text-xs dark:border-gray-800">
+                <div className="border-accent-light text-secondary space-y-1.5 border-t pt-3 text-xs">
                   <div className="flex justify-between">
                     <span>Active jobs:</span>
-                    <span className="font-mono font-medium text-blue-600">
+                    <span className="font-mono font-medium text-blue-600 dark:text-blue-400">
                       {report.services.queues.details?.activeJobs ?? 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Waiting jobs:</span>
-                    <span className="font-mono font-medium text-amber-600">
+                    <span className="font-mono font-medium text-amber-600 dark:text-amber-400">
                       {report.services.queues.details?.waitingJobs ?? 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Failed jobs:</span>
-                    <span className="font-mono font-medium text-rose-600">
+                    <span className="font-mono font-medium text-rose-600 dark:text-rose-400">
                       {report.services.queues.details?.failedJobs ?? 0}
                     </span>
                   </div>
@@ -285,30 +283,30 @@ export const SystemStatus: FC = () => {
               </div>
 
               {/* SMTP Mailer */}
-              <div className="hf-card border-input space-y-3 rounded-xl border p-5">
+              <div className="hf-card space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
                       <IconMail className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">SMTP Mailer</h3>
+                      <h3 className="text-primary text-sm font-semibold">SMTP Mailer</h3>
                       <p className="text-secondary text-[11px]">Transactional Email Transport</p>
                     </div>
                   </div>
                   {renderBadge(report.services.mailer.status)}
                 </div>
-                <div className="text-secondary space-y-1 border-t border-gray-100 pt-2 text-xs dark:border-gray-800">
+                <div className="border-accent-light text-secondary space-y-1.5 border-t pt-3 text-xs">
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                    <span className="text-primary font-medium">
                       {report.services.mailer.message || 'Configured'}
                     </span>
                   </div>
                   {report.services.mailer.details?.port && (
                     <div className="flex justify-between">
                       <span>Port:</span>
-                      <span className="font-mono text-gray-700 dark:text-gray-300">
+                      <span className="text-primary font-mono">
                         {report.services.mailer.details.port}
                       </span>
                     </div>
@@ -317,30 +315,30 @@ export const SystemStatus: FC = () => {
               </div>
 
               {/* Storage */}
-              <div className="hf-card border-input space-y-3 rounded-xl border p-5">
+              <div className="hf-card space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
                       <IconWorldUpload className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">Object Storage</h3>
+                      <h3 className="text-primary text-sm font-semibold">Object Storage</h3>
                       <p className="text-secondary text-[11px]">Media &amp; Uploads Store</p>
                     </div>
                   </div>
                   {renderBadge(report.services.storage.status)}
                 </div>
-                <div className="text-secondary space-y-1 border-t border-gray-100 pt-2 text-xs dark:border-gray-800">
+                <div className="border-accent-light text-secondary space-y-1.5 border-t pt-3 text-xs">
                   <div className="flex justify-between">
                     <span>Engine:</span>
-                    <span className="font-medium capitalize text-gray-800 dark:text-gray-200">
+                    <span className="text-primary font-medium capitalize">
                       {report.services.storage.details?.storageType || 'local-filesystem'}
                     </span>
                   </div>
                   {report.services.storage.details?.bucket && (
                     <div className="flex justify-between">
                       <span>Bucket / Folder:</span>
-                      <span className="font-mono text-gray-700 dark:text-gray-300">
+                      <span className="text-primary font-mono">
                         {report.services.storage.details.bucket}
                       </span>
                     </div>
@@ -349,14 +347,16 @@ export const SystemStatus: FC = () => {
               </div>
 
               {/* 24-Hour Outbound Integration Telemetry */}
-              <div className="hf-card border-input space-y-3 rounded-xl border p-5">
+              <div className="hf-card space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                       <IconActivity className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">24h Integrations Health</h3>
+                      <h3 className="text-primary text-sm font-semibold">
+                        24h Integrations Health
+                      </h3>
                       <p className="text-secondary text-[11px]">Webhook &amp; App Telemetry</p>
                     </div>
                   </div>
@@ -372,22 +372,22 @@ export const SystemStatus: FC = () => {
                     {report.integrations24h.successRate}% Success
                   </Badge>
                 </div>
-                <div className="text-secondary space-y-1 border-t border-gray-100 pt-2 text-xs dark:border-gray-800">
+                <div className="border-accent-light text-secondary space-y-1.5 border-t pt-3 text-xs">
                   <div className="flex justify-between">
                     <span>Successful deliveries:</span>
-                    <span className="font-mono font-medium text-emerald-600">
+                    <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400">
                       {report.integrations24h.totalDelivered}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Failed attempts:</span>
-                    <span className="font-mono font-medium text-rose-600">
+                    <span className="font-mono font-medium text-rose-600 dark:text-rose-400">
                       {report.integrations24h.totalFailed}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Average latency:</span>
-                    <span className="font-mono font-medium text-gray-800 dark:text-gray-200">
+                    <span className="text-primary font-mono font-medium">
                       {report.integrations24h.avgLatencyMs}ms
                     </span>
                   </div>
