@@ -11,7 +11,7 @@ import { helper, timestamp } from '@kyndform/utils'
 
 import Logo from '@/assets/logo.svg?react'
 import { Button, useAlert } from '@/components'
-import { REDIRECT_COOKIE_NAME } from '@/consts'
+import { REDIRECT_COOKIE_NAME, getAppLogoUrl, getAppName } from '@/consts'
 import { useAppStore, useUserStore, useWorkspaceStore } from '@/store'
 
 import { FormShell } from '../Form/FormShell'
@@ -218,9 +218,19 @@ export const BaseLayout: FC<LayoutProps> = ({ options, children }) => {
     <LoginGuard>
       <div className="bg-foreground flex min-h-screen flex-col">
         <div className="bg-foreground sticky top-0 flex items-center justify-between p-4">
-          <a href="/" className="flex items-center gap-2" title="KyndForm">
-            <Logo className="h-8 w-auto" />
-            <span className="text-xl font-medium">KyndForm</span>
+          <a href="/" className="flex items-center gap-2" title={getAppName()}>
+            {getAppLogoUrl() ? (
+              <img
+                src={getAppLogoUrl()}
+                alt={getAppName()}
+                className="h-8 w-auto max-w-[140px] object-contain"
+              />
+            ) : (
+              <>
+                <Logo className="h-8 w-auto" />
+                <span className="text-xl font-medium">{getAppName()}</span>
+              </>
+            )}
           </a>
 
           <WorkspaceAccount

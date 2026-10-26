@@ -908,6 +908,7 @@ export const USER_DETAILS_GQL = gql`
       isSocialAccount
       isDeletionScheduled
       deletionScheduledAt
+      isSystemAdmin
     }
   }
 `
@@ -1496,5 +1497,63 @@ export const MEDIAS_GQL = gql`
 export const DELETE_MEDIA_GQL = gql`
   mutation deleteMedia($input: DeleteMediaInput!) {
     deleteMedia(input: $input)
+  }
+`
+
+export const SYSTEM_SETTINGS_GQL = gql`
+  query systemSettings {
+    systemSettings {
+      allowRegistration
+      appLogoUrl
+      appName
+      maxFormsPerWorkspace
+      maxSubmissionsPerMonth
+      maxUploadFileSizeMB
+    }
+  }
+`
+
+export const UPDATE_SYSTEM_SETTINGS_GQL = gql`
+  mutation updateSystemSettings($input: UpdateSystemSettingsInput!) {
+    updateSystemSettings(input: $input) {
+      allowRegistration
+      appLogoUrl
+      appName
+      maxFormsPerWorkspace
+      maxSubmissionsPerMonth
+      maxUploadFileSizeMB
+    }
+  }
+`
+
+export const ADMIN_USERS_GQL = gql`
+  query adminUsers($page: Int!, $limit: Int!, $keyword: String) {
+    adminUsers(page: $page, limit: $limit, keyword: $keyword) {
+      users {
+        id
+        name
+        email
+        avatar
+        isSystemAdmin
+        isBlocked
+        isEmailVerified
+        createdAt
+      }
+      total
+      page
+      limit
+    }
+  }
+`
+
+export const ADMIN_TOGGLE_USER_BLOCK_GQL = gql`
+  mutation adminToggleUserBlock($userId: String!) {
+    adminToggleUserBlock(userId: $userId)
+  }
+`
+
+export const ADMIN_TOGGLE_USER_ROLE_GQL = gql`
+  mutation adminToggleUserRole($userId: String!) {
+    adminToggleUserRole(userId: $userId)
   }
 `

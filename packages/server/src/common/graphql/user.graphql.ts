@@ -99,6 +99,9 @@ export class UserDetailType {
 
   @Field({ nullable: true })
   deletionScheduledAt?: number
+
+  @Field({ nullable: true })
+  isSystemAdmin?: boolean
 }
 
 @InputType()

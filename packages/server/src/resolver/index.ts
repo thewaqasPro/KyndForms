@@ -97,3 +97,6 @@ export { UnsplashTrackDownloadResolver } from './unsplash/unsplash-track-downloa
 
 export { MediaListResolver } from './media/media-list.resolver'
 export { DeleteMediaResolver } from './media/delete-media.resolver'
+
+export { AdminSettingResolver } from './admin/admin-setting.resolver'
+export { AdminUserResolver } from './admin/admin-user.resolver'

@@ -49,6 +49,16 @@ export function isRegistrationDisabled() {
   )
 }
 
+export function getAppLogoUrl(): string | undefined {
+  const runtimeConfig = typeof window !== 'undefined' ? (window as any).kyndform : null
+  return runtimeConfig?.appLogoUrl || globalConfig?.appLogoUrl || undefined
+}
+
+export function getAppName(): string {
+  const runtimeConfig = typeof window !== 'undefined' ? (window as any).kyndform : null
+  return runtimeConfig?.appName || globalConfig?.appName || 'KyndForm'
+}
+
 export function getVerifyEmailResendCooldownSeconds() {
   const runtimeConfig = typeof window !== 'undefined' ? (window as any).kyndform : null
   const value = Number(

@@ -3,13 +3,13 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 
+import { SystemSettingService } from './system-setting.service'
 import { UserService } from './user.service'
 import {
   APPLE_LOGIN_KEY_ID,
   APPLE_LOGIN_PRIVATE_KEY_PATH,
   APPLE_LOGIN_TEAM_ID,
   APPLE_LOGIN_WEB_CLIENT_ID,
-  APP_DISABLE_REGISTRATION,
   APP_HOMEPAGE_URL,
   GOOGLE_LOGIN_CLIENT_ID,
   GOOGLE_LOGIN_CLIENT_SECRET
@@ -35,7 +35,8 @@ export class SocialLoginService {
   constructor(
     @InjectModel(UserSocialAccountModel.name)
     private readonly userSocialAccountModel: Model<UserSocialAccountModel>,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly systemSettingService: SystemSettingService
   ) {}
 
   private static callbackUrl(kind: SocialLoginTypeEnum): string {
@@ -138,7 +139,8 @@ export class SocialLoginService {
 
       // Create new user
       if (!userId) {
-        if (APP_DISABLE_REGISTRATION) {
+        const isAllowed = await this.systemSettingService.isRegistrationAllowed()
+        if (!isAllowed) {
           throw new BadRequestException('Error: Registration is disabled')
         }
 

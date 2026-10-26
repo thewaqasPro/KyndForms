@@ -3,7 +3,6 @@ import { Request, Response } from 'express'
 
 import { COOKIE_INVITATION_NAME } from '@config'
 import {
-  APP_DISABLE_REGISTRATION,
   APP_HOMEPAGE_URL,
   COOKIE_DOMAIN,
   DISABLE_LOGIN_WITH_APPLE,
@@ -15,15 +14,22 @@ import {
   VERIFY_USER_EMAIL
 } from '@environments'
 import { hs } from '@kyndform/utils'
+import { SystemSettingService } from '@service'
 import { TRUSTED_UPLOAD_ORIGINS } from '@utils'
 
 @Controller()
 export class DashboardController {
-  private runtimeConfig() {
+  constructor(private readonly systemSettingService: SystemSettingService) {}
+
+  private async runtimeConfig() {
+    const branding = await this.systemSettingService.getRuntimeBranding()
     return {
       homepageURL: APP_HOMEPAGE_URL,
       websiteURL: APP_HOMEPAGE_URL,
-      appDisableRegistration: APP_DISABLE_REGISTRATION,
+      appDisableRegistration: branding.appDisableRegistration,
+      allowRegistration: branding.allowRegistration,
+      appName: branding.appName,
+      appLogoUrl: branding.appLogoUrl,
       cookieDomain: COOKIE_DOMAIN,
       disableLoginWithGoogle: DISABLE_LOGIN_WITH_GOOGLE,
       disableLoginWithApple: DISABLE_LOGIN_WITH_APPLE,
@@ -37,7 +43,7 @@ export class DashboardController {
   }
 
   @Get('/api/config')
-  config() {
+  async config() {
     return this.runtimeConfig()
   }
 
@@ -50,8 +56,9 @@ export class DashboardController {
   embedJs() {}
 
   @Get('/sign-up')
-  signUp(@Req() req: Request, @Res() res: Response) {
-    if (APP_DISABLE_REGISTRATION && !req.cookies?.[COOKIE_INVITATION_NAME]) {
+  async signUp(@Req() req: Request, @Res() res: Response) {
+    const isAllowed = await this.systemSettingService.isRegistrationAllowed()
+    if (!isAllowed && !req.cookies?.[COOKIE_INVITATION_NAME]) {
       return res.redirect(302, '/login')
     }
 
@@ -69,15 +76,17 @@ export class DashboardController {
     '/oauth/authorize',
     '/workspace/create',
     '/workspace',
-    '/workspace/*'
+    '/workspace/*',
+    '/admin',
+    '/admin/*'
   ])
   @Header('X-Frame-Options', 'SAMEORIGIN')
-  index(@Res() res: Response) {
+  async index(@Res() res: Response) {
+    const config = await this.runtimeConfig()
     return res.render('index', {
-      title: 'KyndForm Dashboard - Create and Manage Custom Forms Effortlessly',
-      description:
-        "Simplify your form creation process with KyndForm's intuitive dashboard. Design, customize, and manage forms all in one place, with no coding required.",
-      kyndform: this.runtimeConfig()
+      title: `${config.appName} Dashboard - Create and Manage Custom Forms Effortlessly`,
+      description: `Simplify your form creation process with ${config.appName}'s intuitive dashboard. Design, customize, and manage forms all in one place, with no coding required.`,
+      kyndform: config
     })
   }
 }

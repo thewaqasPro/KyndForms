@@ -28,6 +28,10 @@ export const CORS_ALLOWED_ORIGINS: string[] = (process.env.CORS_ALLOWED_ORIGINS 
   .map(origin => origin.trim())
   .filter(Boolean)
 export const APP_DISABLE_REGISTRATION: boolean = helper.isTrue(process.env.APP_DISABLE_REGISTRATION)
+export const ADMIN_EMAILS: string[] = (process.env.ADMIN_EMAILS || '')
+  .split(',')
+  .map(email => email.trim().toLowerCase())
+  .filter(Boolean)
 export const ENABLE_GOOGLE_FONTS: boolean =
   process.env.ENABLE_GOOGLE_FONTS === undefined
     ? true

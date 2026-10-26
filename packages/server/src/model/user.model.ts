@@ -50,6 +50,9 @@ export class UserModel extends Document {
   @Prop({ default: false })
   isBlocked?: boolean
 
+  @Prop({ default: false })
+  isSystemAdmin?: boolean
+
   @Prop()
   blockedAt?: number
 

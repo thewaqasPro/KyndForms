@@ -33,6 +33,8 @@ import {
   SubmissionIpLimitSchema,
   SubmissionModel,
   SubmissionSchema,
+  SystemSettingModel,
+  SystemSettingSchema,
   TeamActivityModel,
   TeamActivitySchema,
   TeamInvitationModel,
@@ -81,5 +83,6 @@ export const ModelModule = MongooseModule.forFeature([
   { name: ProjectGroupModel.name, schema: ProjectGroupSchema },
   { name: ProjectMemberModel.name, schema: ProjectMemberSchema },
   { name: BrandKitModel.name, schema: BrandKitSchema },
-  { name: MediaModel.name, schema: MediaSchema }
+  { name: MediaModel.name, schema: MediaSchema },
+  { name: SystemSettingModel.name, schema: SystemSettingSchema }
 ])

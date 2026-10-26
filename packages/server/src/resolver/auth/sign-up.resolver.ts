@@ -2,13 +2,13 @@ import { BadRequestException, UseGuards } from '@nestjs/common'
 
 import { COOKIE_INVITATION_NAME, CookieOptionsFactory } from '@config'
 import { GraphqlResponse } from '@decorator'
-import { APP_DISABLE_REGISTRATION, BCRYPT_SALT, VERIFY_USER_EMAIL } from '@environments'
+import { BCRYPT_SALT, VERIFY_USER_EMAIL } from '@environments'
 import { SignUpInput } from '@graphql'
 import { DeviceIdGuard } from '@guard'
 import { helper } from '@kyndform/utils'
 import { TeamModel, TeamRoleEnum, UserActivityKindEnum } from '@model'
 import { Args, Mutation, Resolver } from '@nestjs/graphql'
-import { AuthService, MailService, TeamService, UserService } from '@service'
+import { AuthService, MailService, SystemSettingService, TeamService, UserService } from '@service'
 import { ClientInfo, GqlClient, gravatar, passwordHash } from '@utils'
 import { isDisposableEmail } from '@utils'
 
@@ -19,7 +19,8 @@ export class SignUpResolver {
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly mailService: MailService,
-    private readonly teamService: TeamService
+    private readonly teamService: TeamService,
+    private readonly systemSettingService: SystemSettingService
   ) {}
 
   @Mutation(returns => Boolean)
@@ -29,8 +30,9 @@ export class SignUpResolver {
     @Args('input') input: SignUpInput
   ): Promise<boolean> {
     const invitation = await this.findInvitation(input)
+    const isAllowed = await this.systemSettingService.isRegistrationAllowed()
 
-    if (APP_DISABLE_REGISTRATION && !invitation) {
+    if (!isAllowed && !invitation) {
       throw new BadRequestException('Error: Registration is disabled')
     }
 

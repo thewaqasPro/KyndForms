@@ -16,7 +16,8 @@ import {
   EndpointAnonymousIdGuard,
   GqlThrottlerGuard,
   PermissionGuard,
-  RoleGuard
+  RoleGuard,
+  SystemAdminGuard
 } from '@guard'
 import { hs } from '@kyndform/utils'
 import { FormBodyMiddleware, JsonBodyMiddleware, RawBodyMiddleware } from '@middleware'
@@ -56,6 +57,7 @@ class ServiceModule {}
     GqlThrottlerGuard,
     PermissionGuard,
     RoleGuard,
+    SystemAdminGuard,
     LowerCaseScalar
   ]
 })

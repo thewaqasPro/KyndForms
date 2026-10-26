@@ -1,5 +1,5 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { IconCheck, IconChevronRight } from '@tabler/icons-react'
+import { IconCheck, IconChevronRight, IconShield } from '@tabler/icons-react'
 import { useLocalStorageState } from 'ahooks'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -127,6 +127,19 @@ export default function WorkspaceAccount({
                 {t('workspace.sidebar.accountSettings')}
               </Button.Link>
             </DropdownMenu.Item>
+
+            {user?.isSystemAdmin && (
+              <DropdownMenu.Item className="focus-visible:outline-none">
+                <Button.Link
+                  className="data-[highlighted]:bg-accent-light text-primary w-full font-medium [&_[data-slot=button]]:justify-start"
+                  size="md"
+                  onClick={() => router.redirect('/admin/settings')}
+                >
+                  <IconShield className="text-primary mr-2 h-4 w-4" />
+                  Admin Console
+                </Button.Link>
+              </DropdownMenu.Item>
+            )}
 
             {/* Locale switcher */}
             <DropdownMenu.Sub>

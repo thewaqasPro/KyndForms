@@ -25,7 +25,8 @@ export class UserDetailResolver {
       isEmailVerified: user.isEmailVerified,
       isSocialAccount: isValid(result),
       isDeletionScheduled: user.isDeletionScheduled,
-      deletionScheduledAt: user.deletionScheduledAt
+      deletionScheduledAt: user.deletionScheduledAt,
+      isSystemAdmin: !!user.isSystemAdmin
     }
   }
 }

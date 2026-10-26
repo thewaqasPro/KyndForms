@@ -5,6 +5,8 @@ import { hasInvitationCookie } from '@/utils'
 
 import { isRegistrationDisabled } from '@/consts'
 import { AuthLayout, BaseLayout, WorkspaceGuard, WorkspaceLayout } from '@/layouts'
+import AdminSettings from '@/pages/admin/Settings'
+import AdminUsers from '@/pages/admin/Users'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Login from '@/pages/auth/Login'
 import OAuth from '@/pages/auth/OAuth'
@@ -230,6 +232,29 @@ const routes = [
     options: {
       loginRequired: false,
       title: 'form.render.title'
+    }
+  },
+  {
+    path: '/admin',
+    component: () => createElement(Navigate, { to: '/admin/settings', replace: true }),
+    options: {
+      loginRequired: true
+    }
+  },
+  {
+    path: '/admin/settings',
+    component: AdminSettings,
+    options: {
+      loginRequired: true,
+      title: 'Admin Settings'
+    }
+  },
+  {
+    path: '/admin/users',
+    component: AdminUsers,
+    options: {
+      loginRequired: true,
+      title: 'Admin Users'
     }
   }
 ]
