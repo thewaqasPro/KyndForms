@@ -6,6 +6,7 @@ import {
   IconPlus,
   IconSearch,
   IconSettings,
+  IconShield,
   IconUsers
 } from '@tabler/icons-react'
 import { FC, ForwardRefExoticComponent } from 'react'
@@ -16,7 +17,7 @@ import { cn, useParam } from '@/utils'
 import { helper } from '@kyndform/utils'
 
 import { Button, Tooltip } from '@/components'
-import { useAppStore, useModal, useWorkspaceStore } from '@/store'
+import { useAppStore, useModal, useUserStore, useWorkspaceStore } from '@/store'
 
 import ChangelogButton from './ChangelogButton'
 import ProjectItem from './ProjectItem'
@@ -56,6 +57,7 @@ const WorkspaceSidebarComponent = () => {
   const { workspaceId } = useParam()
   const { openModal } = useAppStore()
   const { workspace } = useWorkspaceStore()
+  const { user } = useUserStore()
 
   return (
     <div className="hf-sidebar-surface max-lg:bg-background flex h-full flex-col max-lg:rounded-lg max-lg:border">
@@ -94,6 +96,10 @@ const WorkspaceSidebarComponent = () => {
                 label={t('settings.title')}
               />
             </>
+          )}
+
+          {user?.isSystemAdmin && (
+            <Link to="/admin/status" icon={IconShield} label="Admin Console" />
           )}
         </nav>
 
