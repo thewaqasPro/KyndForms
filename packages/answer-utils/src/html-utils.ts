@@ -30,6 +30,8 @@ const ALLOWED_TAGS = [
 const ALLOWED_ATTRIBUTES = [
   'href',
   'class',
+  'style',
+  'align',
   'data-mention',
   'data-variable',
   'data-hiddenfield',
@@ -50,6 +52,32 @@ export function isUnsafeUrlProtocol(value: unknown): boolean {
 
   const protocol = matched[1].replace(URL_PROTOCOL_CONTROL_CHARS_REGEX, '').toLowerCase()
   return UNSAFE_URL_PROTOCOLS.has(protocol)
+}
+
+function sanitizeStyle(styleString: unknown): string | undefined {
+  if (typeof styleString !== 'string') return undefined
+  const safeDeclarations: string[] = []
+  const declarations = styleString.split(';')
+  for (const decl of declarations) {
+    const parts = decl.split(':')
+    if (parts.length === 2) {
+      const property = parts[0].trim().toLowerCase()
+      const val = parts[1].trim().toLowerCase()
+      if (property === 'text-align' && ['left', 'center', 'right', 'justify'].includes(val)) {
+        safeDeclarations.push(`text-align: ${val};`)
+      }
+    }
+  }
+  return safeDeclarations.length > 0 ? safeDeclarations.join(' ') : undefined
+}
+
+function sanitizeAlign(alignString: unknown): string | undefined {
+  if (typeof alignString !== 'string') return undefined
+  const val = alignString.trim().toLowerCase()
+  if (['left', 'center', 'right', 'justify'].includes(val)) {
+    return val
+  }
+  return undefined
 }
 
 function escapeText(value: unknown): string {
@@ -74,6 +102,22 @@ function getAttributes(row: IAttribute[], allowedAttributes: string[] = []): Rec
 
       if (allowedAttributes.includes(name)) {
         if (name === 'href' && helper.isValid(value) && isUnsafeUrlProtocol(value)) {
+          return
+        }
+
+        if (name === 'style') {
+          const safeStyle = sanitizeStyle(value)
+          if (safeStyle) {
+            result[name] = safeStyle
+          }
+          return
+        }
+
+        if (name === 'align') {
+          const safeAlign = sanitizeAlign(value)
+          if (safeAlign) {
+            result[name] = safeAlign
+          }
           return
         }
 
@@ -222,7 +266,17 @@ function serialize(schemas?: any[], option?: HTMLWalkOptions): string {
         property = Object.keys(attributes!)
           .filter(key => customOption.allowedAttributes!.includes(key))
           .filter(key => key !== 'href' || !isUnsafeUrlProtocol(attributes![key]))
-          .map(key => ` ${key}="${escapeAttribute(attributes![key])}"`)
+          .map(key => {
+            if (key === 'style') {
+              const safeStyle = sanitizeStyle(attributes![key])
+              return safeStyle ? ` style="${escapeAttribute(safeStyle)}"` : ''
+            }
+            if (key === 'align') {
+              const safeAlign = sanitizeAlign(attributes![key])
+              return safeAlign ? ` align="${escapeAttribute(safeAlign)}"` : ''
+            }
+            return ` ${key}="${escapeAttribute(attributes![key])}"`
+          })
           .join('')
       }
 

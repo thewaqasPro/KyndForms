@@ -153,3 +153,21 @@ test('cleanEmptyBlocks removes trailing and leading empty block tags and breaks'
   expect(htmlUtils.cleanEmptyBlocks('')).toBe('')
   expect(htmlUtils.cleanEmptyBlocks(undefined)).toBe('')
 })
+
+test('purge preserves safe text alignment styles, align attributes, and heading tags', () => {
+  expect(
+    htmlUtils.purge(
+      '<h1 style="text-align: center;">Welcome</h1><p align="right">Thank you</p><div class="text-center">Done</div>'
+    )
+  ).toBe(
+    '<h1 style="text-align: center;">Welcome</h1><p align="right">Thank you</p><div class="text-center">Done</div>'
+  )
+})
+
+test('purge strips unsafe style properties while keeping text-align', () => {
+  expect(
+    htmlUtils.purge(
+      '<p style="color: red; text-align: center; background: url(javascript:alert(1));">Text</p>'
+    )
+  ).toBe('<p style="text-align: center;">Text</p>')
+})
