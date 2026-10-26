@@ -77,10 +77,10 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="space-y-6">
+        <div className="border-accent-light flex flex-col justify-between gap-4 border-b pb-6 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-xl font-bold tracking-tight">User Management &amp; Governance</h2>
+            <h1 className="hf-page-title">User Governance</h1>
             <p className="text-secondary mt-1 text-sm">
               View registered users, manage system administrator privileges, and enforce access
               blocks.
@@ -96,10 +96,10 @@ export default function AdminUsers() {
           </div>
         </div>
 
-        <div className="border-accent-light bg-foreground overflow-hidden rounded-xl border shadow-sm">
+        <div className="hf-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-accent-light bg-accent/20 text-secondary border-b text-xs uppercase tracking-wider">
+              <thead className="border-accent-light bg-accent/30 text-secondary border-b text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3.5">User</th>
                   <th className="px-6 py-3.5">Email</th>
@@ -154,12 +154,12 @@ export default function AdminUsers() {
 
                         <td className="whitespace-nowrap px-6 py-4">
                           {u.isSystemAdmin ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                               <IconShield className="h-3 w-3" />
                               System Admin
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full border border-slate-500/20 bg-slate-500/10 px-2.5 py-1 text-xs font-medium text-slate-600">
+                            <span className="inline-flex items-center rounded-full border border-slate-500/20 bg-slate-500/10 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
                               Standard User
                             </span>
                           )}
@@ -167,11 +167,11 @@ export default function AdminUsers() {
 
                         <td className="whitespace-nowrap px-6 py-4">
                           {u.isBlocked ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-600">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-600 dark:text-rose-400">
                               Blocked
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                               Active
                             </span>
                           )}
@@ -191,12 +191,12 @@ export default function AdminUsers() {
                             >
                               {u.isSystemAdmin ? (
                                 <>
-                                  <IconShieldOff className="mr-1 h-3.5 w-3.5 text-amber-600" />
+                                  <IconShieldOff className="mr-1 h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                                   Demote
                                 </>
                               ) : (
                                 <>
-                                  <IconShield className="mr-1 h-3.5 w-3.5 text-blue-600" />
+                                  <IconShield className="mr-1 h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                   Make Admin
                                 </>
                               )}
@@ -210,12 +210,12 @@ export default function AdminUsers() {
                             >
                               {u.isBlocked ? (
                                 <>
-                                  <IconUserCheck className="mr-1 h-3.5 w-3.5 text-emerald-600" />
+                                  <IconUserCheck className="mr-1 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                                   Unblock
                                 </>
                               ) : (
                                 <>
-                                  <IconUserX className="mr-1 h-3.5 w-3.5 text-rose-600" />
+                                  <IconUserX className="mr-1 h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
                                   Block
                                 </>
                               )}

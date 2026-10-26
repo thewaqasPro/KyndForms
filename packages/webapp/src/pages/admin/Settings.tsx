@@ -54,29 +54,29 @@ export default function AdminSettings() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-4xl space-y-8">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">System &amp; Registration Settings</h2>
-          <p className="text-secondary mt-1 text-sm">
+      <div className="space-y-8">
+        <div className="border-accent-light flex flex-col gap-2 border-b pb-6">
+          <h1 className="hf-page-title">Platform Settings</h1>
+          <p className="text-secondary text-sm">
             Configure global access, branding, and resource limits for your KyndForm instance.
           </p>
         </div>
 
         {/* Section 1: User Registration Control */}
-        <div className="border-accent-light bg-foreground rounded-xl border p-6 shadow-sm">
+        <div className="hf-card p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-base font-semibold">User Registration</h3>
+              <h3 className="hf-section-title text-base">User Registration</h3>
               <p className="text-secondary mt-1 text-sm">
                 Control whether new users are allowed to register publicly on your instance.
               </p>
               <div className="mt-2 text-xs">
                 {settings.allowRegistration ? (
-                  <span className="inline-flex items-center font-medium text-emerald-600">
+                  <span className="inline-flex items-center font-medium text-emerald-600 dark:text-emerald-400">
                     ● Public registration is currently OPEN. Anyone can sign up.
                   </span>
                 ) : (
-                  <span className="inline-flex items-center font-medium text-amber-600">
+                  <span className="inline-flex items-center font-medium text-amber-600 dark:text-amber-400">
                     ● Public registration is DISABLED. New users can only join via direct workspace
                     invitations.
                   </span>
@@ -91,9 +91,9 @@ export default function AdminSettings() {
         </div>
 
         {/* Section 2: Platform Branding & Logo */}
-        <div className="border-accent-light bg-foreground space-y-6 rounded-xl border p-6 shadow-sm">
+        <div className="hf-card space-y-6 p-6">
           <div>
-            <h3 className="text-base font-semibold">Platform Branding</h3>
+            <h3 className="hf-section-title text-base">Platform Branding</h3>
             <p className="text-secondary mt-1 text-sm">
               Customize the instance name and upload a custom logo for the sidebar and login
               screens.
@@ -102,7 +102,9 @@ export default function AdminSettings() {
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Instance Name</label>
+              <label className="text-primary block text-sm font-medium leading-6">
+                Instance Name
+              </label>
               <Input
                 value={settings.appName || ''}
                 placeholder="KyndForm"
@@ -114,7 +116,9 @@ export default function AdminSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Custom Application Logo</label>
+              <label className="text-primary block text-sm font-medium leading-6">
+                Custom Application Logo
+              </label>
               <div className="flex items-center gap-4">
                 <ImageFormPicker
                   value={settings.appLogoUrl}
@@ -143,9 +147,9 @@ export default function AdminSettings() {
         </div>
 
         {/* Section 3: System Resource Limitations */}
-        <div className="border-accent-light bg-foreground space-y-6 rounded-xl border p-6 shadow-sm">
+        <div className="hf-card space-y-6 p-6">
           <div>
-            <h3 className="text-base font-semibold">Resource Limits &amp; Quotas</h3>
+            <h3 className="hf-section-title text-base">Resource Limits &amp; Quotas</h3>
             <p className="text-secondary mt-1 text-sm">
               Define safety boundaries for workspaces on this instance. (Set to 0 for unlimited)
             </p>
@@ -153,7 +157,9 @@ export default function AdminSettings() {
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Max Forms / Workspace</label>
+              <label className="text-primary block text-sm font-medium leading-6">
+                Max Forms / Workspace
+              </label>
               <Input
                 type="number"
                 value={
@@ -169,7 +175,9 @@ export default function AdminSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Max Submissions / Month</label>
+              <label className="text-primary block text-sm font-medium leading-6">
+                Max Submissions / Month
+              </label>
               <Input
                 type="number"
                 value={
@@ -185,7 +193,9 @@ export default function AdminSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Max File Upload Size (MB)</label>
+              <label className="text-primary block text-sm font-medium leading-6">
+                Max File Upload Size (MB)
+              </label>
               <Input
                 type="number"
                 value={
@@ -205,7 +215,7 @@ export default function AdminSettings() {
         {/* Action Bar */}
         <div className="flex items-center justify-end gap-3 pt-4">
           {saved && (
-            <span className="flex items-center text-sm font-medium text-emerald-600">
+            <span className="flex items-center text-sm font-medium text-emerald-600 dark:text-emerald-400">
               <IconCheck className="mr-1 h-4 w-4" />
               Settings saved successfully!
             </span>
