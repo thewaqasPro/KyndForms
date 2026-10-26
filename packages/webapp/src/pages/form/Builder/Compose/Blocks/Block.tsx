@@ -235,6 +235,23 @@ export const Block: FC<BlockProps> = ({
     }
   }, [field.id])
 
+  const imagePosition = field.properties?.imagePosition || 'bottom'
+  const imageSize = field.properties?.imageSize || 'medium'
+
+  const inlineImageNode = isCoverShow && field.layout?.align === FieldLayoutAlignEnum.INLINE && (
+    <div className={cn('kyndform-block-image', `kyndform-image-${imageSize}`)}>
+      {isImageCover ? (
+        <img src={field.layout?.mediaUrl} />
+      ) : (
+        <div
+          style={{
+            backgroundImage: field.layout?.mediaUrl
+          }}
+        ></div>
+      )}
+    </div>
+  )
+
   return (
     <>
       <div className="kyndform-theme-background" />
@@ -261,11 +278,21 @@ export const Block: FC<BlockProps> = ({
 
       <div
         className={cn('kyndform-block-container', {
-          [`kyndform-block-${field.layout?.align}`]: field.layout?.align
+          [`kyndform-block-${field.layout?.align}`]: field.layout?.align,
+          [`kyndform-align-${field.properties?.align}`]: field.properties?.align
         })}
       >
         <div className="flex min-h-full flex-col items-center justify-center">
-          <div className={cn('kyndform-block', className)} {...restProps}>
+          <div
+            className={cn(
+              'kyndform-block',
+              className,
+              field.properties?.align && `kyndform-align-${field.properties.align}`
+            )}
+            {...restProps}
+          >
+            {imagePosition === 'top' && inlineImageNode}
+
             <div className="mb-10">
               {isLabelShow && (
                 <label className="kyndform-block-number">
@@ -282,6 +309,7 @@ export const Block: FC<BlockProps> = ({
                 placeholder={t('form.builder.compose.question')}
                 onChange={handleTitleChangeCallback}
               />
+              {imagePosition === 'center' && inlineImageNode}
               <RichText
                 className="kyndform-block-description"
                 innerRef={descriptionRef as RefObject<HTMLDivElement>}
@@ -290,19 +318,7 @@ export const Block: FC<BlockProps> = ({
               />
             </div>
 
-            {isCoverShow && field.layout?.align === FieldLayoutAlignEnum.INLINE && (
-              <div className="kyndform-block-image">
-                {isImageCover ? (
-                  <img src={field.layout?.mediaUrl} />
-                ) : (
-                  <div
-                    style={{
-                      backgroundImage: field.layout?.mediaUrl
-                    }}
-                  ></div>
-                )}
-              </div>
-            )}
+            {imagePosition === 'bottom' && inlineImageNode}
 
             {children}
           </div>

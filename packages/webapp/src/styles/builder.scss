@@ -312,6 +312,26 @@
       max-width: 75%;
       max-height: 20rem;
     }
+
+    &.kyndform-image-small img {
+      max-width: 140px;
+      max-height: 140px;
+    }
+
+    &.kyndform-image-medium img {
+      max-width: 280px;
+      max-height: 280px;
+    }
+
+    &.kyndform-image-large img {
+      max-width: 440px;
+      max-height: 380px;
+    }
+
+    &.kyndform-image-full img {
+      max-width: 100%;
+      max-height: 480px;
+    }
   }
 
   .kyndform-block {

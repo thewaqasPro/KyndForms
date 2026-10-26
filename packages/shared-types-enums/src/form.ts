@@ -181,6 +181,7 @@ export interface Property {
 export interface EndScreenButton {
   id: string
   text: string
+  label?: string
   url?: string
   action?: 'url' | 'reload'
   variant?: 'primary' | 'secondary'
