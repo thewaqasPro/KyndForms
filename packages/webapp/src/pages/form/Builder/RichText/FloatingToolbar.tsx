@@ -49,7 +49,9 @@ function getActiveState() {
     isJustifyLeft: document.queryCommandState('justifyLeft'),
     isJustifyCenter: document.queryCommandState('justifyCenter'),
     isJustifyRight: document.queryCommandState('justifyRight'),
-    blockFormat: String(document.queryCommandValue('formatBlock') || '').toLowerCase(),
+    blockFormat: String(document.queryCommandValue('formatBlock') || '')
+      .replace(/[<>]/g, '')
+      .toLowerCase(),
     link: undefined
   }
 
@@ -113,9 +115,9 @@ export const FloatingToolbar: FC<FloatingToolbarProps> = ({
 
   function handleFormatBlock(tag: 'h1' | 'h2' | 'h3') {
     handleSelectRange()
-    const current = activeState.blockFormat
+    const current = (activeState.blockFormat || '').replace(/[<>]/g, '').toLowerCase()
     const target = current === tag ? 'p' : tag
-    document.execCommand('formatBlock', false, target)
+    document.execCommand('formatBlock', false, `<${target}>`)
     startTransition(() => {
       setActiveState(getActiveState())
       onChange()

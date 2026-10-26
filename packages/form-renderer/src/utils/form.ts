@@ -249,9 +249,13 @@ export function removeHeading(title?: string): string {
     return ''
   }
 
-  const withSpans = String(title)
-    .replace(/<h\d>/gi, '<span>')
-    .replace(/<\/h\d>/gi, '</span>')
+  const withSpans = String(title).replace(
+    /<h([1-6])([^>]*)>([\s\S]*?)<\/h\1>/gi,
+    (_, level, attrs, inner) => {
+      const safeAttrs = attrs || ''
+      return `<span class="kyndform-heading-${level}"${safeAttrs}>${inner}</span>`
+    }
+  )
   return htmlUtils.cleanEmptyBlocks(withSpans)
 }
 

@@ -344,6 +344,25 @@
   .rich-text {
     @apply relative;
 
+    h1,
+    .kyndform-heading-1 {
+      @apply block text-4xl font-bold mb-2;
+    }
+
+    h2,
+    .kyndform-heading-2 {
+      @apply block text-3xl font-semibold mb-2;
+    }
+
+    h3,
+    .kyndform-heading-3 {
+      @apply block text-2xl font-semibold mb-1;
+    }
+
+    p {
+      @apply mb-1;
+    }
+
     a {
       @apply underline;
       color: var(--kyndform-question-color);
@@ -459,6 +478,7 @@
   .kyndform-thank-you {
     .kyndform-block-title,
     .kyndform-block-description {
+      @apply w-full;
       &:empty:before {
         @apply w-full;
       }
@@ -467,33 +487,96 @@
     &.kyndform-align-left {
       .kyndform-block-title,
       .kyndform-block-description,
-      .kyndform-layout-inline {
-        @apply text-left;
+      .rich-text {
+        text-align: left !important;
+        justify-content: flex-start !important;
+
+        div,
+        p,
+        h1,
+        h2,
+        h3,
+        span {
+          text-align: left !important;
+        }
+
+        &:empty:before {
+          left: 0;
+          right: auto;
+          text-align: left !important;
+        }
       }
+
+      .kyndform-layout-inline {
+        text-align: left;
+      }
+
       .kyndform-action-buttons-group {
-        @apply justify-start;
+        justify-content: flex-start !important;
       }
     }
 
     &.kyndform-align-center {
       .kyndform-block-title,
       .kyndform-block-description,
-      .kyndform-layout-inline {
-        @apply text-center;
+      .rich-text {
+        text-align: center !important;
+        justify-content: center !important;
+
+        div,
+        p,
+        h1,
+        h2,
+        h3,
+        span {
+          text-align: center !important;
+        }
+
+        &:empty:before {
+          left: 0;
+          right: 0;
+          text-align: center !important;
+        }
       }
+
+      .kyndform-layout-inline {
+        text-align: center;
+      }
+
       .kyndform-action-buttons-group {
-        @apply justify-center;
+        justify-content: center !important;
       }
     }
 
     &.kyndform-align-right {
       .kyndform-block-title,
       .kyndform-block-description,
-      .kyndform-layout-inline {
-        @apply text-right;
+      .rich-text {
+        text-align: right !important;
+        justify-content: flex-end !important;
+
+        div,
+        p,
+        h1,
+        h2,
+        h3,
+        span {
+          text-align: right !important;
+        }
+
+        &:empty:before {
+          left: auto;
+          right: 0;
+          text-align: right !important;
+        }
       }
+
+      .kyndform-layout-inline {
+        text-align: right;
+      }
+
       .kyndform-action-buttons-group {
-        @apply justify-end;
+        justify-content: flex-end !important;
       }
     }
 
