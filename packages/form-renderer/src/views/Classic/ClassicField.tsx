@@ -311,8 +311,21 @@ export const ClassicField: FC<ClassicFieldProps> = ({ field, index, error, onCha
       )}
     >
       <label className="kyndform-classic-label">
-        <span className="kyndform-classic-number">{index + 1}.</span>
-        <span dangerouslySetInnerHTML={{ __html: titleHtml }} />
+        <span
+          id={`field-${field.id}-prefix`}
+          aria-label={t('Question {{number}} of {{total}}', {
+            number: index + 1,
+            total: state.questionCount || state.fields.length
+          })}
+          data-qa="question-header-counter"
+          className="kyndform-classic-number kyndform-block-number-badge"
+        >
+          {index + 1}
+        </span>
+        <span
+          className="kyndform-classic-title-text"
+          dangerouslySetInnerHTML={{ __html: titleHtml }}
+        />
         {isRequired && <span className="kyndform-classic-required">*</span>}
       </label>
 

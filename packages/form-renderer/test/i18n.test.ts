@@ -81,6 +81,8 @@ describe('form-renderer i18n & interpolation', () => {
     // Verify it rendered Question 1 cleanly and has no raw {{number}} braces
     expect(html).toContain('kyndform-block-number-1')
     expect(html).toContain('Question 1')
+    expect(html).toContain('kyndform-block-number-badge')
+    expect(html).toContain('data-qa="question-header-counter"')
     expect(html).not.toContain('{{number}}')
   })
 
@@ -110,7 +112,8 @@ describe('form-renderer i18n & interpolation', () => {
     )
 
     expect(html).toContain('kyndform-classic-number')
-    expect(html).toContain('8<!-- -->.')
+    expect(html).toContain('kyndform-block-number-badge')
+    expect(html).toContain('data-qa="question-header-counter"')
     expect(html).not.toContain('{{number}}')
   })
 })

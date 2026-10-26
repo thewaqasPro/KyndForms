@@ -177,6 +177,9 @@ export const Block: FC<BlockProps> = ({
   )
 
   const isQuestion = QUESTION_FIELD_KINDS.includes(field.kind)
+  const currentQuestionNumber = questionNumber(field.index, field.parent?.index)
+  const totalQuestions =
+    state.questionCount || state.fields.filter(f => QUESTION_FIELD_KINDS.includes(f.kind)).length
   const isInlineLayout = field.layout?.align === FieldLayoutAlignEnum.INLINE
   const isSplitLayout = SPLIT_LAYOUTS.includes(field.layout?.align as FieldLayoutAlignEnum)
 
@@ -379,27 +382,52 @@ export const Block: FC<BlockProps> = ({
                 <div className="kyndform-block-main">
                   <div className="kyndform-block-wrapper">
                     <div className="kyndform-block-header">
-                      {isQuestion && (
+                      {isQuestion && currentQuestionNumber && (
                         <div
                           className={clsx(
                             'kyndform-block-number',
-                            `kyndform-block-number-${questionNumber(
-                              field.index,
-                              field.parent?.index
-                            )}`
+                            'kyndform-block-number-legacy',
+                            `kyndform-block-number-${currentQuestionNumber}`
                           )}
                         >
                           {t('Question {{number}}', {
-                            number: questionNumber(field.index, field.parent?.index)
+                            number: currentQuestionNumber
                           })}{' '}
                           {field.validations?.required && <span className="text-red-700">*</span>}
                         </div>
                       )}
-                      {field.title && (
-                        <h1
-                          className="kyndform-block-title"
-                          dangerouslySetInnerHTML={{ __html: removeHeading(field.title as string) }}
-                        />
+                      {(field.title || (isQuestion && currentQuestionNumber)) && (
+                        <h1 className="kyndform-block-title">
+                          {isQuestion && currentQuestionNumber && (
+                            <span
+                              id={`field-${field.id}-prefix`}
+                              aria-label={t('Question {{number}} of {{total}}', {
+                                number: currentQuestionNumber,
+                                total: totalQuestions
+                              })}
+                              data-qa="question-header-counter"
+                              className="kyndform-block-number-badge"
+                            >
+                              {currentQuestionNumber}
+                            </span>
+                          )}
+                          {field.title && (
+                            <span
+                              className="kyndform-block-title-content"
+                              dangerouslySetInnerHTML={{
+                                __html: removeHeading(field.title as string)
+                              }}
+                            />
+                          )}
+                          {field.validations?.required && (
+                            <span
+                              className="kyndform-block-required text-red-700"
+                              aria-hidden="true"
+                            >
+                              *
+                            </span>
+                          )}
+                        </h1>
                       )}
                       {field.description && (
                         <div

@@ -79,10 +79,13 @@
     }
 
     .kyndform-classic-label {
-      display: block;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      row-gap: 4px;
       font-size: 15px;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: var(--kyndform-question-color, var(--kyndform-theme-question-text, #1f2937));
 
       .kyndform-classic-required {
@@ -92,9 +95,22 @@
       }
 
       .kyndform-classic-number {
-        margin-right: 6px;
-        opacity: 0.7;
-        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        margin-right: 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        background-color: rgba(0, 0, 0, 0.06);
+        color: var(--kyndform-question-color, var(--kyndform-theme-question-text, #1f2937));
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        user-select: none;
       }
     }
 

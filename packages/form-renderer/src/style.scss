@@ -790,6 +790,65 @@ button.button-icon-only {
 .kyndform-block-title {
   @apply mb-2 text-3xl font-medium;
   color: var(--kyndform-question-color);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  row-gap: 4px;
+
+  .kyndform-block-title-content {
+    display: inline;
+    flex: 1 1 auto;
+    min-width: 0;
+
+    p {
+      display: inline;
+    }
+  }
+
+  .kyndform-block-required {
+    @apply font-bold;
+    color: #ef4444;
+  }
+}
+
+.kyndform-block-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 1.875rem;
+  height: 1.875rem;
+  padding: 0 0.5rem;
+  margin-right: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  background-color: var(--kyndform-question-badge-bg, rgba(0, 0, 0, 0.06));
+  color: var(--kyndform-question-badge-color, var(--kyndform-question-color));
+  border: 1px solid var(--kyndform-question-badge-border, rgba(0, 0, 0, 0.08));
+  vertical-align: middle;
+  user-select: none;
+  transition: all 0.2s ease;
+
+  @media (max-width: 640px) {
+    min-width: 1.625rem;
+    height: 1.625rem;
+    padding: 0 0.375rem;
+    font-size: 0.8125rem;
+    margin-right: 0.5rem;
+    border-radius: 0.375rem;
+  }
+}
+
+.kyndform-theme-dark,
+[data-theme='dark'] {
+  .kyndform-block-number-badge {
+    background-color: var(--kyndform-question-badge-bg, rgba(255, 255, 255, 0.12));
+    border-color: var(--kyndform-question-badge-border, rgba(255, 255, 255, 0.16));
+    color: var(--kyndform-question-badge-color, var(--kyndform-question-color, #ffffff));
+  }
 }
 
 .kyndform-block-description {
@@ -809,8 +868,14 @@ button.button-icon-only {
 }
 
 .kyndform-block-number {
+  display: none;
   @apply mb-1 text-base;
   color: var(--kyndform-label-color);
+
+  &.is-visible,
+  .kyndform-show-question-label & {
+    display: block;
+  }
 }
 
 .kyndform-skip-button {
