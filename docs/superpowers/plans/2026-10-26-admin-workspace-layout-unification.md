@@ -35,7 +35,7 @@
 - Produces: `AdminLayout` wrapper component accepting `children` and optional title.
 - Consumes: `useUserStore`, `useWorkspaceStore`, `WorkspaceAccount`, `Button`, Radix UI Dialog for mobile drawer.
 
-- [ ] **Step 1: Write AdminSidebar component inside `AdminLayout.tsx`**
+- [x] **Step 1: Write AdminSidebar component inside `AdminLayout.tsx`**
   Implement the standard `hf-sidebar-surface` left sidebar:
   - Top: KyndForm logo & app name, with an "Admin Console" shield badge.
   - Navigation section:
@@ -46,19 +46,19 @@
   - Return link: `← Back to Workspace` (`/workspace`, `IconArrowLeft`).
   - Bottom: `WorkspaceAccount` with avatar, dark mode switcher, and logout.
 
-- [ ] **Step 2: Add Mobile Drawer to `AdminLayout.tsx`**
+- [x] **Step 2: Add Mobile Drawer to `AdminLayout.tsx`**
   Add mobile topbar with hamburger button (`IconMenu`) and Radix UI Dialog for `<lg` screen sizes, mirroring `WorkspaceSidebarModal`.
 
-- [ ] **Step 3: Update Main Content Wrapper**
+- [x] **Step 3: Update Main Content Wrapper**
   Structure main content with:
   `className="bg-foreground flex flex-1 flex-col lg:min-w-0 lg:pl-64 min-h-screen"`
   `<div className="grow"><div className="hf-page-shell flex min-h-full flex-col">{children}</div></div>`
 
-- [ ] **Step 4: Verify type-check passes**
+- [x] **Step 4: Verify type-check passes**
   Run: `pnpm --filter ./packages/webapp type-check`
   Expected: Clean pass with 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   ```bash
   git add packages/webapp/src/pages/admin/AdminLayout.tsx
   git commit -m "feat(webapp): restructure AdminLayout with persistent sidebar and workspace shell"
@@ -75,21 +75,21 @@
 - Produces: Visual layout matching Workspace Settings (`hf-page-title`, `hf-card`, `border-accent-light`).
 - Consumes: `AdminService.getSystemStatus()`, `Badge`, `Button.Ghost`.
 
-- [ ] **Step 1: Update Page Header & Actions**
+- [x] **Step 1: Update Page Header & Actions**
   Use `hf-page-title` for "System Status & Diagnostics" and `text-secondary` for description.
   Add border divider `border-accent-light my-6 w-full border-t`.
 
-- [ ] **Step 2: Redesign Subsystem Cards with `hf-card` & Dark Mode Support**
+- [x] **Step 2: Redesign Subsystem Cards with `hf-card` & Dark Mode Support**
   Replace ad-hoc Tailwind colors with:
   - `hf-card p-6 space-y-4`
   - Subtle dark-mode-compatible status badges.
   - Diagnostic metrics formatted with clean typography and monospace font for latencies.
 
-- [ ] **Step 3: Verify build and type-check**
+- [x] **Step 3: Verify build and type-check**
   Run: `pnpm --filter ./packages/webapp type-check`
   Expected: 0 errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
   ```bash
   git add packages/webapp/src/pages/admin/SystemStatus.tsx
   git commit -m "style(admin): harmonize SystemStatus with hf-card and dark theme tokens"
@@ -106,20 +106,20 @@
 **Interfaces:**
 - Produces: Clean sections using `hf-section-title`, `border-accent-light`, `hf-card`, and `hf-table-shell`.
 
-- [ ] **Step 1: Update `Settings.tsx` to match Workspace Settings sections**
+- [x] **Step 1: Update `Settings.tsx` to match Workspace Settings sections**
   Format sections like `WorkspaceGeneral`:
   - `section` with `border-accent-light border-b pb-10`.
   - `h2 className="hf-section-title"`.
   - Input fields and switches matching `WorkspaceSettings`.
 
-- [ ] **Step 2: Update `Users.tsx` table with `hf-card` and `hf-table-shell`**
+- [x] **Step 2: Update `Users.tsx` table with `hf-card` and `hf-table-shell`**
   Wrap user list in `hf-card overflow-hidden` with `border-accent-light`.
 
-- [ ] **Step 3: Verify webapp builds cleanly**
+- [x] **Step 3: Verify webapp builds cleanly**
   Run: `pnpm --filter ./packages/webapp build`
   Expected: Clean build in < 10s.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
   ```bash
   git add packages/webapp/src/pages/admin/
   git commit -m "style(admin): align Settings and Users pages with workspace design"
@@ -135,14 +135,14 @@
 **Interfaces:**
 - Consumes: `useUserStore.user.isSystemAdmin`
 
-- [ ] **Step 1: Add conditional Admin Console link**
+- [x] **Step 1: Add conditional Admin Console link**
   In `WorkspaceSidebar.tsx`, when `user?.isSystemAdmin` is true, render an "Admin Console" link with `IconShield` under the main navigation group.
 
-- [ ] **Step 2: Verify type-check passes**
+- [x] **Step 2: Verify type-check passes**
   Run: `pnpm --filter ./packages/webapp type-check`
   Expected: 0 errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add packages/webapp/src/layouts/Workspace/WorkspaceSidebar.tsx
   git commit -m "feat(webapp): add Admin Console link in workspace sidebar for system admins"
@@ -152,18 +152,18 @@
 
 ### Task 5: Full Verification Protocol
 
-- [ ] **Step 1: Verify architectural integrity**
+- [x] **Step 1: Verify architectural integrity**
   Run: `pnpm run verify:integrity`
   Expected: 14/14 checks pass.
 
-- [ ] **Step 2: Type check entire workspace**
+- [x] **Step 2: Type check entire workspace**
   Run: `pnpm run type-check`
   Expected: Clean pass across 7 packages.
 
-- [ ] **Step 3: Run all unit tests**
+- [x] **Step 3: Run all unit tests**
   Run: `pnpm test`
   Expected: 331 tests pass.
 
-- [ ] **Step 4: Verify linting**
+- [x] **Step 4: Verify linting**
   Run: `pnpm run lint`
   Expected: 0 errors.
