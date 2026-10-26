@@ -801,8 +801,19 @@ button.button-icon-only {
     flex: 1 1 auto;
     min-width: 0;
 
-    p {
+    p,
+    div {
       display: inline;
+    }
+
+    div:empty,
+    p:empty {
+      display: none;
+    }
+
+    div:has(> br:only-child),
+    p:has(> br:only-child) {
+      display: none;
     }
   }
 

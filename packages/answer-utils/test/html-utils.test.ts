@@ -125,3 +125,31 @@ test('plain html with large limit', () => {
     )
   ).toBe("Programmer's guide about how to cook at home")
 })
+
+test('cleanEmptyBlocks removes trailing and leading empty block tags and breaks', () => {
+  expect(htmlUtils.cleanEmptyBlocks('Who are you shopping for?<div><br></div>')).toBe(
+    'Who are you shopping for?'
+  )
+  expect(htmlUtils.cleanEmptyBlocks('Who are you shopping for?<div><p><br></p></div>')).toBe(
+    'Who are you shopping for?'
+  )
+  expect(
+    htmlUtils.cleanEmptyBlocks('<div><br></div>Who are you shopping for?<div><br></div>')
+  ).toBe('Who are you shopping for?')
+  expect(htmlUtils.cleanEmptyBlocks('<div><br></div>')).toBe('')
+  expect(htmlUtils.cleanEmptyBlocks('<p><br></p>')).toBe('')
+  expect(htmlUtils.cleanEmptyBlocks('First line<br>Second line<div><br></div>')).toBe(
+    'First line<br>Second line'
+  )
+  expect(htmlUtils.cleanEmptyBlocks('First line<div>Second line</div><div><br></div>')).toBe(
+    'First line<div>Second line</div>'
+  )
+  expect(
+    htmlUtils.cleanEmptyBlocks('<span class="bold">Who</span> are you shopping for?<div><br></div>')
+  ).toBe('<span class="bold">Who</span> are you shopping for?')
+  expect(htmlUtils.cleanEmptyBlocks('<span data-mention="123">User</span>')).toBe(
+    '<span data-mention="123">User</span>'
+  )
+  expect(htmlUtils.cleanEmptyBlocks('')).toBe('')
+  expect(htmlUtils.cleanEmptyBlocks(undefined)).toBe('')
+})

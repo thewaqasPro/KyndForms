@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import { FC, useMemo } from 'react'
 
 import { removeHeading, useTranslation } from '../../utils'
+import { htmlUtils } from '@kyndform/answer-utils'
 import { helper } from '@kyndform/utils'
 
 import {
@@ -42,6 +43,10 @@ export const ClassicField: FC<ClassicFieldProps> = ({ field, index, error, onCha
   const titleHtml = useMemo(() => {
     return field.title ? removeHeading(field.title as string) : ''
   }, [field.title])
+
+  const descriptionHtml = useMemo(() => {
+    return field.description ? htmlUtils.cleanEmptyBlocks(field.description as string) : ''
+  }, [field.description])
 
   function handleFullNameChange(part: 'firstName' | 'lastName', val: string) {
     const prev = typeof value === 'object' && value !== null ? value : {}
@@ -322,17 +327,19 @@ export const ClassicField: FC<ClassicFieldProps> = ({ field, index, error, onCha
         >
           {index + 1}
         </span>
-        <span
-          className="kyndform-classic-title-text"
-          dangerouslySetInnerHTML={{ __html: titleHtml }}
-        />
+        {titleHtml && (
+          <span
+            className="kyndform-classic-title-text"
+            dangerouslySetInnerHTML={{ __html: titleHtml }}
+          />
+        )}
         {isRequired && <span className="kyndform-classic-required">*</span>}
       </label>
 
-      {field.description && (
+      {descriptionHtml && (
         <div
           className="kyndform-classic-field-description"
-          dangerouslySetInnerHTML={{ __html: field.description as string }}
+          dangerouslySetInnerHTML={{ __html: descriptionHtml }}
         />
       )}
 

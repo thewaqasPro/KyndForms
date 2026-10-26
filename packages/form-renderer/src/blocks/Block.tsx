@@ -183,6 +183,15 @@ export const Block: FC<BlockProps> = ({
   const isInlineLayout = field.layout?.align === FieldLayoutAlignEnum.INLINE
   const isSplitLayout = SPLIT_LAYOUTS.includes(field.layout?.align as FieldLayoutAlignEnum)
 
+  const titleHtml = useMemo(
+    () => (field.title ? removeHeading(field.title as string) : ''),
+    [field.title]
+  )
+  const descriptionHtml = useMemo(
+    () => (field.description ? htmlUtils.cleanEmptyBlocks(field.description as string) : ''),
+    [field.description]
+  )
+
   const [isReducedMotion, setIsReducedMotion] = useState(false)
   const [isTransitionReady, setIsTransitionReady] = useState(false)
   const [isScrolledToTop, setIsScrolledToTop] = useState(true)
@@ -396,7 +405,7 @@ export const Block: FC<BlockProps> = ({
                           {field.validations?.required && <span className="text-red-700">*</span>}
                         </div>
                       )}
-                      {(field.title || (isQuestion && currentQuestionNumber)) && (
+                      {(titleHtml || (isQuestion && currentQuestionNumber)) && (
                         <h1 className="kyndform-block-title">
                           {isQuestion && currentQuestionNumber && (
                             <span
@@ -411,11 +420,11 @@ export const Block: FC<BlockProps> = ({
                               {currentQuestionNumber}
                             </span>
                           )}
-                          {field.title && (
+                          {titleHtml && (
                             <span
                               className="kyndform-block-title-content"
                               dangerouslySetInnerHTML={{
-                                __html: removeHeading(field.title as string)
+                                __html: titleHtml
                               }}
                             />
                           )}
@@ -429,10 +438,10 @@ export const Block: FC<BlockProps> = ({
                           )}
                         </h1>
                       )}
-                      {field.description && (
+                      {descriptionHtml && (
                         <div
                           className="kyndform-block-description"
-                          dangerouslySetInnerHTML={{ __html: field.description as string }}
+                          dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                         />
                       )}
                     </div>

@@ -146,7 +146,7 @@ function sanitizeRichTextHTML(value: unknown): string {
     return ''
   }
 
-  return result
+  return htmlUtils.cleanEmptyBlocks(result)
 }
 
 export interface BlockProps extends ComponentProps {
@@ -179,7 +179,7 @@ export const Block: FC<BlockProps> = ({
       payload: {
         id: field.id,
         updates: {
-          title
+          title: htmlUtils.cleanEmptyBlocks(title)
         }
       }
     })
@@ -191,7 +191,7 @@ export const Block: FC<BlockProps> = ({
       payload: {
         id: field.id,
         updates: {
-          description
+          description: htmlUtils.cleanEmptyBlocks(description)
         }
       }
     })

@@ -244,8 +244,15 @@ export function questionNumber(number?: number | string, parentNumber?: number |
   return ''
 }
 
-export function removeHeading(title?: string) {
-  return (title || '').replace(/<h\d>/gi, '<span>').replace(/<\/h\d>/gi, '</span>')
+export function removeHeading(title?: string): string {
+  if (!title) {
+    return ''
+  }
+
+  const withSpans = String(title)
+    .replace(/<h\d>/gi, '<span>')
+    .replace(/<\/h\d>/gi, '</span>')
+  return htmlUtils.cleanEmptyBlocks(withSpans)
 }
 
 export function getNavigateFieldId(

@@ -261,9 +261,32 @@ function plain(html: string, limit = 0) {
   return result
 }
 
+// Strip leading/trailing empty HTML blocks (div, p, span containing only br, nbsp, or whitespace)
+function cleanEmptyBlocks(html?: string): string {
+  if (!html) {
+    return ''
+  }
+
+  let result = String(html)
+  const emptyElemRegex = /<(div|p|span)[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi
+  const trailingRegex = /(?:<br\s*\/?>|&nbsp;|\s)+$/gi
+  const leadingRegex = /^(?:<br\s*\/?>|&nbsp;|\s)+/gi
+
+  let prev = ''
+  while (prev !== result) {
+    prev = result
+    result = result.replace(emptyElemRegex, '')
+    result = result.replace(trailingRegex, '')
+    result = result.replace(leadingRegex, '')
+  }
+
+  return result
+}
+
 export const htmlUtils = {
   parse,
   serialize,
   purge,
-  plain
+  plain,
+  cleanEmptyBlocks
 }

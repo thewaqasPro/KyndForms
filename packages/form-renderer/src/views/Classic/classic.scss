@@ -88,6 +88,27 @@
       margin-bottom: 8px;
       color: var(--kyndform-question-color, var(--kyndform-theme-question-text, #1f2937));
 
+      .kyndform-classic-title-text {
+        display: inline;
+        flex: 1 1 auto;
+        min-width: 0;
+
+        p,
+        div {
+          display: inline;
+        }
+
+        div:empty,
+        p:empty {
+          display: none;
+        }
+
+        div:has(> br:only-child),
+        p:has(> br:only-child) {
+          display: none;
+        }
+      }
+
       .kyndform-classic-required {
         color: #ef4444;
         margin-left: 4px;
