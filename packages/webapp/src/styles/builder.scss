@@ -77,8 +77,8 @@
 }
 
 .compose {
-  
-  
+
+
   .kyndform-layout {
     @apply pointer-events-none absolute rounded-lg;
     z-index: 2;
@@ -174,8 +174,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-radio {
     @apply mb-2 h-10;
   }
@@ -246,8 +246,8 @@
     background-color: var(--kyndform-answer-opacity-10-color);
   }
 
-  
-  
+
+
   .kyndform-select {
     @apply w-full;
   }
@@ -288,8 +288,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-block-container {
     @apply scrollbar absolute inset-0 inset-0 z-10 px-20;
 
@@ -392,8 +392,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-empty-state {
     .kyndform-block-title {
       @apply mb-4 text-3xl;
@@ -437,8 +437,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-input,
   .kyndform-textarea {
     @apply w-full border-none bg-transparent p-0 pb-2 text-2xl shadow-none outline-none transition;
@@ -455,8 +455,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-textarea {
     @apply h-10 resize-none overflow-hidden;
   }
@@ -466,8 +466,8 @@
     color: var(--kyndform-answer-color);
   }
 
-  
-  
+
+
   .kyndform-opinion-scale {
     .kyndform-radio {
       @apply h-14 flex-1;
@@ -487,8 +487,8 @@
     color: var(--kyndform-answer-color);
   }
 
-  
-  
+
+
   .kyndform-multiple-choice-list {
     @apply inline-flex flex-col max-w-full;
     min-width: 10rem;
@@ -519,14 +519,26 @@
     }
 
     &.kyndform-multiple-choice-horizontal {
-      @apply sm:w-full sm:flex-row sm:flex-wrap sm:gap-2;
+      @apply sm:w-full;
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)) !important;
+      gap: 0.5rem !important;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr !important;
+      }
 
       .kyndform-radio {
-        @apply w-full sm:flex-1 builder-md:max-w-[calc(50%-0.5rem)] builder-lg:max-w-[calc(33.33%-0.5rem)] sm:mb-0 sm:self-stretch;
+        @apply sm:mb-0 sm:self-stretch;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
       }
 
       .kyndform-radio-container {
         @apply sm:h-full;
+        width: 100% !important;
+        min-width: 0 !important;
       }
 
       .kyndform-radio-hotkey {
@@ -572,8 +584,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-picture-choice-list {
     @apply -mx-1 -mb-2 flex flex-wrap items-stretch;
 
@@ -637,8 +649,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-file-uploader {
     @apply flex h-72 cursor-pointer items-center justify-center rounded transition;
     color: var(--kyndform-answer-color);
@@ -664,8 +676,8 @@
     color: var(--kyndform-label-color);
   }
 
-  
-  
+
+
   .kyndform-signature-wrapper {
     @apply h-40 rounded;
     border: 1px dashed var(--kyndform-answer-color);
@@ -677,8 +689,8 @@
     color: var(--kyndform-label-color);
   }
 
-  
-  
+
+
   .rate {
     @apply flex items-center;
   }
@@ -718,8 +730,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-phone-number {
     .kyndform-input {
       @apply ml-4 w-80;
@@ -736,8 +748,8 @@
     color: var(--kyndform-answer-color);
   }
 
-  
-  
+
+
   .kyndform-date-root {
     @apply flex items-end;
   }
@@ -784,8 +796,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-table-scrollable {
     @apply w-full overflow-x-auto;
   }
@@ -873,8 +885,8 @@
     }
   }
 
-  
-  
+
+
   .kyndform-payment-header,
   .kyndform-payment-label {
     @apply text-base;
