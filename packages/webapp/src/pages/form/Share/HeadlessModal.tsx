@@ -1,14 +1,16 @@
-import { IconCheck, IconCopy } from '@tabler/icons-react'
+import { IconAlertTriangle, IconCheck, IconCopy, IconSparkles } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 
+import { extractFormInputFields, generateAllSnippets } from './utils/snippet-generator'
 import { useParam } from '@/utils'
 
 import { Button, CodeBlock, Modal, Tabs } from '@/components'
-import { useModal, useWorkspaceStore } from '@/store'
+import { useFormStore, useModal, useWorkspaceStore } from '@/store'
 
 export default function HeadlessModal() {
   const { formId } = useParam()
   const { sharingURLPrefix } = useWorkspaceStore()
+  const { form } = useFormStore()
   const { isOpen, onOpenChange } = useModal('HeadlessModal')
 
   const endpointUrl = useMemo(() => `${sharingURLPrefix}/f/${formId}`, [formId, sharingURLPrefix])
@@ -21,160 +23,28 @@ export default function HeadlessModal() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const htmlSnippet = useMemo(
-    () => `<!-- Standard HTML Form -->
-<form action="${endpointUrl}" method="POST">
-  <!-- Core Form Fields -->
-  <input type="text" name="name" placeholder="Your Name" required />
-  <input type="email" name="email" placeholder="Your Email" required />
-  <textarea name="message" placeholder="Your Message" required></textarea>
+  // Extract input fields and hidden fields from active form
+  const inputFields = useMemo(() => {
+    const raw = form?.drafts || []
+    return extractFormInputFields(raw as any)
+  }, [form?.drafts])
 
-  <!-- Multi-select / Checkboxes (Interested In) -->
-  <label><input type="checkbox" name="interested_in[]" value="Web Design" /> Web Design</label>
-  <label><input type="checkbox" name="interested_in[]" value="SEO" /> SEO</label>
+  const hiddenFields = useMemo(() => {
+    return form?.hiddenFields || []
+  }, [form?.hiddenFields])
 
-  <!-- Location or Custom Fields -->
-  <input type="text" name="location" placeholder="City or Address" />
+  const redirectUrl = useMemo(() => {
+    return form?.settings?.redirectUrl
+  }, [form?.settings?.redirectUrl])
 
-  <!-- Hidden Tracking / Attribution -->
-  <input type="hidden" name="utm_source" value="google" />
-
-  <!-- Honeypot Spam Protection (Keep Hidden from Users) -->
-  <input type="text" name="_gotcha" style="display:none !important" tabIndex="-1" autocomplete="off" />
-
-  <!-- Optional Custom Redirect After Submission -->
-  <input type="hidden" name="_next" value="https://yourwebsite.com/thank-you" />
-
-  <button type="submit">Submit</button>
-</form>`,
-    [endpointUrl]
-  )
-
-  const nextjsSnippet = useMemo(
-    () => `'use client'
-
-import { useState } from 'react'
-
-export default function ContactForm() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setStatus('loading')
-
-    const formData = new FormData(e.currentTarget)
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      message: formData.get('message'),
-      interested_in: formData.getAll('interested_in'),
-      location: formData.get('location'),
-      utm_source: typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('utm_source') || 'website'
-        : 'website'
-    }
-
-    try {
-      const res = await fetch('${endpointUrl}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-
-      if (res.ok) {
-        setStatus('success')
-      } else {
-        setStatus('error')
-      }
-    } catch {
-      setStatus('error')
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <input name="name" type="text" placeholder="Name" required />
-      <input name="email" type="email" placeholder="Email" required />
-      <textarea name="message" placeholder="Message" required />
-
-      {/* Spam Honeypot */}
-      <input name="_gotcha" type="text" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-
-      <button type="submit" disabled={status === 'loading'}>
-        {status === 'loading' ? 'Sending...' : 'Send Message'}
-      </button>
-
-      {status === 'success' && <p>Thank you! Your message has been received.</p>}
-      {status === 'error' && <p>Something went wrong. Please try again.</p>}
-    </form>
-  )
-}`,
-    [endpointUrl]
-  )
-
-  const astroSnippet = useMemo(
-    () => `---
-// src/components/ContactForm.astro
----
-
-<form id="contact-form" action="${endpointUrl}" method="POST">
-  <input type="text" name="name" placeholder="Name" required />
-  <input type="email" name="email" placeholder="Email" required />
-  <textarea name="message" placeholder="Message" required></textarea>
-
-  <!-- Multi-select options -->
-  <label><input type="checkbox" name="interested_in[]" value="Design" /> Design</label>
-  <label><input type="checkbox" name="interested_in[]" value="Development" /> Development</label>
-
-  <!-- Honeypot -->
-  <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
-  <input type="hidden" name="_next" value="/thank-you" />
-
-  <button type="submit">Submit</button>
-</form>
-
-<script>
-  const form = document.getElementById('contact-form') as HTMLFormElement;
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-    data.interested_in = formData.getAll('interested_in');
-
-    const response = await fetch(form.action, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (response.ok) {
-      window.location.href = '/thank-you';
-    }
-  });
-</script>`,
-    [endpointUrl]
-  )
-
-  const curlSnippet = useMemo(
-    () => `curl -X POST ${endpointUrl} \\
-  -H "Content-Type: application/json" \\
-  -H "Accept: application/json" \\
-  -d '{
-    "name": "Sarah Connor",
-    "email": "sarah@example.com",
-    "interested_in": ["AI Defense", "Cybersecurity"],
-    "location": { "city": "Los Angeles", "state": "CA" },
-    "utm_source": "google_ads",
-    "message": "Direct headless submission"
-  }'`,
-    [endpointUrl]
-  )
+  const snippets = useMemo(() => {
+    return generateAllSnippets({
+      endpointUrl,
+      fields: inputFields,
+      hiddenFields,
+      redirectUrl
+    })
+  }, [endpointUrl, inputFields, hiddenFields, redirectUrl])
 
   const tabs = [
     {
@@ -182,7 +52,7 @@ export default function ContactForm() {
       label: 'HTML Form',
       content: (
         <div className="mt-4">
-          <CodeBlock code={htmlSnippet} language="html" title="HTML Form Example" />
+          <CodeBlock code={snippets.html} language="html" title="HTML Form Example" />
         </div>
       )
     },
@@ -192,7 +62,7 @@ export default function ContactForm() {
       content: (
         <div className="mt-4">
           <CodeBlock
-            code={nextjsSnippet}
+            code={snippets.nextjs}
             language="javascript"
             title="components/ContactForm.tsx"
           />
@@ -204,7 +74,7 @@ export default function ContactForm() {
       label: 'Astro.js',
       content: (
         <div className="mt-4">
-          <CodeBlock code={astroSnippet} language="astro" title="components/ContactForm.astro" />
+          <CodeBlock code={snippets.astro} language="astro" title="components/ContactForm.astro" />
         </div>
       )
     },
@@ -213,7 +83,7 @@ export default function ContactForm() {
       label: 'cURL / API',
       content: (
         <div className="mt-4">
-          <CodeBlock code={curlSnippet} language="curl" title="Terminal cURL Request" />
+          <CodeBlock code={snippets.curl} language="curl" title="Terminal cURL Request" />
         </div>
       )
     }
@@ -253,9 +123,40 @@ export default function ContactForm() {
         </div>
 
         <div>
-          <label className="text-secondary text-xs font-semibold uppercase tracking-wider">
-            Integration Code Snippets
-          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="text-secondary text-xs font-semibold uppercase tracking-wider">
+              Integration Code Snippets
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <IconSparkles className="h-3 w-3" />
+                <span>
+                  {inputFields.length}{' '}
+                  {inputFields.length === 1 ? 'question field' : 'question fields'}
+                </span>
+              </span>
+              {hiddenFields.length > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                  <span>
+                    {hiddenFields.length}{' '}
+                    {hiddenFields.length === 1 ? 'hidden field' : 'hidden fields'}
+                  </span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {inputFields.length === 0 && (
+            <div className="mt-3 flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
+              <IconAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <span className="font-semibold">No questions configured yet:</span> These snippets
+                show fallback sample fields. Add question blocks in the Form Builder to
+                automatically generate your custom input fields and names here.
+              </div>
+            </div>
+          )}
+
           <div className="mt-2">
             <Tabs tabs={tabs} />
           </div>
@@ -266,19 +167,19 @@ export default function ContactForm() {
           <ul className="list-disc space-y-1 pl-4">
             <li>
               <code className="text-primary font-mono">_next</code>: URL to redirect the browser to
-              after submission.
+              after submission (defaults to your form redirect URL if configured in settings).
             </li>
             <li>
               <code className="text-primary font-mono">_gotcha</code>: Honeypot spam trap. Keep
-              hidden from real users.
+              hidden from real users (bots filling this will be silently dropped).
             </li>
             <li>
-              <code className="text-primary font-mono">interested_in[]</code>: Submitting arrays or
-              multi-select inputs automatically formats as badge tags.
+              <code className="text-primary font-mono">field[]</code>: Submitting arrays or
+              multi-select inputs automatically formats as badge tags or option arrays.
             </li>
             <li>
-              <code className="text-primary font-mono">utm_*</code>: Tracking and referrer
-              parameters are saved to hidden metadata.
+              <code className="text-primary font-mono">utm_* / hidden fields</code>: Configured
+              hidden fields and URL tracking parameters are saved to submission metadata.
             </li>
             <li>
               <code className="text-primary font-mono">enctype="multipart/form-data"</code>: File

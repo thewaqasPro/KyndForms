@@ -83,6 +83,14 @@ function formatFieldTitle(key: string): string {
     .trim()
 }
 
+function normalizeKey(str: string): string {
+  return String(str || '')
+    .toLowerCase()
+    .replace(/[-_\s]+/g, ' ')
+    .replace(/[^\w\s]/g, '')
+    .trim()
+}
+
 function getFieldPlainTitle(field: FormField): string {
   if (typeof field.title === 'string') {
     return field.title
@@ -459,7 +467,12 @@ export class HeadlessFormController {
         continue
       }
 
-      if (isHiddenFieldKey(key)) {
+      const normKey = normalizeKey(key)
+      const isConfiguredHidden = formHiddenFields.some(
+        h => h.id === key || h.name === key || normalizeKey(h.name) === normKey
+      )
+
+      if (isHiddenFieldKey(key) || isConfiguredHidden) {
         hiddenFields.push({
           id: key,
           name: key,
@@ -491,14 +504,25 @@ export class HeadlessFormController {
       let existingField = formFields.find(f => {
         const plainTitle = getFieldPlainTitle(f).toLowerCase().trim()
         const label = (f.label || '').toLowerCase().trim()
+        const normTitle = normalizeKey(plainTitle)
+        const normLabel = normalizeKey(label)
+        const normId = normalizeKey(f.id)
+
         return (
           f.id === key ||
+          normId === normKey ||
           label === lowerKey ||
+          normLabel === normKey ||
           plainTitle === lowerKey ||
+          normTitle === normKey ||
           (lowerKey === 'name' &&
-            (f.kind === FieldKindEnum.FULL_NAME || plainTitle === 'full name')) ||
+            (f.kind === FieldKindEnum.FULL_NAME ||
+              plainTitle === 'full name' ||
+              normTitle === 'full name')) ||
           (lowerKey === 'phone' &&
-            (f.kind === FieldKindEnum.PHONE_NUMBER || plainTitle === 'phone number'))
+            (f.kind === FieldKindEnum.PHONE_NUMBER ||
+              plainTitle === 'phone number' ||
+              normTitle === 'phone number'))
         )
       })
 
