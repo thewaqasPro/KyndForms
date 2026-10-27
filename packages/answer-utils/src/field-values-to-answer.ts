@@ -10,7 +10,7 @@ export function fieldValuesToAnswers(
   values: Record<string, any>,
   partialSubmission?: boolean
 ): Answer[] {
-  const rules = fieldsToValidateRules(fields)
+  const rules = fieldsToValidateRules(fields, values)
   const answers: Answer[] = []
 
   for (const rule of rules) {

@@ -144,6 +144,20 @@ function sanitizeField(field: Record<string, any>): Record<string, any> {
     }
   }
 
+  if (Array.isArray(sanitized.properties?.buttons)) {
+    sanitized.properties = {
+      ...sanitized.properties,
+      buttons: sanitized.properties.buttons.map((btn: any) => {
+        if (!btn || typeof btn !== 'object') return btn
+        const sanitizedBtn = { ...btn }
+        if (sanitizedBtn.url && isUnsafeUrlProtocol(sanitizedBtn.url)) {
+          sanitizedBtn.url = ''
+        }
+        return sanitizedBtn
+      })
+    }
+  }
+
   return sanitized
 }
 

@@ -18,7 +18,10 @@ export interface FieldsToValidateRules
   choices?: string[]
 }
 
-export function fieldsToValidateRules(fields: FormField[]): FieldsToValidateRules[] {
+export function fieldsToValidateRules(
+  fields: FormField[],
+  values?: Record<string, any>
+): FieldsToValidateRules[] {
   let rules: FieldsToValidateRules[] = []
 
   for (const field of fields) {
@@ -27,29 +30,42 @@ export function fieldsToValidateRules(fields: FormField[]): FieldsToValidateRule
     }
 
     if (field.kind === FieldKindEnum.GROUP) {
-      rules = [...rules, ...(field.properties?.fields || [])?.map(field => convert(field))]
+      rules = [...rules, ...(field.properties?.fields || [])?.map(f => convert(f, values, fields))]
     } else {
-      rules.push(convert(field))
+      rules.push(convert(field, values, fields))
     }
   }
 
   return rules
 }
 
-function convert(field: FormField): FieldsToValidateRules {
+function convert(
+  field: FormField,
+  values?: Record<string, any>,
+  allFields?: FormField[]
+): FieldsToValidateRules {
   let title = (field.title as string) || ''
   let description = (field.description as string) || ''
 
   if (helper.isValidArray(field.title)) {
     title = htmlUtils.serialize(field.title as unknown as any, {
-      plain: true
+      plain: true,
+      values,
+      fields: allFields
     })
   }
 
   if (helper.isValidArray(field.description)) {
     description = htmlUtils.serialize(field.description as unknown as any, {
-      plain: true
+      plain: true,
+      values,
+      fields: allFields
     })
+  }
+
+  // Clean raw &nbsp; in titles
+  if (typeof title === 'string' && (title.includes('&nbsp;') || title.includes('\u00a0'))) {
+    title = title.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ')
   }
 
   const rule: FieldsToValidateRules = {

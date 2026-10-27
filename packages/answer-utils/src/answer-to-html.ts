@@ -1,12 +1,171 @@
 import { Answer, FieldKindEnum } from '@kyndform/shared-types-enums'
 
 import parser from './answer-parser'
+import { parsePlainAnswer } from './answer-to-plain'
 import { escapeHtmlText } from './escape-html'
 
 const IMAGE_EXTENSION_REGEX = /\.(jpg|jpeg|png|gif|webp|bmp)($|\?)/i
 
 function isImageUrl(url: string): boolean {
   return IMAGE_EXTENSION_REGEX.test(url)
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export function formatQuestionTitle(title: string | undefined, allAnswers?: Answer[]): string {
+  if (!title) {
+    return 'Question'
+  }
+
+  let text = String(title)
+  let hadMention = false
+
+  // 1. Resolve HTML mention spans: <span ... data-mention="id">...</span>
+  if (text.includes('data-mention')) {
+    text = text.replace(
+      /<span[^>]+data-mention="([^"]+)"[^>]*>([\s\S]*?)<\/span>/gi,
+      (_, fieldId) => {
+        hadMention = true
+        if (allAnswers && allAnswers.length > 0) {
+          const found = allAnswers.find(a => a.id === fieldId)
+          if (found) {
+            const val = parsePlainAnswer(found, true)
+            if (val && val.trim()) {
+              return val.trim()
+            }
+          }
+        }
+        return ''
+      }
+    )
+  }
+
+  // 1b. Resolve HTML hiddenfield and variable spans
+  if (text.includes('data-hiddenfield')) {
+    text = text.replace(
+      /<span[^>]+data-hiddenfield="([^"]+)"[^>]*>([\s\S]*?)<\/span>/gi,
+      (_, fieldId) => {
+        hadMention = true
+        if (allAnswers && allAnswers.length > 0) {
+          const found = allAnswers.find(a => a.id === fieldId)
+          if (found) {
+            const val = parsePlainAnswer(found, true)
+            if (val && val.trim()) return val.trim()
+          }
+        }
+        return ''
+      }
+    )
+  }
+
+  if (text.includes('data-variable')) {
+    text = text.replace(
+      /<span[^>]+data-variable="([^"]+)"[^>]*>([\s\S]*?)<\/span>/gi,
+      (_, varId) => {
+        hadMention = true
+        if (allAnswers && allAnswers.length > 0) {
+          const found = allAnswers.find(a => a.id === varId)
+          if (found) {
+            const val = parsePlainAnswer(found, true)
+            if (val && val.trim()) return val.trim()
+          }
+        }
+        return ''
+      }
+    )
+  }
+
+  // 2. Resolve plain text mentions: e.g. "@Find The Perfect Engagement Ring For Your Style"
+  // When titles were serialized with { plain: true }, mentions became "@<Original Question Title>"
+  if (allAnswers && allAnswers.length > 0 && text.includes('@')) {
+    const sortedAnswers = [...allAnswers]
+      .filter(a => a.title && a.title.trim().length > 1)
+      .sort((a, b) => (b.title?.length || 0) - (a.title?.length || 0))
+
+    for (const ans of sortedAnswers) {
+      const cleanAnsTitle = ans
+        .title!.replace(/&nbsp;/gi, ' ')
+        .replace(/\u00a0/g, ' ')
+        .replace(/<[^>]+>/g, '')
+        .trim()
+
+      if (cleanAnsTitle.length > 1) {
+        const mentionPattern = new RegExp('@' + escapeRegex(cleanAnsTitle), 'gi')
+        if (mentionPattern.test(text)) {
+          hadMention = true
+          const val = parsePlainAnswer(ans, true)
+          const replacement = val && val.trim() ? val.trim() : ''
+          text = text.replace(mentionPattern, replacement)
+        }
+      }
+    }
+  }
+
+  // 3. Clean &nbsp; and \u00a0
+  if (text.includes('&nbsp;') || text.includes('\u00a0')) {
+    text = text.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ')
+  }
+
+  // 4. If the title had a mention, clean formatting asterisks, stray tags, and leftover punctuation
+  if (hadMention) {
+    text = text
+      .replace(/\*+/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/^[,.\s]+/, '')
+      .trim()
+  }
+
+  return text || 'Question'
+}
+
+function extractChoiceLabels(answer: Answer): string[] {
+  const choices = (answer.properties?.choices || []) as Array<{ id: string; label: string }>
+  const choiceMap = new Map<string, string>()
+  for (const c of choices) {
+    if (c?.id) {
+      choiceMap.set(c.id, c.label ?? '')
+    }
+  }
+
+  const result: string[] = []
+
+  if (Array.isArray(answer.value)) {
+    for (const item of answer.value) {
+      if (typeof item === 'string' && choiceMap.has(item)) {
+        result.push(choiceMap.get(item)!)
+      } else if (item !== undefined && item !== null && item !== '') {
+        result.push(String(item))
+      }
+    }
+  } else if (typeof answer.value === 'object' && answer.value !== null) {
+    if (Array.isArray(answer.value.value)) {
+      for (const item of answer.value.value) {
+        if (typeof item === 'string' && choiceMap.has(item)) {
+          result.push(choiceMap.get(item)!)
+        } else if (item !== undefined && item !== null && item !== '') {
+          result.push(String(item))
+        }
+      }
+    }
+    if (
+      answer.value.other !== undefined &&
+      answer.value.other !== null &&
+      String(answer.value.other).trim() !== ''
+    ) {
+      result.push(String(answer.value.other).trim())
+    }
+  } else if (typeof answer.value === 'string' && answer.value.trim() !== '') {
+    if (choiceMap.has(answer.value)) {
+      result.push(choiceMap.get(answer.value)!)
+    } else {
+      result.push(answer.value)
+    }
+  }
+
+  return result
 }
 
 export function answersToHtml(answers: Answer[]): string {
@@ -17,12 +176,13 @@ export function answersToHtml(answers: Answer[]): string {
   const rows = answers
     .map(answer => {
       const valueHtml = renderAnswerHtml(answer)
+      const title = formatQuestionTitle(answer.title, answers)
 
       return `
 <tr>
   <td style="padding: 14px 0; border-bottom: 1px solid #f1f5f9;">
     <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 5px;">
-      ${escapeHtmlText(answer.title || 'Question')}
+      ${escapeHtmlText(title)}
     </div>
     <div style="font-size: 14px; color: #0f172a; line-height: 1.5;">
       ${valueHtml}
@@ -119,18 +279,7 @@ function renderAnswerHtml(answer: Answer): string {
 
       case FieldKindEnum.MULTIPLE_CHOICE:
       case FieldKindEnum.PICTURE_CHOICE: {
-        let choices: string[] = []
-        if (Array.isArray(answer.value)) {
-          choices = answer.value.map(String)
-        } else {
-          const parsed = parser.multipleChoice(answer)
-          if (parsed) {
-            choices = parsed
-              .split(',')
-              .map(s => s.trim())
-              .filter(Boolean)
-          }
-        }
+        const choices = extractChoiceLabels(answer)
 
         if (choices.length > 0) {
           const badges = choices

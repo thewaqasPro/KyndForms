@@ -99,8 +99,13 @@ export class EndScreenButtonInput {
   @Field()
   id: string
 
-  @Field()
-  text: string
+  @Field({ nullable: true })
+  @IsOptional()
+  text?: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  label?: string
 
   @Field({ nullable: true })
   @IsOptional()
@@ -987,8 +992,11 @@ export class EndScreenButtonType {
   @Field()
   id: string
 
-  @Field()
-  text: string
+  @Field({ nullable: true })
+  text?: string
+
+  @Field({ nullable: true })
+  label?: string
 
   @Field({ nullable: true })
   url?: string

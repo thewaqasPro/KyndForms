@@ -148,6 +148,44 @@ function testCssValueRejectsRuleBreakingCharacters() {
   }
 }
 
+function testSanitizesEndScreenButtons() {
+  const drafts = sanitizeFormDrafts([
+    {
+      id: 'thank_you_1',
+      kind: 'thank_you',
+      title: 'Thank you',
+      properties: {
+        screenVariant: 'rich',
+        buttons: [
+          {
+            id: 'btn_1',
+            text: 'Learn More',
+            label: 'Learn More',
+            action: 'url',
+            url: 'https://example.com',
+            newTab: true,
+            variant: 'primary'
+          },
+          {
+            id: 'btn_2',
+            text: 'Malicious',
+            label: 'Malicious',
+            action: 'url',
+            url: 'javascript:alert(1)',
+            newTab: false,
+            variant: 'secondary'
+          }
+        ]
+      }
+    }
+  ])
+
+  assert.strictEqual(drafts[0].properties.buttons.length, 2)
+  assert.strictEqual(drafts[0].properties.buttons[0].url, 'https://example.com')
+  assert.strictEqual(drafts[0].properties.buttons[0].label, 'Learn More')
+  assert.strictEqual(drafts[0].properties.buttons[1].url, '')
+}
+
 function run() {
   testSanitizesDraftRichText()
   testSanitizesNestedGroupDrafts()
@@ -155,6 +193,7 @@ function run() {
   testDropsControlCharacterSplitUnsafeHrefProtocols()
   testCustomCssRejectsHtmlBreakingCharacters()
   testCssValueRejectsRuleBreakingCharacters()
+  testSanitizesEndScreenButtons()
 }
 
 if (require.main === module) {

@@ -3,12 +3,16 @@ import { IAttribute } from 'html5parser/src/types'
 
 import { helper, htmlToText } from '@kyndform/utils'
 
-interface HTMLWalkOptions {
+import { parsePlainAnswer } from './answer-to-plain'
+
+export interface HTMLWalkOptions {
   allowedTags?: string[]
   allowedBlockTags?: string[]
   allowedAttributes?: string[]
   plain?: boolean
   livePreview?: boolean
+  values?: Record<string, any>
+  fields?: any[]
 }
 
 const ALLOWED_BLOCK_TAGS = ['div', 'h1', 'h2', 'h3', 'p', 'br']
@@ -233,6 +237,20 @@ function serialize(schemas?: any[], option?: HTMLWalkOptions): string {
         (helper.isEmpty(body) && helper.isEmpty(attributes) && tag !== 'br')
       ) {
         return ''
+      }
+
+      if (
+        tag === 'mention' &&
+        customOption.values &&
+        attributes?.id &&
+        customOption.values[attributes.id] !== undefined
+      ) {
+        const refValue = customOption.values[attributes.id]
+        const refField = customOption.fields?.find((f: any) => f.id === attributes.id)
+        const text = parsePlainAnswer({ ...refField, value: refValue } as any, true)
+        if (text && text.trim()) {
+          body = [text.trim()]
+        }
       }
 
       if (customOption.plain) {
