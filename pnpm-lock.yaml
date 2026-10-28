@@ -876,6 +876,9 @@ importers:
       vite-plugin-webfont-dl:
         specifier: ^3.9.4
         version: 3.12.0(debug@4.4.0(supports-color@8.1.1))(supports-color@8.1.1)(vite@5.4.21(@types/node@22.19.13)(sass@1.97.3)(terser@5.46.1))
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@22.19.13)(jsdom@16.7.0(bufferutil@4.0.9)(supports-color@8.1.1)(utf-8-validate@5.0.10))(sass@1.97.3)(supports-color@8.1.1)(terser@5.46.1)
 
 packages:
 
@@ -20978,6 +20981,24 @@ snapshots:
       - supports-color
       - terser
 
+  vite-node@1.6.1(@types/node@22.19.13)(sass@1.97.3)(supports-color@8.1.1)(terser@5.46.1):
+    dependencies:
+      cac: 6.7.14
+      debug: 4.4.0(supports-color@8.1.1)
+      pathe: 1.1.2
+      picocolors: 1.1.1
+      vite: 5.4.21(@types/node@22.19.13)(sass@1.97.3)(terser@5.46.1)
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+
   vite-node@1.6.1(@types/node@25.9.5)(sass@1.97.3)(supports-color@8.1.1)(terser@5.46.1):
     dependencies:
       cac: 6.7.14
@@ -21075,6 +21096,41 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.17.24
+      jsdom: 16.7.0(bufferutil@4.0.9)(supports-color@8.1.1)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+
+  vitest@1.6.1(@types/node@22.19.13)(jsdom@16.7.0(bufferutil@4.0.9)(supports-color@8.1.1)(utf-8-validate@5.0.10))(sass@1.97.3)(supports-color@8.1.1)(terser@5.46.1):
+    dependencies:
+      '@vitest/expect': 1.6.1
+      '@vitest/runner': 1.6.1
+      '@vitest/snapshot': 1.6.1
+      '@vitest/spy': 1.6.1
+      '@vitest/utils': 1.6.1
+      acorn-walk: 8.3.5
+      chai: 4.5.0
+      debug: 4.4.0(supports-color@8.1.1)
+      execa: 8.0.1
+      local-pkg: 0.5.1
+      magic-string: 0.30.21
+      pathe: 1.1.2
+      picocolors: 1.1.1
+      std-env: 3.10.0
+      strip-literal: 2.1.1
+      tinybench: 2.9.0
+      tinypool: 0.8.4
+      vite: 5.4.21(@types/node@22.19.13)(sass@1.97.3)(terser@5.46.1)
+      vite-node: 1.6.1(@types/node@22.19.13)(sass@1.97.3)(supports-color@8.1.1)(terser@5.46.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 22.19.13
       jsdom: 16.7.0(bufferutil@4.0.9)(supports-color@8.1.1)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - less

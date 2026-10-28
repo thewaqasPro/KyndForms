@@ -22,7 +22,8 @@
     "test": "pnpm --filter ./packages/utils test && pnpm --filter ./packages/answer-utils test",
     "verify:integrity": "node scripts/verify-integrity.js",
     "make-admin": "node scripts/make-admin.js",
-    "postinstall": "simple-git-hooks"
+    "postinstall": "simple-git-hooks",
+    "test:unit": "pnpm test"
   },
   "simple-git-hooks": {
     "pre-commit": "if ! command -v node >/dev/null 2>&1; then for d in \"$HOME\"/.nvm/versions/node/*/bin; do [ -d \"$d\" ] && PATH=\"$d:$PATH\"; done; export PATH; fi; ./node_modules/.bin/lint-staged --concurrent false"

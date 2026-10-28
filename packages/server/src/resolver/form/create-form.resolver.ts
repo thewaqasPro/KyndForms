@@ -1,18 +1,22 @@
 import { CaptchaKindEnum, FieldKindEnum, FormStatusEnum } from '@kyndform/shared-types-enums'
+import { BadRequestException } from '@nestjs/common'
 
 import { Auth, ProjectGuard, Team, User } from '@decorator'
 import { CreateFormInput } from '@graphql'
 import { helper, nanoid } from '@kyndform/utils'
 import { TeamModel, UserModel } from '@model'
 import { Args, Mutation, Resolver } from '@nestjs/graphql'
-import { FormService } from '@service'
+import { FormService, SystemSettingService } from '@service'
 
 const DEFAULT_FORM_NAME = 'Untitled'
 
 @Resolver()
 @Auth()
 export class CreateFormResolver {
-  constructor(private readonly formService: FormService) {}
+  constructor(
+    private readonly formService: FormService,
+    private readonly systemSettingService: SystemSettingService
+  ) {}
 
   @Mutation(returns => String)
   @ProjectGuard()
@@ -21,6 +25,16 @@ export class CreateFormResolver {
     @User() user: UserModel,
     @Args('input') input: CreateFormInput
   ): Promise<string> {
+    const settings = await this.systemSettingService.getSettings()
+    if (settings.maxFormsPerWorkspace && settings.maxFormsPerWorkspace > 0) {
+      const existingFormsCount = await this.formService.countByTeamId(team.id)
+      if (existingFormsCount >= settings.maxFormsPerWorkspace) {
+        throw new BadRequestException(
+          `Workspace form limit (${settings.maxFormsPerWorkspace}) reached`
+        )
+      }
+    }
+
     const name = helper.isValid(input.name?.trim()) ? input.name.trim() : DEFAULT_FORM_NAME
 
     const fields = [

@@ -42,6 +42,10 @@ export class LoginResolver {
       throw new BadRequestException('Incorrect email or password.')
     }
 
+    if (user.isBlocked) {
+      throw new BadRequestException('Your account has been suspended by an administrator.')
+    }
+
     const key = loginAttemptKey(user.id, client)
 
     await this.authService.attemptsCheck(key, async () => {

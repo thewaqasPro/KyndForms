@@ -3,12 +3,27 @@ import clsx from 'clsx'
 import type { FC } from 'react'
 import { useEffect } from 'react'
 
-import { isURL } from '../utils'
-
 import { useStore } from '../store'
 import { WelcomeBranding } from '../views/Branding'
 import type { BlockProps } from './Block'
 import { Block } from './Block'
+
+export function isSafeHttpOrRelativeUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false
+  const trimmed = url.trim()
+  const cleaned = trimmed.toLowerCase().replace(/[\x00-\x20\s]/g, '')
+  if (
+    cleaned.startsWith('javascript:') ||
+    cleaned.startsWith('data:') ||
+    cleaned.startsWith('vbscript:')
+  ) {
+    return false
+  }
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return true
+  }
+  return /^https?:\/\//i.test(trimmed)
+}
 
 export const ThankYou: FC<BlockProps> = ({ field, className, children, ...restProps }) => {
   const { state } = useStore()
@@ -19,12 +34,19 @@ export const ThankYou: FC<BlockProps> = ({ field, className, children, ...restPr
     if (state.customUrlRedirects && field.properties?.redirectOnCompletion && redirectUrl) {
       const delay = (field.properties?.redirectDelay || 0) * 1_000
 
-      if (!isURL(redirectUrl)) {
-        redirectUrl = 'https://' + redirectUrl
+      let targetUrl = redirectUrl.trim()
+      if (!isSafeHttpOrRelativeUrl(targetUrl)) {
+        if (!targetUrl.includes(':') && !targetUrl.startsWith('/')) {
+          targetUrl = 'https://' + targetUrl
+        }
+      }
+
+      if (!isSafeHttpOrRelativeUrl(targetUrl)) {
+        return
       }
 
       setTimeout(() => {
-        window.location.href = redirectUrl as string
+        window.location.href = targetUrl
       }, delay)
     }
   }, [])
@@ -40,11 +62,17 @@ export const ThankYou: FC<BlockProps> = ({ field, className, children, ...restPr
       return
     }
 
-    let destination = button.url || ''
+    let destination = button.url?.trim() || ''
     if (!destination) return
 
-    if (!isURL(destination)) {
-      destination = 'https://' + destination
+    if (!isSafeHttpOrRelativeUrl(destination)) {
+      if (!destination.includes(':') && !destination.startsWith('/')) {
+        destination = 'https://' + destination
+      }
+    }
+
+    if (!isSafeHttpOrRelativeUrl(destination)) {
+      return
     }
 
     if (button.newTab) {

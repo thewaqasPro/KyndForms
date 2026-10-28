@@ -1,8 +1,8 @@
 import { FieldKindEnum } from '@kyndform/shared-types-enums'
 import { FC, useState } from 'react'
 
-import { useTranslation } from '../../utils'
-import { ValidateError, validateFields } from '@kyndform/answer-utils'
+import { removeHeading, useTranslation } from '../../utils'
+import { ValidateError, htmlUtils, validateFields } from '@kyndform/answer-utils'
 import { helper } from '@kyndform/utils'
 
 import { ThankYou } from '../../blocks/ThankYou'
@@ -22,8 +22,19 @@ export const ClassicForm: FC = () => {
   )
 
   const welcomeField = state.welcomeField
-  const formTitle = welcomeField?.title ? String(welcomeField.title) : undefined
-  const formDescription = welcomeField?.description ? String(welcomeField.description) : undefined
+  const rawTitle = welcomeField?.title
+    ? Array.isArray(welcomeField.title)
+      ? htmlUtils.serialize(welcomeField.title)
+      : (welcomeField.title as string)
+    : undefined
+  const formTitle = rawTitle ? removeHeading(rawTitle) : undefined
+
+  const rawDescription = welcomeField?.description
+    ? Array.isArray(welcomeField.description)
+      ? htmlUtils.serialize(welcomeField.description)
+      : (welcomeField.description as string)
+    : undefined
+  const formDescription = rawDescription ? htmlUtils.cleanEmptyBlocks(rawDescription) : undefined
 
   function handleFieldChange(fieldId: string, value: any) {
     dispatch({

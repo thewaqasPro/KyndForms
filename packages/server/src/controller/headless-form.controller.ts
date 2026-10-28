@@ -41,7 +41,8 @@ import {
   IntegrationService,
   RedisService,
   SubmissionIpLimitService,
-  SubmissionService
+  SubmissionService,
+  SystemSettingService
 } from '@service'
 import { ClientInfo, HttpClient, assertFormIsAcceptingSubmissions, passwordVerify } from '@utils'
 
@@ -257,7 +258,8 @@ export class HeadlessFormController {
     private readonly submissionIpLimitService: SubmissionIpLimitService,
     private readonly formReportService: FormReportService,
     private readonly integrationService: IntegrationService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly systemSettingService?: SystemSettingService
   ) {}
 
   private setCorsHeaders(form: FormModel | null, req: Request, res: Response): void {
@@ -398,6 +400,19 @@ export class HeadlessFormController {
 
     // Process file uploads
     if (helper.isValidArray(files) && files.length > 0) {
+      if (this.systemSettingService) {
+        const settings = await this.systemSettingService.getSettings()
+        if (settings.maxUploadFileSizeMB && settings.maxUploadFileSizeMB > 0) {
+          const maxBytes = settings.maxUploadFileSizeMB * 1024 * 1024
+          for (const file of files) {
+            if (file.size > maxBytes) {
+              throw new BadRequestException(
+                `File exceeds maximum allowed size of ${settings.maxUploadFileSizeMB}MB`
+              )
+            }
+          }
+        }
+      }
       await this.redisService.throttler(`upload:form:${form.id}`, 300, '1h')
       for (const file of files) {
         if (!isUploadFileContentValid(file)) {

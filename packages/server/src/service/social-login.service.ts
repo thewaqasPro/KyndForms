@@ -160,6 +160,11 @@ export class SocialLoginService {
       })
     }
 
+    const user = await this.userService.findById(userId!)
+    if (user?.isBlocked) {
+      throw new BadRequestException('Your account has been suspended by an administrator.')
+    }
+
     return userId
   }
 }

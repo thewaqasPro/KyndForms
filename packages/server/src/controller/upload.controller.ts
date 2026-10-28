@@ -24,7 +24,8 @@ import {
   FormService,
   MediaService,
   ProjectService,
-  RedisService
+  RedisService,
+  SystemSettingService
 } from '@service'
 import { isAllowedUploadField, md5 } from '@utils'
 
@@ -49,7 +50,8 @@ export class UploadController {
     private readonly formService: FormService,
     private readonly redisService: RedisService,
     private readonly mediaService?: MediaService,
-    private readonly projectService?: ProjectService
+    private readonly projectService?: ProjectService,
+    private readonly systemSettingService?: SystemSettingService
   ) {}
 
   @Post('/api/upload')
@@ -68,6 +70,17 @@ export class UploadController {
   ): Promise<{ filename: string; url: string; size: number }> {
     if (!file) {
       throw new BadRequestException('No supported upload file provided')
+    }
+
+    if (this.systemSettingService) {
+      const settings = await this.systemSettingService.getSettings()
+      if (settings.maxUploadFileSizeMB && settings.maxUploadFileSizeMB > 0) {
+        if (file.size > settings.maxUploadFileSizeMB * 1024 * 1024) {
+          throw new BadRequestException(
+            `File exceeds maximum allowed size of ${settings.maxUploadFileSizeMB}MB`
+          )
+        }
+      }
     }
 
     await this.assertUploadAllowed(req)

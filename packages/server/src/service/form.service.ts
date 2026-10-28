@@ -157,6 +157,10 @@ export class FormService {
     return this.formModel.countDocuments({})
   }
 
+  async countByTeamId(teamId: string): Promise<number> {
+    return this.countAll(teamId)
+  }
+
   async countAll(teamId: string): Promise<number> {
     return this.formModel.countDocuments({
       teamId

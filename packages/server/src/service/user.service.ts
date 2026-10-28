@@ -2,13 +2,17 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 
+import { RedisService } from './redis.service'
 import { ADMIN_EMAILS } from '@environments'
 import { timestamp } from '@kyndform/utils'
 import { UserModel } from '@model'
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(UserModel.name) private readonly userModel: Model<UserModel>) {}
+  constructor(
+    @InjectModel(UserModel.name) private readonly userModel: Model<UserModel>,
+    private readonly redisService?: RedisService
+  ) {}
 
   async findById(id: string): Promise<UserModel | null> {
     const user = await this.userModel.findById(id)
@@ -98,7 +102,8 @@ export class UserService {
     const filter: Record<string, any> = {}
 
     if (options.keyword && options.keyword.trim()) {
-      const regex = new RegExp(options.keyword.trim(), 'i')
+      const sanitized = options.keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regex = new RegExp(sanitized, 'i')
       filter.$or = [{ name: regex }, { email: regex }]
     }
 
@@ -125,6 +130,9 @@ export class UserService {
         blockedAt: newBlocked ? timestamp() : undefined
       }
     )
+    if (newBlocked && this.redisService) {
+      await this.redisService.del(`sess:${id}`)
+    }
     return newBlocked
   }
 

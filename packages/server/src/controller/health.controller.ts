@@ -1,7 +1,8 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common'
+import { Controller, Get, ServiceUnavailableException, UseGuards } from '@nestjs/common'
 import { InjectConnection } from '@nestjs/mongoose'
 import { Connection } from 'mongoose'
 
+import { AuthGuard, SystemAdminGuard } from '@guard'
 import { RedisService, StatusService, SystemStatusReport } from '@service'
 
 interface HealthResponse {
@@ -27,6 +28,7 @@ export class HealthController {
   ) {}
 
   @Get('/api/system/status')
+  @UseGuards(AuthGuard, SystemAdminGuard)
   async systemStatus(): Promise<SystemStatusReport> {
     return this.statusService.getStatusReport()
   }

@@ -41,6 +41,10 @@ export class AuthGuard implements CanActivate {
         const detail = await this.userService.findById(user.id)
 
         if (helper.isValid(detail)) {
+          if (detail.isBlocked) {
+            throw new ForbiddenException('Your account has been suspended by an administrator.')
+          }
+
           req.user = detail
 
           const now = timestamp()

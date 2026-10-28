@@ -5,6 +5,7 @@ import { Model } from 'mongoose'
 
 import { FormService } from './form.service'
 import { RedisService } from './redis.service'
+import { SystemSettingService } from './system-setting.service'
 import { date, helper } from '@kyndform/utils'
 import { SubmissionModel } from '@model'
 import { getUpdateQuery } from '@utils'
@@ -31,7 +32,8 @@ export class SubmissionService {
     @InjectModel(SubmissionModel.name)
     private readonly submissionModel: Model<SubmissionModel>,
     private readonly formService: FormService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly systemSettingService?: SystemSettingService
   ) {}
 
   async findById(id: string): Promise<SubmissionModel | null> {
@@ -259,6 +261,23 @@ export class SubmissionService {
     submission: SubmissionModel | any,
     quotaLimit?: number
   ): Promise<string> {
+    if (this.systemSettingService) {
+      const settings = await this.systemSettingService.getSettings()
+      if (settings.maxSubmissionsPerMonth && settings.maxSubmissionsPerMonth > 0) {
+        let teamId = submission.teamId
+        if (!teamId && submission.formId) {
+          const form = await this.formService.findById(submission.formId)
+          teamId = form?.teamId
+        }
+        if (teamId) {
+          const count = await this.countAllInTeam(teamId)
+          if (count >= settings.maxSubmissionsPerMonth) {
+            throw new BadRequestException('Monthly submission quota reached for this workspace')
+          }
+        }
+      }
+    }
+
     if (!Number.isSafeInteger(quotaLimit) || quotaLimit! < 1) {
       return this.create(submission)
     }

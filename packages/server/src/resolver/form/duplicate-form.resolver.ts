@@ -1,14 +1,19 @@
+import { BadRequestException } from '@nestjs/common'
+
 import { Auth, Form, FormGuard, User } from '@decorator'
 import { DuplicateFormInput } from '@graphql'
 import { helper, pickValidValues } from '@kyndform/utils'
 import { FormModel, UserModel } from '@model'
 import { Args, Mutation, Resolver } from '@nestjs/graphql'
-import { FormService } from '@service'
+import { FormService, SystemSettingService } from '@service'
 
 @Resolver()
 @Auth()
 export class DuplicateFormResolver {
-  constructor(private readonly formService: FormService) {}
+  constructor(
+    private readonly formService: FormService,
+    private readonly systemSettingService: SystemSettingService
+  ) {}
 
   @Mutation(returns => String)
   @FormGuard()
@@ -17,6 +22,16 @@ export class DuplicateFormResolver {
     @Form() form: FormModel,
     @Args('input') input: DuplicateFormInput
   ): Promise<string> {
+    const settings = await this.systemSettingService.getSettings()
+    if (settings.maxFormsPerWorkspace && settings.maxFormsPerWorkspace > 0) {
+      const existingFormsCount = await this.formService.countByTeamId(form.teamId)
+      if (existingFormsCount >= settings.maxFormsPerWorkspace) {
+        throw new BadRequestException(
+          `Workspace form limit (${settings.maxFormsPerWorkspace}) reached`
+        )
+      }
+    }
+
     const fields = [
       'variables',
       'logics',

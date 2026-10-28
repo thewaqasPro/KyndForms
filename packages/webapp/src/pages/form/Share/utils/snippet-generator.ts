@@ -37,6 +37,15 @@ export interface SnippetResults {
   curl: string
 }
 
+export function escapeAttr(str: string): string {
+  if (!str || typeof str !== 'string') return ''
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 export function extractPlainTitle(title: any, fallback = ''): string {
   if (typeof title === 'string') {
     return title.trim()
@@ -260,7 +269,7 @@ export function generateHtmlSnippet({
         case FieldKindEnum.LONG_TEXT:
           elements.push(`    <label for="${slug}">${title}${isRequired ? ' *' : ''}</label>`)
           elements.push(
-            `    <textarea id="${slug}" name="${slug}" placeholder="${title}"${reqAttr}></textarea>`
+            `    <textarea id="${slug}" name="${slug}" placeholder="${escapeAttr(title)}"${reqAttr}></textarea>`
           )
           break
 
@@ -285,7 +294,7 @@ export function generateHtmlSnippet({
           const max = field.properties?.total ?? field.validations?.max ?? 100
           elements.push(`    <label for="${slug}">${title}${isRequired ? ' *' : ''}</label>`)
           elements.push(
-            `    <input id="${slug}" type="number" name="${slug}" min="${min}" max="${max}" placeholder="${title}"${reqAttr} />`
+            `    <input id="${slug}" type="number" name="${slug}" min="${min}" max="${max}" placeholder="${escapeAttr(title)}"${reqAttr} />`
           )
           break
         }
@@ -317,7 +326,7 @@ export function generateHtmlSnippet({
             if (choices.length > 0) {
               for (const choice of choices) {
                 elements.push(
-                  `      <label><input type="checkbox" name="${slug}[]" value="${choice}" /> ${choice}</label>`
+                  `      <label><input type="checkbox" name="${slug}[]" value="${escapeAttr(choice)}" /> ${escapeAttr(choice)}</label>`
                 )
               }
             } else {
@@ -334,7 +343,9 @@ export function generateHtmlSnippet({
             elements.push(`    <select id="${slug}" name="${slug}"${reqAttr}>`)
             elements.push(`      <option value="">Select an option</option>`)
             for (const choice of choices) {
-              elements.push(`      <option value="${choice}">${choice}</option>`)
+              elements.push(
+                `      <option value="${escapeAttr(choice)}">${escapeAttr(choice)}</option>`
+              )
             }
             elements.push(`    </select>`)
           }
@@ -348,7 +359,7 @@ export function generateHtmlSnippet({
         default:
           elements.push(`    <label for="${slug}">${title}${isRequired ? ' *' : ''}</label>`)
           elements.push(
-            `    <input id="${slug}" type="text" name="${slug}" placeholder="${title}"${reqAttr} />`
+            `    <input id="${slug}" type="text" name="${slug}" placeholder="${escapeAttr(title)}"${reqAttr} />`
           )
           break
       }
@@ -428,13 +439,19 @@ export function generateNextJsSnippet({
       const req = isRequired ? ' required' : ''
 
       if (p.field.kind === FieldKindEnum.LONG_TEXT) {
-        jsxInputs.push(`      <textarea name="${slug}" placeholder="${title}"${req} />`)
+        jsxInputs.push(`      <textarea name="${slug}" placeholder="${escapeAttr(title)}"${req} />`)
       } else if (p.field.kind === FieldKindEnum.EMAIL) {
-        jsxInputs.push(`      <input name="${slug}" type="email" placeholder="${title}"${req} />`)
+        jsxInputs.push(
+          `      <input name="${slug}" type="email" placeholder="${escapeAttr(title)}"${req} />`
+        )
       } else if (p.field.kind === FieldKindEnum.PHONE_NUMBER) {
-        jsxInputs.push(`      <input name="${slug}" type="tel" placeholder="${title}"${req} />`)
+        jsxInputs.push(
+          `      <input name="${slug}" type="tel" placeholder="${escapeAttr(title)}"${req} />`
+        )
       } else if (p.field.kind === FieldKindEnum.NUMBER) {
-        jsxInputs.push(`      <input name="${slug}" type="number" placeholder="${title}"${req} />`)
+        jsxInputs.push(
+          `      <input name="${slug}" type="number" placeholder="${escapeAttr(title)}"${req} />`
+        )
       } else if (p.field.kind === FieldKindEnum.DATE || p.field.kind === FieldKindEnum.DATE_RANGE) {
         jsxInputs.push(`      <input name="${slug}" type="date"${req} />`)
       } else if (p.field.kind === FieldKindEnum.FILE_UPLOAD) {
@@ -444,19 +461,23 @@ export function generateNextJsSnippet({
         jsxInputs.push(`        <p className="text-sm font-medium">${title}</p>`)
         for (const choice of choices) {
           jsxInputs.push(
-            `        <label className="flex items-center gap-2"><input type="checkbox" name="${slug}[]" value="${choice}" /> ${choice}</label>`
+            `        <label className="flex items-center gap-2"><input type="checkbox" name="${slug}[]" value="${escapeAttr(choice)}" /> ${escapeAttr(choice)}</label>`
           )
         }
         jsxInputs.push(`      </div>`)
       } else if (choices.length > 0) {
         jsxInputs.push(`      <select name="${slug}"${req}>`)
-        jsxInputs.push(`        <option value="">Select ${title}</option>`)
+        jsxInputs.push(`        <option value="">Select ${escapeAttr(title)}</option>`)
         for (const choice of choices) {
-          jsxInputs.push(`        <option value="${choice}">${choice}</option>`)
+          jsxInputs.push(
+            `        <option value="${escapeAttr(choice)}">${escapeAttr(choice)}</option>`
+          )
         }
         jsxInputs.push(`      </select>`)
       } else {
-        jsxInputs.push(`      <input name="${slug}" type="text" placeholder="${title}"${req} />`)
+        jsxInputs.push(
+          `      <input name="${slug}" type="text" placeholder="${escapeAttr(title)}"${req} />`
+        )
       }
     }
   }
@@ -553,13 +574,21 @@ export function generateAstroSnippet({
       const req = isRequired ? ' required' : ''
 
       if (p.field.kind === FieldKindEnum.LONG_TEXT) {
-        inputs.push(`  <textarea name="${slug}" placeholder="${title}"${req}></textarea>`)
+        inputs.push(
+          `  <textarea name="${slug}" placeholder="${escapeAttr(title)}"${req}></textarea>`
+        )
       } else if (p.field.kind === FieldKindEnum.EMAIL) {
-        inputs.push(`  <input type="email" name="${slug}" placeholder="${title}"${req} />`)
+        inputs.push(
+          `  <input type="email" name="${slug}" placeholder="${escapeAttr(title)}"${req} />`
+        )
       } else if (p.field.kind === FieldKindEnum.PHONE_NUMBER) {
-        inputs.push(`  <input type="tel" name="${slug}" placeholder="${title}"${req} />`)
+        inputs.push(
+          `  <input type="tel" name="${slug}" placeholder="${escapeAttr(title)}"${req} />`
+        )
       } else if (p.field.kind === FieldKindEnum.NUMBER) {
-        inputs.push(`  <input type="number" name="${slug}" placeholder="${title}"${req} />`)
+        inputs.push(
+          `  <input type="number" name="${slug}" placeholder="${escapeAttr(title)}"${req} />`
+        )
       } else if (p.field.kind === FieldKindEnum.DATE || p.field.kind === FieldKindEnum.DATE_RANGE) {
         inputs.push(`  <input type="date" name="${slug}"${req} />`)
       } else if (p.field.kind === FieldKindEnum.FILE_UPLOAD) {
@@ -575,13 +604,15 @@ export function generateAstroSnippet({
         inputs.push(`  </div>`)
       } else if (choices.length > 0) {
         inputs.push(`  <select name="${slug}"${req}>`)
-        inputs.push(`    <option value="">Select ${title}</option>`)
+        inputs.push(`    <option value="">Select ${escapeAttr(title)}</option>`)
         for (const choice of choices) {
-          inputs.push(`    <option value="${choice}">${choice}</option>`)
+          inputs.push(`    <option value="${escapeAttr(choice)}">${escapeAttr(choice)}</option>`)
         }
         inputs.push(`  </select>`)
       } else {
-        inputs.push(`  <input type="text" name="${slug}" placeholder="${title}"${req} />`)
+        inputs.push(
+          `  <input type="text" name="${slug}" placeholder="${escapeAttr(title)}"${req} />`
+        )
       }
     }
   }
