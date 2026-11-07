@@ -76,10 +76,11 @@ export class IntegrationQueue extends BaseQueue {
           const durationMs = Date.now() - startTime
           const errorMessage = err?.message || 'Outbound delivery failed'
           const responseStatus = err?.response?.status || err?.status || 500
-          const responseBody = err?.response?.data
-            ? typeof err.response.data === 'string'
-              ? err.response.data
-              : JSON.stringify(err.response.data)
+          const rawBody = err?.response?.body ?? err?.response?.data
+          const responseBody = rawBody
+            ? typeof rawBody === 'string'
+              ? rawBody
+              : JSON.stringify(rawBody)
             : undefined
 
           await this.deliveryService.recordAttempt({

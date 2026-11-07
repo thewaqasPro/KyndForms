@@ -15,14 +15,51 @@ interface RunArgs {
   form: FormModel
 }
 
-export function buildKlaviyoPayload(
-  config: KlaviyoConfig,
-  submission: SubmissionModel
-): Record<string, any> | null {
-  if (!config?.apiKey || !config?.listId) {
-    return null
+export interface KlaviyoProfilePayload {
+  data: {
+    type: 'profile'
+    attributes: {
+      email: string
+      first_name?: string
+      last_name?: string
+      phone_number?: string
+      properties?: Record<string, any>
+    }
   }
+}
 
+export interface KlaviyoSubscribePayload {
+  data: {
+    type: 'profile-subscription-bulk-create-job'
+    attributes: {
+      profiles: {
+        data: Array<{
+          type: 'profile'
+          attributes: {
+            email: string
+            subscriptions: {
+              email: {
+                marketing: {
+                  consent: 'SUBSCRIBED'
+                }
+              }
+            }
+          }
+        }>
+      }
+    }
+    relationships: {
+      list: {
+        data: {
+          type: 'list'
+          id: string
+        }
+      }
+    }
+  }
+}
+
+export function extractKlaviyoData(submission: SubmissionModel) {
   let email = ''
   let firstName = ''
   let lastName = ''
@@ -46,26 +83,45 @@ export function buildKlaviyoPayload(
     }
   }
 
+  return { email, firstName, lastName, phone, customProperties }
+}
+
+export function buildKlaviyoProfilePayload(
+  submission: SubmissionModel
+): KlaviyoProfilePayload | null {
+  const { email, firstName, lastName, phone, customProperties } = extractKlaviyoData(submission)
+
   if (!email) {
     return null
   }
 
-  const profileAttributes: Record<string, any> = {
-    email,
-    subscriptions: {
-      email: {
-        marketing: {
-          consent: 'SUBSCRIBED'
-        }
-      }
-    }
+  const attributes: KlaviyoProfilePayload['data']['attributes'] = { email }
+  if (firstName) attributes.first_name = firstName
+  if (lastName) attributes.last_name = lastName
+  if (phone) attributes.phone_number = phone
+  if (Object.keys(customProperties).length > 0) {
+    attributes.properties = customProperties
   }
 
-  if (firstName) profileAttributes.first_name = firstName
-  if (lastName) profileAttributes.last_name = lastName
-  if (phone) profileAttributes.phone_number = phone
-  if (Object.keys(customProperties).length > 0) {
-    profileAttributes.properties = customProperties
+  return {
+    data: {
+      type: 'profile',
+      attributes
+    }
+  }
+}
+
+export function buildKlaviyoSubscribePayload(
+  config: KlaviyoConfig,
+  submission: SubmissionModel
+): KlaviyoSubscribePayload | null {
+  if (!config?.apiKey || !config?.listId) {
+    return null
+  }
+
+  const { email } = extractKlaviyoData(submission)
+  if (!email) {
+    return null
   }
 
   return {
@@ -76,7 +132,16 @@ export function buildKlaviyoPayload(
           data: [
             {
               type: 'profile',
-              attributes: profileAttributes
+              attributes: {
+                email,
+                subscriptions: {
+                  email: {
+                    marketing: {
+                      consent: 'SUBSCRIBED'
+                    }
+                  }
+                }
+              }
             }
           ]
         }
@@ -91,6 +156,14 @@ export function buildKlaviyoPayload(
       }
     }
   }
+}
+
+// Retained for backward-compatibility with existing tests/callers
+export function buildKlaviyoPayload(
+  config: KlaviyoConfig,
+  submission: SubmissionModel
+): KlaviyoSubscribePayload | null {
+  return buildKlaviyoSubscribePayload(config, submission)
 }
 
 export default {
@@ -122,19 +195,32 @@ export default {
   run: async ({ config, submission }: RunArgs) => {
     if (!config?.apiKey || !config?.listId) return
 
-    const payload = buildKlaviyoPayload(config, submission)
-    if (!payload) return
+    const apiKey = config.apiKey.trim()
+    const headers = {
+      Authorization: `Klaviyo-API-Key ${apiKey}`,
+      revision: '2024-02-15',
+      'Content-Type': 'application/vnd.api+json',
+      Accept: 'application/vnd.api+json'
+    }
 
-    const url = 'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/'
+    const profilePayload = buildKlaviyoProfilePayload(submission)
+    if (!profilePayload) return
 
-    await got.post(url, {
-      headers: {
-        Authorization: `Klaviyo-API-Key ${config.apiKey.trim()}`,
-        revision: '2024-02-15',
-        'Content-Type': 'application/vnd.api+json',
-        Accept: 'application/vnd.api+json'
-      },
-      json: payload,
+    // 1. Upsert profile with full details (Name, Phone, Custom Form Answers)
+    await got.post('https://a.klaviyo.com/api/profile-import/', {
+      headers,
+      json: profilePayload,
+      timeout: 15000,
+      retry: 1
+    })
+
+    // 2. Subscribe profile to the specified list with marketing consent
+    const subscribePayload = buildKlaviyoSubscribePayload(config, submission)
+    if (!subscribePayload) return
+
+    await got.post('https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/', {
+      headers,
+      json: subscribePayload,
       timeout: 15000,
       retry: 1
     })
