@@ -11,7 +11,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 
 import { IntegrationService } from '@/services'
-import { useParam } from '@/utils'
+import { cn, useParam } from '@/utils'
 import { date } from '@kyndform/utils'
 
 import { Badge, Button, EmptyState, Loader, Modal } from '@/components'
@@ -123,15 +123,16 @@ export default function DeliveryLogsModal() {
   return (
     <Modal
       open={isOpen}
+      isCloseButtonShow={false}
       contentProps={{
-        className: 'max-w-5xl p-0 overflow-hidden',
+        className: 'max-w-5xl !p-0 overflow-hidden',
         forceMount: true
       }}
       onOpenChange={onOpenChange}
     >
-      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+      <div className="border-accent-light flex items-center justify-between border-b px-6 py-4">
         <div>
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-primary flex items-center gap-2 text-lg font-semibold">
             <IconFileText className="text-primary h-5 w-5" />
             {app ? `${app.name} Delivery Logs` : 'Integration Delivery Logs'}
           </h2>
@@ -149,6 +150,14 @@ export default function DeliveryLogsModal() {
             <IconRefresh className="h-4 w-4" />
             Refresh
           </Button.Ghost>
+          <Button.Link
+            size="sm"
+            iconOnly
+            className="text-secondary hover:text-primary"
+            onClick={() => onOpenChange?.(false)}
+          >
+            <IconX className="h-5 w-5" />
+          </Button.Link>
         </div>
       </div>
 
@@ -160,33 +169,35 @@ export default function DeliveryLogsModal() {
           </div>
         ) : logs.length === 0 ? (
           <EmptyState
-            icon={<IconClock className="h-10 w-10 text-gray-400" />}
+            icon={<IconClock className="text-secondary h-10 w-10" />}
             headline="No delivery logs found"
             subHeadline="Outbound webhook and third-party deliveries will be recorded here whenever a form submission is processed."
           />
         ) : (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-xs">
-              <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-1 dark:border-gray-800 dark:bg-gray-800/40">
+              <div className="bg-accent-light text-secondary flex items-center gap-1 rounded-lg p-1">
                 <button
                   type="button"
                   onClick={() => setFilter('all')}
-                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+                  className={cn(
+                    'rounded-md px-2.5 py-1 font-medium transition-colors',
                     filter === 'all'
-                      ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-                  }`}
+                      ? 'bg-foreground text-primary shadow-sm'
+                      : 'text-secondary hover:text-primary'
+                  )}
                 >
                   All ({logs.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter('success')}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors ${
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors',
                     filter === 'success'
-                      ? 'bg-white text-emerald-600 shadow-sm dark:bg-gray-700 dark:text-emerald-400'
-                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-                  }`}
+                      ? 'bg-foreground text-primary shadow-sm'
+                      : 'text-secondary hover:text-primary'
+                  )}
                 >
                   <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
                   Success ({successCount})
@@ -194,11 +205,12 @@ export default function DeliveryLogsModal() {
                 <button
                   type="button"
                   onClick={() => setFilter('failed')}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors ${
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors',
                     filter === 'failed'
-                      ? 'bg-white text-rose-600 shadow-sm dark:bg-gray-700 dark:text-rose-400'
-                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-                  }`}
+                      ? 'bg-foreground text-primary shadow-sm'
+                      : 'text-secondary hover:text-primary'
+                  )}
                 >
                   <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
                   Failed ({failedCount})
@@ -210,9 +222,9 @@ export default function DeliveryLogsModal() {
               </span>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+            <div className="border-accent-light overflow-hidden rounded-xl border">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase text-gray-500 dark:border-gray-800 dark:bg-gray-800/50">
+                <thead className="border-accent-light bg-accent-light/50 text-secondary border-b text-xs font-semibold uppercase">
                   <tr>
                     <th className="px-4 py-3">Timestamp</th>
                     <th className="px-4 py-3">Integration</th>
@@ -222,23 +234,22 @@ export default function DeliveryLogsModal() {
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody className="divide-accent-light divide-y">
                   {filteredLogs.map(log => {
                     const isSuccess = log.status === 'success'
                     const isSelected = selectedLog?.id === log.id
                     return (
                       <tr
                         key={log.id}
-                        className={`transition-colors ${
-                          isSelected
-                            ? 'bg-primary/5 dark:bg-primary/10'
-                            : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/30'
-                        }`}
+                        className={cn(
+                          'transition-colors',
+                          isSelected ? 'bg-accent-light/80 font-medium' : 'hover:bg-accent-light/40'
+                        )}
                       >
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                        <td className="text-secondary whitespace-nowrap px-4 py-3 font-mono text-xs">
                           {date(log.createdAt).format('YYYY-MM-DD HH:mm:ss')}
                         </td>
-                        <td className="px-4 py-3 text-xs font-medium uppercase text-gray-900 dark:text-gray-100">
+                        <td className="text-primary px-4 py-3 text-xs font-medium uppercase">
                           {log.appId}
                         </td>
                         <td className="px-4 py-3">
@@ -254,10 +265,10 @@ export default function DeliveryLogsModal() {
                             </Badge>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500">
+                        <td className="text-secondary px-4 py-3 font-mono text-xs">
                           {log.executionDurationMs ? `${log.executionDurationMs}ms` : '—'}
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500">{log.attempts || 1}</td>
+                        <td className="text-secondary px-4 py-3 text-xs">{log.attempts || 1}</td>
                         <td className="space-x-2 whitespace-nowrap px-4 py-3 text-right">
                           <Button.Ghost
                             size="sm"
@@ -267,15 +278,15 @@ export default function DeliveryLogsModal() {
                             {isSelected ? 'Close' : 'Inspect'}
                           </Button.Ghost>
                           {!isSuccess && (
-                            <Button
+                            <Button.Ghost
                               size="sm"
-                              className="flex-inline items-center gap-1 !px-2.5 !py-1 text-xs"
+                              className="border-error/30 text-error hover:bg-error/10 flex-inline items-center gap-1 !px-2.5 !py-1 text-xs"
                               loading={retryingId === log.id}
                               onClick={() => handleRetry(log)}
                             >
                               <IconRotateClockwise2 className="h-3 w-3" />
                               Replay
-                            </Button>
+                            </Button.Ghost>
                           )}
                         </td>
                       </tr>
@@ -286,65 +297,70 @@ export default function DeliveryLogsModal() {
             </div>
 
             {selectedLog && (
-              <div className="mt-4 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <div className="flex flex-wrap items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800">
+              <div className="hf-card border-accent-light mt-4 rounded-xl border p-0 shadow-sm">
+                <div className="border-accent-light flex flex-wrap items-center justify-between border-b p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-gray-900 dark:text-gray-100">
-                      Diagnostics — Log #{selectedLog.id}
+                    <span className="text-primary font-semibold">
+                      Diagnostic Payload Details — Log #{selectedLog.id}
                     </span>
                     <Badge color={selectedLog.status === 'success' ? 'green' : 'red'}>
                       {selectedLog.status === 'success' ? 'Delivered' : 'Failed'}
                     </Badge>
                     {selectedLog.requestMethod && (
-                      <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                      <span className="border-accent-light text-secondary bg-accent-light/60 rounded border px-1.5 py-0.5 font-mono text-[11px] font-semibold">
                         {selectedLog.requestMethod}
                       </span>
                     )}
                     {selectedLog.executionDurationMs && (
-                      <span className="text-secondary text-xs">
+                      <span className="text-secondary font-mono text-xs">
                         ({selectedLog.executionDurationMs}ms)
                       </span>
                     )}
                   </div>
-                  <button
+                  <Button.Link
+                    size="sm"
+                    iconOnly
                     onClick={() => setSelectedLog(null)}
-                    className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                    className="text-secondary hover:text-primary"
                   >
                     <IconX className="h-4 w-4" />
-                  </button>
+                  </Button.Link>
                 </div>
 
-                <div className="flex border-b border-gray-100 px-4 dark:border-gray-800">
+                <div className="border-accent-light flex border-b px-4">
                   <button
                     type="button"
                     onClick={() => setActiveTab('request')}
-                    className={`border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+                    className={cn(
+                      'border-b-2 px-3 py-2 text-xs font-medium transition-colors',
                       activeTab === 'request'
                         ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
+                        : 'text-secondary hover:text-primary border-transparent'
+                    )}
                   >
                     Request Payload
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('response')}
-                    className={`border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+                    className={cn(
+                      'border-b-2 px-3 py-2 text-xs font-medium transition-colors',
                       activeTab === 'response'
                         ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
+                        : 'text-secondary hover:text-primary border-transparent'
+                    )}
                   >
                     Response Details
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('details')}
-                    className={`border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+                    className={cn(
+                      'border-b-2 px-3 py-2 text-xs font-medium transition-colors',
                       activeTab === 'details'
                         ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
+                        : 'text-secondary hover:text-primary border-transparent'
+                    )}
                   >
                     Headers & Endpoint
                   </button>
@@ -353,7 +369,7 @@ export default function DeliveryLogsModal() {
                 <div className="p-4">
                   {activeTab === 'request' && (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="text-secondary flex items-center justify-between text-xs">
                         <span>Outbound payload dispatched to {selectedLog.appId}:</span>
                         {selectedLog.requestPayload && (
                           <Button.Ghost
@@ -379,11 +395,11 @@ export default function DeliveryLogsModal() {
                         )}
                       </div>
                       {selectedLog.requestPayload ? (
-                        <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-950 p-3 font-mono text-[11px] leading-relaxed text-gray-100">
+                        <pre className="border-accent-light text-primary bg-accent-light/40 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border p-3 font-mono text-[11px] leading-relaxed">
                           {tryFormatJson(selectedLog.requestPayload)}
                         </pre>
                       ) : (
-                        <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400 dark:border-gray-800">
+                        <div className="border-accent-light text-secondary rounded-lg border border-dashed p-6 text-center text-xs">
                           No outbound request payload was recorded for this delivery attempt.
                         </div>
                       )}
@@ -393,11 +409,11 @@ export default function DeliveryLogsModal() {
                   {activeTab === 'response' && (
                     <div className="space-y-3">
                       {selectedLog.errorMessage && (
-                        <div className="rounded-lg bg-rose-50 p-3 font-mono text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                        <div className="border-error/20 bg-error/10 text-error rounded-lg border p-3 font-mono text-xs">
                           <strong>Error:</strong> {selectedLog.errorMessage}
                         </div>
                       )}
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="text-secondary flex items-center justify-between text-xs">
                         <span>HTTP {selectedLog.responseStatus || '—'} Response Body:</span>
                         {selectedLog.responseBody && (
                           <Button.Ghost
@@ -423,11 +439,11 @@ export default function DeliveryLogsModal() {
                         )}
                       </div>
                       {selectedLog.responseBody ? (
-                        <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-950 p-3 font-mono text-[11px] leading-relaxed text-gray-100">
+                        <pre className="border-accent-light text-primary bg-accent-light/40 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border p-3 font-mono text-[11px] leading-relaxed">
                           {tryFormatJson(selectedLog.responseBody)}
                         </pre>
                       ) : (
-                        <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400 dark:border-gray-800">
+                        <div className="border-accent-light text-secondary rounded-lg border border-dashed p-6 text-center text-xs">
                           No response body returned from destination server.
                         </div>
                       )}
@@ -436,29 +452,27 @@ export default function DeliveryLogsModal() {
 
                   {activeTab === 'details' && (
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
-                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                      <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
                         <span className="text-secondary font-medium">Target Endpoint:</span>
-                        <div className="break-all font-mono text-gray-800 dark:text-gray-200">
+                        <div className="text-primary break-all font-mono">
                           {selectedLog.endpointUrl || 'N/A'}
                         </div>
                       </div>
-                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                      <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
                         <span className="text-secondary font-medium">Submission ID:</span>
-                        <div className="break-all font-mono text-gray-800 dark:text-gray-200">
+                        <div className="text-primary break-all font-mono">
                           {selectedLog.submissionId}
                         </div>
                       </div>
-                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                      <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
                         <span className="text-secondary font-medium">Execution Duration:</span>
-                        <div className="font-mono text-gray-800 dark:text-gray-200">
+                        <div className="text-primary font-mono">
                           {selectedLog.executionDurationMs || 0} ms
                         </div>
                       </div>
-                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                      <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
                         <span className="text-secondary font-medium">Attempt Number:</span>
-                        <div className="font-mono text-gray-800 dark:text-gray-200">
-                          {selectedLog.attempts || 1}
-                        </div>
+                        <div className="text-primary font-mono">{selectedLog.attempts || 1}</div>
                       </div>
                     </div>
                   )}

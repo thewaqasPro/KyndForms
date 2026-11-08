@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { AppService, FormService } from '@/services'
 import { useParam } from '@/utils'
 
-import { Async, Button, Repeat } from '@/components'
+import { Async, Badge, Button, Repeat } from '@/components'
 import { APP_STATUS_ENUM } from '@/consts'
 import { useAppStore, useFormStore } from '@/store'
 
@@ -68,11 +68,9 @@ export default function FormIntegrations() {
   return (
     <>
       <div className="mt-8 space-y-6 px-6">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4 dark:border-gray-800">
+        <div className="border-accent-light flex items-center justify-between border-b pb-4">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Integrations & Webhooks
-            </h1>
+            <h1 className="text-primary text-xl font-semibold">Integrations & Webhooks</h1>
             <p className="text-secondary mt-1 text-xs">
               Connect external apps, automatically receive Zapier-style failure alerts, and replay
               failed submissions.
@@ -91,12 +89,8 @@ export default function FormIntegrations() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <IconCircleCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                      Active Integrations
-                    </h2>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                      {activeApps.length} active
-                    </span>
+                    <h2 className="text-primary text-sm font-semibold">Active Integrations</h2>
+                    <Badge color="green">{activeApps.length} active</Badge>
                   </div>
                   <span className="text-secondary text-xs">Connected and active for this form</span>
                 </div>
@@ -109,10 +103,10 @@ export default function FormIntegrations() {
             )}
 
             <section className="space-y-3">
-              <div className="flex items-center justify-between border-t border-gray-100 pt-6 dark:border-gray-800">
+              <div className="border-accent-light flex items-center justify-between border-t pt-6">
                 <div className="flex items-center gap-2">
-                  <IconPlug className="h-4 w-4 text-gray-400" />
-                  <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <IconPlug className="text-secondary h-4 w-4" />
+                  <h2 className="text-primary text-sm font-semibold">
                     {activeApps.length > 0 ? 'Available Integrations' : 'All Integrations'}
                   </h2>
                   <span className="text-secondary text-xs">({availableApps.length})</span>

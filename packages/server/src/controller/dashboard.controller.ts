@@ -51,6 +51,10 @@ export class DashboardController {
   @Redirect('/static/favicon.ico', 302)
   favicon() {}
 
+  @Get('/favicon.svg')
+  @Redirect('/static/favicon.svg', 302)
+  faviconSvg() {}
+
   @Get('/embed.js')
   @Redirect('/static/embed.js', 302)
   embedJs() {}

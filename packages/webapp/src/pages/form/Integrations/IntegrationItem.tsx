@@ -172,14 +172,14 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
           {children}
         </div>
         <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="font-medium text-gray-900 dark:text-gray-100">{app.name}</div>
+          <div className="text-primary font-medium">{app.name}</div>
           {statusBadge}
         </div>
         <div className="text-secondary mt-1 text-xs">{getIntegrationDescription(t, app)}</div>
       </div>
 
       {app.status === APP_STATUS_ENUM.ACTIVE && (
-        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
+        <div className="border-accent-light mt-4 flex items-center justify-between border-t pt-3">
           <Button.Link
             size="sm"
             onClick={handleOpenLogs}
@@ -189,7 +189,7 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
             Delivery Logs
           </Button.Link>
           {app.integration?.lastFailureAt && (
-            <span className="text-[11px] text-red-500">Failed recently</span>
+            <span className="text-error text-[11px]">Failed recently</span>
           )}
         </div>
       )}
