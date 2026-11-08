@@ -1,6 +1,7 @@
 import { FieldKindEnum } from '@kyndform/shared-types-enums'
 import got from 'got'
 
+import { parsePlainAnswer } from '@kyndform/answer-utils'
 import { helper } from '@kyndform/utils'
 import { FormModel, SubmissionModel } from '@model'
 
@@ -59,6 +60,11 @@ export interface KlaviyoSubscribePayload {
   }
 }
 
+export function cleanPropertyKey(title: string): string {
+  if (!title) return ''
+  return title.replace(/\s*\*+\s*$/, '').trim()
+}
+
 export function extractKlaviyoData(submission: SubmissionModel) {
   let email = ''
   let firstName = ''
@@ -77,8 +83,28 @@ export function extractKlaviyoData(submission: SubmissionModel) {
         phone = typeof a.value === 'object' ? a.value.phone : String(a.value)
       } else if (!email && a.title && /email/i.test(a.title) && helper.isEmail(a.value)) {
         email = String(a.value).trim().toLowerCase()
-      } else if (a.title && a.value !== undefined && a.value !== null && a.value !== '') {
-        customProperties[a.title] = a.value
+      }
+
+      if (a.title) {
+        // Resolve choice IDs, ratings, objects, etc. into their human-readable labels
+        const plainValue = parsePlainAnswer(a)
+        const valueToSave =
+          plainValue !== undefined && plainValue !== null && plainValue !== ''
+            ? plainValue
+            : typeof a.value === 'object' && a.value !== null
+              ? JSON.stringify(a.value)
+              : a.value
+
+        if (valueToSave !== undefined && valueToSave !== null && valueToSave !== '') {
+          const cleanTitle = cleanPropertyKey(a.title)
+          if (cleanTitle) {
+            customProperties[cleanTitle] = valueToSave
+          }
+          // Also set the original raw title if it had an asterisk, for backward-compatibility
+          if (a.title !== cleanTitle) {
+            customProperties[a.title] = valueToSave
+          }
+        }
       }
     }
   }

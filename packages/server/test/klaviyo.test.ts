@@ -50,6 +50,17 @@ function testBuildPayloadWithCompleteSubmission() {
         kind: FieldKindEnum.MULTIPLE_CHOICE,
         title: 'Interests',
         value: ['Newsletter', 'Product Updates']
+      },
+      {
+        kind: FieldKindEnum.MULTIPLE_CHOICE,
+        title: 'Which of these best describes your style?*',
+        properties: {
+          choices: [
+            { id: 'ZRZ4iVxriuWS', label: 'Classic' },
+            { id: 'toVYm6hYNWZA', label: 'Modern' }
+          ]
+        },
+        value: { value: ['ZRZ4iVxriuWS'] }
       }
     ]
   }
@@ -63,10 +74,20 @@ function testBuildPayloadWithCompleteSubmission() {
   assert.strictEqual(profilePayload.data.attributes.last_name, 'Doe')
   assert.strictEqual(profilePayload.data.attributes.phone_number, '+15551234567')
   assert.strictEqual(profilePayload.data.attributes.properties?.['Company Name'], 'Acme Corp')
-  assert.deepStrictEqual(profilePayload.data.attributes.properties?.['Interests'], [
-    'Newsletter',
-    'Product Updates'
-  ])
+  assert.strictEqual(
+    profilePayload.data.attributes.properties?.['Interests'],
+    'Newsletter, Product Updates'
+  )
+  // Verify clean question key without asterisk resolves to human-readable label
+  assert.strictEqual(
+    profilePayload.data.attributes.properties?.['Which of these best describes your style?'],
+    'Classic'
+  )
+  // Also backward-compatible with raw asterisk key
+  assert.strictEqual(
+    profilePayload.data.attributes.properties?.['Which of these best describes your style?*'],
+    'Classic'
+  )
 
   // 2. Subscribe payload
   const subscribePayload = klaviyoApp.buildKlaviyoSubscribePayload(config, submission)
