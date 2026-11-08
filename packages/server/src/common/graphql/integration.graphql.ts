@@ -69,6 +69,12 @@ export class IntegrationDeliveryLogType {
   endpointUrl?: string
 
   @Field({ nullable: true })
+  requestMethod?: string
+
+  @Field({ nullable: true })
+  requestPayload?: string
+
+  @Field({ nullable: true })
   responseStatus?: number
 
   @Field({ nullable: true })

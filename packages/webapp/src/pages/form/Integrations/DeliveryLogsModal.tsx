@@ -2,12 +2,13 @@ import {
   IconAlertCircle,
   IconCheck,
   IconClock,
+  IconCopy,
   IconFileText,
   IconRefresh,
   IconRotateClockwise2,
   IconX
 } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { IntegrationService } from '@/services'
 import { useParam } from '@/utils'
@@ -23,6 +24,8 @@ export interface DeliveryLogItem {
   appId: string
   submissionId: string
   endpointUrl?: string
+  requestMethod?: string
+  requestPayload?: string
   responseStatus?: number
   responseBody?: string
   executionDurationMs?: number
@@ -31,6 +34,16 @@ export interface DeliveryLogItem {
   status: string
   isAlertSent: boolean
   createdAt: string
+}
+
+function tryFormatJson(val?: string): string {
+  if (!val) return ''
+  try {
+    const parsed = typeof val === 'string' ? JSON.parse(val) : val
+    return JSON.stringify(parsed, null, 2)
+  } catch {
+    return String(val)
+  }
 }
 
 export default function DeliveryLogsModal() {
@@ -42,6 +55,9 @@ export default function DeliveryLogsModal() {
   const [logs, setLogs] = useState<DeliveryLogItem[]>([])
   const [total, setTotal] = useState(0)
   const [selectedLog, setSelectedLog] = useState<DeliveryLogItem | null>(null)
+  const [activeTab, setActiveTab] = useState<'request' | 'response' | 'details'>('request')
+  const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all')
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   const integrationId = payload?.integrationId
   const app = payload?.app
@@ -66,6 +82,8 @@ export default function DeliveryLogsModal() {
     if (isOpen) {
       fetchLogs()
       setSelectedLog(null)
+      setFilter('all')
+      setActiveTab('request')
     }
   }, [isOpen, formId, integrationId])
 
@@ -84,11 +102,29 @@ export default function DeliveryLogsModal() {
     }
   }
 
+  function copyToClipboard(text: string, key: string) {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    setCopiedKey(key)
+    setTimeout(() => {
+      setCopiedKey(null)
+    }, 2000)
+  }
+
+  const successCount = useMemo(() => logs.filter(l => l.status === 'success').length, [logs])
+  const failedCount = useMemo(() => logs.filter(l => l.status !== 'success').length, [logs])
+
+  const filteredLogs = useMemo(() => {
+    if (filter === 'success') return logs.filter(l => l.status === 'success')
+    if (filter === 'failed') return logs.filter(l => l.status !== 'success')
+    return logs
+  }, [logs, filter])
+
   return (
     <Modal
       open={isOpen}
       contentProps={{
-        className: 'max-w-4xl p-0 overflow-hidden',
+        className: 'max-w-5xl p-0 overflow-hidden',
         forceMount: true
       }}
       onOpenChange={onOpenChange}
@@ -100,7 +136,7 @@ export default function DeliveryLogsModal() {
             {app ? `${app.name} Delivery Logs` : 'Integration Delivery Logs'}
           </h2>
           <p className="text-secondary mt-0.5 text-xs">
-            Real-time delivery attempts, latencies, responses, and retry capabilities.
+            Real-time delivery attempts, payloads, responses, and retry capabilities.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -130,20 +166,48 @@ export default function DeliveryLogsModal() {
           />
         ) : (
           <div className="space-y-4">
-            <div className="text-secondary flex items-center justify-between px-1 text-xs">
-              <span>
-                Showing last {logs.length} deliveries (Total: {total})
-              </span>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-xs">
+              <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-1 dark:border-gray-800 dark:bg-gray-800/40">
+                <button
+                  type="button"
+                  onClick={() => setFilter('all')}
+                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+                    filter === 'all'
+                      ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  All ({logs.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter('success')}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors ${
+                    filter === 'success'
+                      ? 'bg-white text-emerald-600 shadow-sm dark:bg-gray-700 dark:text-emerald-400'
+                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
                   <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                  Success
-                </span>
-                <span className="flex items-center gap-1">
+                  Success ({successCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter('failed')}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors ${
+                    filter === 'failed'
+                      ? 'bg-white text-rose-600 shadow-sm dark:bg-gray-700 dark:text-rose-400'
+                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
                   <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
-                  Failed
-                </span>
+                  Failed ({failedCount})
+                </button>
               </div>
+
+              <span className="text-secondary">
+                Showing {filteredLogs.length} of {total} total
+              </span>
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
@@ -159,12 +223,17 @@ export default function DeliveryLogsModal() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {logs.map(log => {
+                  {filteredLogs.map(log => {
                     const isSuccess = log.status === 'success'
+                    const isSelected = selectedLog?.id === log.id
                     return (
                       <tr
                         key={log.id}
-                        className="transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/30"
+                        className={`transition-colors ${
+                          isSelected
+                            ? 'bg-primary/5 dark:bg-primary/10'
+                            : 'hover:bg-gray-50/80 dark:hover:bg-gray-800/30'
+                        }`}
                       >
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
                           {date(log.createdAt).format('YYYY-MM-DD HH:mm:ss')}
@@ -192,15 +261,15 @@ export default function DeliveryLogsModal() {
                         <td className="space-x-2 whitespace-nowrap px-4 py-3 text-right">
                           <Button.Ghost
                             size="sm"
-                            className="!px-2 !py-1 text-xs"
-                            onClick={() => setSelectedLog(selectedLog?.id === log.id ? null : log)}
+                            className="!px-2.5 !py-1 text-xs"
+                            onClick={() => setSelectedLog(isSelected ? null : log)}
                           >
-                            {selectedLog?.id === log.id ? 'Hide' : 'Inspect'}
+                            {isSelected ? 'Close' : 'Inspect'}
                           </Button.Ghost>
                           {!isSuccess && (
                             <Button
                               size="sm"
-                              className="flex-inline items-center gap-1 !px-2 !py-1 text-xs"
+                              className="flex-inline items-center gap-1 !px-2.5 !py-1 text-xs"
                               loading={retryingId === log.id}
                               onClick={() => handleRetry(log)}
                             >
@@ -217,37 +286,183 @@ export default function DeliveryLogsModal() {
             </div>
 
             {selectedLog && (
-              <div className="mt-4 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs dark:border-gray-700 dark:bg-gray-800/60">
-                <div className="flex items-center justify-between font-semibold text-gray-800 dark:text-gray-200">
-                  <span>Diagnostic Payload Details — Log #{selectedLog.id}</span>
+              <div className="mt-4 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div className="flex flex-wrap items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      Diagnostics — Log #{selectedLog.id}
+                    </span>
+                    <Badge color={selectedLog.status === 'success' ? 'green' : 'red'}>
+                      {selectedLog.status === 'success' ? 'Delivered' : 'Failed'}
+                    </Badge>
+                    {selectedLog.requestMethod && (
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                        {selectedLog.requestMethod}
+                      </span>
+                    )}
+                    {selectedLog.executionDurationMs && (
+                      <span className="text-secondary text-xs">
+                        ({selectedLog.executionDurationMs}ms)
+                      </span>
+                    )}
+                  </div>
                   <button
                     onClick={() => setSelectedLog(null)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                   >
                     <IconX className="h-4 w-4" />
                   </button>
                 </div>
-                {selectedLog.endpointUrl && (
-                  <div>
-                    <span className="text-secondary font-medium">Target URL: </span>
-                    <span className="break-all font-mono text-gray-700 dark:text-gray-300">
-                      {selectedLog.endpointUrl}
-                    </span>
-                  </div>
-                )}
-                {selectedLog.errorMessage && (
-                  <div className="rounded bg-red-50 p-2 font-mono text-red-600 dark:bg-red-950/40 dark:text-red-400">
-                    <strong>Error: </strong> {selectedLog.errorMessage}
-                  </div>
-                )}
-                {selectedLog.responseBody && (
-                  <div>
-                    <div className="text-secondary mb-1 font-medium">Response Body:</div>
-                    <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded bg-gray-900 p-2.5 font-mono text-[11px] text-gray-100">
-                      {selectedLog.responseBody}
-                    </pre>
-                  </div>
-                )}
+
+                <div className="flex border-b border-gray-100 px-4 dark:border-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('request')}
+                    className={`border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+                      activeTab === 'request'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    Request Payload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('response')}
+                    className={`border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+                      activeTab === 'response'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    Response Details
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('details')}
+                    className={`border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+                      activeTab === 'details'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    Headers & Endpoint
+                  </button>
+                </div>
+
+                <div className="p-4">
+                  {activeTab === 'request' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Outbound payload dispatched to {selectedLog.appId}:</span>
+                        {selectedLog.requestPayload && (
+                          <Button.Ghost
+                            size="sm"
+                            className="!px-2 !py-0.5 text-xs"
+                            onClick={() =>
+                              copyToClipboard(
+                                tryFormatJson(selectedLog.requestPayload),
+                                'requestPayload'
+                              )
+                            }
+                          >
+                            {copiedKey === 'requestPayload' ? (
+                              <span className="flex items-center gap-1 text-emerald-600">
+                                <IconCheck className="h-3 w-3" /> Copied
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <IconCopy className="h-3 w-3" /> Copy JSON
+                              </span>
+                            )}
+                          </Button.Ghost>
+                        )}
+                      </div>
+                      {selectedLog.requestPayload ? (
+                        <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-950 p-3 font-mono text-[11px] leading-relaxed text-gray-100">
+                          {tryFormatJson(selectedLog.requestPayload)}
+                        </pre>
+                      ) : (
+                        <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400 dark:border-gray-800">
+                          No outbound request payload was recorded for this delivery attempt.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'response' && (
+                    <div className="space-y-3">
+                      {selectedLog.errorMessage && (
+                        <div className="rounded-lg bg-rose-50 p-3 font-mono text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                          <strong>Error:</strong> {selectedLog.errorMessage}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>HTTP {selectedLog.responseStatus || '—'} Response Body:</span>
+                        {selectedLog.responseBody && (
+                          <Button.Ghost
+                            size="sm"
+                            className="!px-2 !py-0.5 text-xs"
+                            onClick={() =>
+                              copyToClipboard(
+                                tryFormatJson(selectedLog.responseBody),
+                                'responseBody'
+                              )
+                            }
+                          >
+                            {copiedKey === 'responseBody' ? (
+                              <span className="flex items-center gap-1 text-emerald-600">
+                                <IconCheck className="h-3 w-3" /> Copied
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <IconCopy className="h-3 w-3" /> Copy JSON
+                              </span>
+                            )}
+                          </Button.Ghost>
+                        )}
+                      </div>
+                      {selectedLog.responseBody ? (
+                        <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-950 p-3 font-mono text-[11px] leading-relaxed text-gray-100">
+                          {tryFormatJson(selectedLog.responseBody)}
+                        </pre>
+                      ) : (
+                        <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400 dark:border-gray-800">
+                          No response body returned from destination server.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'details' && (
+                    <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                        <span className="text-secondary font-medium">Target Endpoint:</span>
+                        <div className="break-all font-mono text-gray-800 dark:text-gray-200">
+                          {selectedLog.endpointUrl || 'N/A'}
+                        </div>
+                      </div>
+                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                        <span className="text-secondary font-medium">Submission ID:</span>
+                        <div className="break-all font-mono text-gray-800 dark:text-gray-200">
+                          {selectedLog.submissionId}
+                        </div>
+                      </div>
+                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                        <span className="text-secondary font-medium">Execution Duration:</span>
+                        <div className="font-mono text-gray-800 dark:text-gray-200">
+                          {selectedLog.executionDurationMs || 0} ms
+                        </div>
+                      </div>
+                      <div className="space-y-1 rounded-lg border border-gray-100 p-3 dark:border-gray-800">
+                        <span className="text-secondary font-medium">Attempt Number:</span>
+                        <div className="font-mono text-gray-800 dark:text-gray-200">
+                          {selectedLog.attempts || 1}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

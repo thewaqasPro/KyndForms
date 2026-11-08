@@ -28,6 +28,8 @@ export class GetIntegrationLogsResolver {
         appId: log.appId,
         submissionId: log.submissionId,
         endpointUrl: log.endpointUrl,
+        requestMethod: log.requestMethod,
+        requestPayload: log.requestPayload,
         responseStatus: log.responseStatus,
         responseBody: log.responseBody,
         executionDurationMs: log.executionDurationMs,

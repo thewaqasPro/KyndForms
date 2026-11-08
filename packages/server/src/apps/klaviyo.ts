@@ -232,23 +232,59 @@ export default {
     const profilePayload = buildKlaviyoProfilePayload(submission)
     if (!profilePayload) return
 
+    let profileRes: any
     // 1. Upsert profile with full details (Name, Phone, Custom Form Answers)
-    await got.post('https://a.klaviyo.com/api/profile-import/', {
-      headers,
-      json: profilePayload,
-      timeout: 15000,
-      retry: 1
-    })
+    try {
+      profileRes = await got.post('https://a.klaviyo.com/api/profile-import/', {
+        headers,
+        json: profilePayload,
+        responseType: 'json',
+        timeout: 15000,
+        retry: 1
+      })
+    } catch (err: any) {
+      err.diagnosticUrl = 'https://a.klaviyo.com/api/profile-import/'
+      err.diagnosticMethod = 'POST'
+      err.diagnosticPayload = profilePayload
+      throw err
+    }
 
     // 2. Subscribe profile to the specified list with marketing consent
     const subscribePayload = buildKlaviyoSubscribePayload(config, submission)
     if (!subscribePayload) return
 
-    await got.post('https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/', {
-      headers,
-      json: subscribePayload,
-      timeout: 15000,
-      retry: 1
-    })
+    let subscribeRes: any
+    try {
+      subscribeRes = await got.post(
+        'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/',
+        {
+          headers,
+          json: subscribePayload,
+          responseType: 'json',
+          timeout: 15000,
+          retry: 1
+        }
+      )
+    } catch (err: any) {
+      err.diagnosticUrl = 'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/'
+      err.diagnosticMethod = 'POST'
+      err.diagnosticPayload = subscribePayload
+      throw err
+    }
+
+    return {
+      endpointUrl: 'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/',
+      requestMethod: 'POST',
+      requestPayload: {
+        profileImport: profilePayload,
+        listSubscription: subscribePayload
+      },
+      responseBody: {
+        profileImportStatus: profileRes?.statusCode || 200,
+        listSubscriptionStatus: subscribeRes?.statusCode || 202,
+        profileImport: profileRes?.body,
+        listSubscription: subscribeRes?.body
+      }
+    }
   }
 }

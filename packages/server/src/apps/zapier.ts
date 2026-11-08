@@ -52,11 +52,26 @@ export default {
       variables: submission.variables
     }
 
-    await got.post(url.toString(), {
-      lookup,
-      json: payload,
-      timeout: 15000,
-      retry: 1
-    })
+    try {
+      const res = await got.post(url.toString(), {
+        lookup,
+        json: payload,
+        responseType: 'json',
+        timeout: 15000,
+        retry: 1
+      })
+
+      return {
+        endpointUrl: config.webhookUrl,
+        requestMethod: 'POST',
+        requestPayload: payload,
+        responseBody: res?.body
+      }
+    } catch (err: any) {
+      err.diagnosticUrl = config.webhookUrl
+      err.diagnosticMethod = 'POST'
+      err.diagnosticPayload = payload
+      throw err
+    }
   }
 }

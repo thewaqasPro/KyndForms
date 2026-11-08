@@ -179,12 +179,19 @@ async function testKlaviyoRunDispatchesNetworkRequest() {
       return { statusCode: 200, body: {} }
     }
 
-    await klaviyo.run({
+    const runResult = await klaviyo.run({
       config,
       submission,
       form: { id: 'form_123' } as any
     })
 
+    assert.ok(runResult)
+    assert.strictEqual(
+      runResult.endpointUrl,
+      'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/'
+    )
+    assert.ok(runResult.requestPayload?.profileImport)
+    assert.ok(runResult.requestPayload?.listSubscription)
     assert.strictEqual(calls.length, 2)
 
     // Call 1: Profile Upsert

@@ -22,6 +22,8 @@ export interface RecordAttemptOptions {
   appId: string
   submissionId: string
   endpointUrl?: string
+  requestMethod?: string
+  requestPayload?: string
   responseStatus?: number
   responseBody?: string
   executionDurationMs?: number
@@ -57,6 +59,8 @@ export class IntegrationDeliveryService {
       appId,
       submissionId,
       endpointUrl,
+      requestMethod,
+      requestPayload,
       responseStatus,
       responseBody,
       executionDurationMs = 0,
@@ -130,8 +134,10 @@ export class IntegrationDeliveryService {
       appId,
       submissionId,
       endpointUrl,
+      requestMethod,
+      requestPayload: requestPayload ? String(requestPayload).slice(0, 10000) : undefined,
       responseStatus,
-      responseBody: responseBody ? String(responseBody).slice(0, 4000) : undefined,
+      responseBody: responseBody ? String(responseBody).slice(0, 10000) : undefined,
       executionDurationMs,
       errorMessage,
       attempts,

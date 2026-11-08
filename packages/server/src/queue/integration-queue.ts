@@ -51,7 +51,7 @@ export class IntegrationQueue extends BaseQueue {
         const startTime = Date.now()
 
         try {
-          await app.run({
+          const runResult = await app.run({
             submission,
             form,
             config
@@ -64,8 +64,19 @@ export class IntegrationQueue extends BaseQueue {
             integrationId,
             appId,
             submissionId,
-            endpointUrl,
-            responseStatus: 200,
+            endpointUrl: runResult?.endpointUrl || endpointUrl,
+            requestMethod: runResult?.requestMethod || 'POST',
+            requestPayload: runResult?.requestPayload
+              ? typeof runResult.requestPayload === 'string'
+                ? runResult.requestPayload
+                : JSON.stringify(runResult.requestPayload, null, 2)
+              : undefined,
+            responseStatus: runResult?.responseStatus || 200,
+            responseBody: runResult?.responseBody
+              ? typeof runResult.responseBody === 'string'
+                ? runResult.responseBody
+                : JSON.stringify(runResult.responseBody, null, 2)
+              : undefined,
             executionDurationMs: durationMs,
             attempts: job.attemptsMade + 1,
             status: IntegrationDeliveryStatusEnum.SUCCESS,
@@ -75,12 +86,13 @@ export class IntegrationQueue extends BaseQueue {
         } catch (err: any) {
           const durationMs = Date.now() - startTime
           const errorMessage = err?.message || 'Outbound delivery failed'
-          const responseStatus = err?.response?.status || err?.status || 500
+          const responseStatus =
+            err?.response?.statusCode || err?.response?.status || err?.status || 500
           const rawBody = err?.response?.body ?? err?.response?.data
           const responseBody = rawBody
             ? typeof rawBody === 'string'
               ? rawBody
-              : JSON.stringify(rawBody)
+              : JSON.stringify(rawBody, null, 2)
             : undefined
 
           await this.deliveryService.recordAttempt({
@@ -88,7 +100,13 @@ export class IntegrationQueue extends BaseQueue {
             integrationId,
             appId,
             submissionId,
-            endpointUrl,
+            endpointUrl: err?.diagnosticUrl || endpointUrl,
+            requestMethod: err?.diagnosticMethod || 'POST',
+            requestPayload: err?.diagnosticPayload
+              ? typeof err.diagnosticPayload === 'string'
+                ? err.diagnosticPayload
+                : JSON.stringify(err.diagnosticPayload, null, 2)
+              : undefined,
             responseStatus,
             responseBody,
             executionDurationMs: durationMs,

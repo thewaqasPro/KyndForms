@@ -25,6 +25,12 @@ export class IntegrationDeliveryLogModel extends Document {
   @Prop()
   endpointUrl?: string
 
+  @Prop()
+  requestMethod?: string
+
+  @Prop()
+  requestPayload?: string
+
   @Prop({ type: Number })
   responseStatus?: number
 

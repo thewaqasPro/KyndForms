@@ -772,6 +772,8 @@ export const GET_INTEGRATION_LOGS_GQL = gql`
         appId
         submissionId
         endpointUrl
+        requestMethod
+        requestPayload
         responseStatus
         responseBody
         executionDurationMs
