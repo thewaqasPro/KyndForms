@@ -260,13 +260,13 @@
             (e = 'rgb'))
         } else if (
           (t =
-            /^((?:rgba?|hs[lvb]a?|hwba?|cmyk?|xy[zy]|gray|lab|lchu?v?|[ly]uv|lms|oklch|oklab|color))\s*\(([^)]*)\)/.exec(
+            /^((?:rgba?|hs[lvb]a?|hwba?|cmyk?|xy[zy]|gray|lab|lchu?v?|[ly]uv|lms|oklch|oklab|color))\s*\(([^\)]*)\)/.exec(
               n
             ))
         ) {
           var c = t[1],
             l = 'cmyk' === (e = c.replace(/a$/, '')) ? 4 : 'gray' === e ? 1 : 3
-          ;((o = t[2].trim().split(/\s*[,/]\s*|\s+/)),
+          ;((o = t[2].trim().split(/\s*[,\/]\s*|\s+/)),
             'color' === e && (e = o.shift()),
             (r =
               (o = o.map(function (n, t) {
