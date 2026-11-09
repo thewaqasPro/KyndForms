@@ -16,6 +16,7 @@ import { FC, useEffect, useRef, useState } from 'react'
 import { EndpointService } from '../service/endpoint'
 import { recaptchaToken } from '../utils/captcha'
 import { isStripeEnabled } from '../utils/payment'
+import { initTracking, trackFormSubmission } from '../utils/tracking'
 import { Uploader } from '../utils/uploader'
 import { helper } from '@kyndform/utils'
 
@@ -193,6 +194,10 @@ export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) 
       }
 
       sendMessageToParent('FORM_SUBMITTED')
+      trackFormSubmission(form.integrations, {
+        formId: form.id,
+        formName: form.name
+      })
     } catch (err: Any) {
       /**
        * Throw error to let Renderer knows that there was an error.
@@ -208,6 +213,7 @@ export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) 
 
   useEffect(() => {
     sendMessageToParent('FORM_LOADED')
+    initTracking(form.integrations)
 
     if (!form.suspended && form.settings?.active) {
       openForm()

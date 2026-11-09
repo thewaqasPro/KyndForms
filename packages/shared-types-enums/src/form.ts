@@ -276,10 +276,7 @@ export interface FormModel {
   suspended?: boolean
   status: FormStatusEnum
   draft?: boolean
-  integrations: {
-    googleanalytics: string
-    facebookpixel: string
-  }
+  integrations?: Record<string, any>
   updatedAt: number
 }
 
