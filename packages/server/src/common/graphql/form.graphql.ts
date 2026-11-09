@@ -1327,7 +1327,7 @@ export class PublicFormType extends FormType {
   translations: FormModel['translations']
 
   @Field(type => GraphQLJSONObject, { nullable: true })
-  integrations?: Record<string, string>
+  integrations?: Record<string, any>
 }
 
 @ObjectType()
