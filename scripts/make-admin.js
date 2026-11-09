@@ -39,7 +39,10 @@ async function run() {
   try {
     await mongoose.connect(mongoUri)
     const db = mongoose.connection.db
-    const usersCollection = db.collection('users')
+    const collections = await db.listCollections().toArray()
+    const colNames = collections.map(c => c.name)
+    const targetCol = colNames.includes('usermodels') ? 'usermodels' : 'users'
+    const usersCollection = db.collection(targetCol)
 
     if (!targetEmail) {
       console.log('🔍 No email specified. Fetching users in database...\n')
