@@ -35,7 +35,7 @@ const ButtonComponent: FC<ButtonProps> = ({
   return (
     <button
       className={cn(
-        'bg-brand text-primary-light relative h-10 cursor-pointer rounded-md border border-transparent px-3.5 text-sm/6 font-medium transition-colors duration-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 data-[size=md]:h-9 data-[size=sm]:h-8 data-[size=lg]:hover:bg-opacity-85 data-[size=md]:hover:bg-opacity-85 dark:text-white',
+        'bg-brand text-primary-light relative h-10 cursor-pointer rounded-md border border-transparent px-3.5 text-sm/6 font-medium transition-colors duration-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 data-[size=md]:h-9 data-[size=sm]:h-8 data-[size=lg]:hover:bg-opacity-85 data-[size=md]:hover:bg-opacity-85',
         {
           '[&_[data-slot=button]]:opacity-0': loading,
           'w-10 px-0 data-[size=md]:w-9 data-[size=sm]:w-8': iconOnly

@@ -33,7 +33,7 @@ const LayoutModeSelector: FC<LayoutModeSelectorProps> = ({
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-lg',
               current === 'conversational'
-                ? 'bg-primary/30 text-white'
+                ? 'bg-primary/10 text-primary'
                 : 'bg-accent-light text-secondary'
             )}
           >
@@ -68,7 +68,7 @@ const LayoutModeSelector: FC<LayoutModeSelectorProps> = ({
           <div
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-lg',
-              current === 'classic' ? 'bg-primary/30 text-white' : 'bg-accent-light text-primary'
+              current === 'classic' ? 'bg-primary/10 text-primary' : 'bg-accent-light text-primary'
             )}
           >
             <IconLayoutList className="h-5 w-5" />

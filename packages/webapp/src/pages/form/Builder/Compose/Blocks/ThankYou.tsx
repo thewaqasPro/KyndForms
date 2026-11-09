@@ -33,7 +33,7 @@ export const ThankYou: FC<BlockProps> = ({ field, locale, ...restProps }) => {
                 'kyndform-action-btn pointer-events-none rounded-lg px-6 py-2.5 text-sm font-medium shadow-sm transition-all',
                 button.variant === 'secondary'
                   ? 'border border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
-                  : 'bg-primary text-white hover:opacity-90'
+                  : 'bg-primary text-primary-light hover:opacity-90'
               )}
             >
               {button.text || button.label || 'Action'}
