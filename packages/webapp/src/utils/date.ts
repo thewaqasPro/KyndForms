@@ -30,6 +30,8 @@ dayjs.extend(weekday)
 dayjs.extend(localeData)
 dayjs.extend(relativeTime)
 
+export { dayjs }
+
 export function timeFromNow(timestamp: number, locale: string) {
   return dayjs.unix(timestamp).locale(locale.toLowerCase()).fromNow()
 }

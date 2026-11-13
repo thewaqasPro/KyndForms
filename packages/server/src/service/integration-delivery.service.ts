@@ -174,6 +174,7 @@ export class IntegrationDeliveryService {
 
       const link = `${APP_HOMEPAGE_URL}/form/${form.id}/settings/integrations`
       const appName = appId.charAt(0).toUpperCase() + appId.slice(1)
+      const timestamp = new Date().toUTCString()
 
       for (const user of users) {
         if (user.email) {
@@ -184,7 +185,8 @@ export class IntegrationDeliveryService {
               formName: form.name || 'Untitled Form',
               endpointUrl,
               errorMessage,
-              link
+              link,
+              timestamp
             },
             user.lang
           )

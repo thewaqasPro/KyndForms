@@ -62,6 +62,7 @@ export interface IntegrationBrokenAlertOptions {
   endpointUrl: string
   errorMessage: string
   link: string
+  timestamp?: string
 }
 
 const HTML_EXT = '.html'

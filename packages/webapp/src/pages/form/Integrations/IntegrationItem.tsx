@@ -11,8 +11,9 @@ import { useTranslation } from 'react-i18next'
 
 import { getIntegrationDescription } from './utils'
 import { IntegrationService } from '@/services'
-import { useParam } from '@/utils'
-import { helper } from '@kyndform/utils'
+import { cn, useParam } from '@/utils'
+import { dayjs } from '@/utils/date'
+import { date, helper } from '@kyndform/utils'
 
 import { Badge, Button, Image, Switch, Tooltip } from '@/components'
 import { APP_STATUS_ENUM, INTEGRATION_STATUS_ENUM } from '@/consts'
@@ -189,7 +190,26 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
             Delivery Logs
           </Button.Link>
           {app.integration?.lastFailureAt && (
-            <span className="text-error text-[11px]">Failed recently</span>
+            <Tooltip
+              label={`Failure recorded: ${date(app.integration.lastFailureAt).format(
+                'YYYY-MM-DD HH:mm:ss'
+              )}${
+                app.integration.lastErrorMessage ? ` — ${app.integration.lastErrorMessage}` : ''
+              }`}
+            >
+              <span
+                className={cn(
+                  'cursor-help text-[11px] font-medium',
+                  app.integration.status === INTEGRATION_STATUS_ENUM.BROKEN
+                    ? 'text-error'
+                    : 'text-amber-600'
+                )}
+              >
+                {app.integration.status === INTEGRATION_STATUS_ENUM.BROKEN
+                  ? `Failed ${dayjs(app.integration.lastFailureAt).fromNow()}`
+                  : `Last error ${dayjs(app.integration.lastFailureAt).fromNow()}`}
+              </span>
+            </Tooltip>
           )}
         </div>
       )}

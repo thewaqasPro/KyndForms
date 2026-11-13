@@ -12,9 +12,10 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { IntegrationService } from '@/services'
 import { cn, useParam } from '@/utils'
+import { dayjs } from '@/utils/date'
 import { date } from '@kyndform/utils'
 
-import { Badge, Button, EmptyState, Loader, Modal } from '@/components'
+import { Badge, Button, EmptyState, Loader, Modal, Tooltip } from '@/components'
 import { useModal } from '@/store'
 
 export interface DeliveryLogItem {
@@ -113,6 +114,19 @@ export default function DeliveryLogsModal() {
 
   const successCount = useMemo(() => logs.filter(l => l.status === 'success').length, [logs])
   const failedCount = useMemo(() => logs.filter(l => l.status !== 'success').length, [logs])
+
+  const resolvedSubmissions = useMemo(() => {
+    const map = new Map<string, { resolvedAt: string; attempt: number }>()
+    for (const log of logs) {
+      if (log.status === 'success') {
+        const key = `${log.submissionId}:${log.appId}`
+        if (!map.has(key)) {
+          map.set(key, { resolvedAt: log.createdAt, attempt: log.attempts })
+        }
+      }
+    }
+    return map
+  }, [logs])
 
   const filteredLogs = useMemo(() => {
     if (filter === 'success') return logs.filter(l => l.status === 'success')
@@ -238,6 +252,8 @@ export default function DeliveryLogsModal() {
                   {filteredLogs.map(log => {
                     const isSuccess = log.status === 'success'
                     const isSelected = selectedLog?.id === log.id
+                    const resolution = resolvedSubmissions.get(`${log.submissionId}:${log.appId}`)
+                    const isResolvedOnRetry = !isSuccess && !!resolution
                     return (
                       <tr
                         key={log.id}
@@ -247,22 +263,56 @@ export default function DeliveryLogsModal() {
                         )}
                       >
                         <td className="text-secondary whitespace-nowrap px-4 py-3 font-mono text-xs">
-                          {date(log.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+                          <div className="text-primary font-medium">
+                            {date(log.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+                          </div>
+                          <div className="text-secondary text-[11px]">
+                            {dayjs(log.createdAt).fromNow()}
+                          </div>
                         </td>
                         <td className="text-primary px-4 py-3 text-xs font-medium uppercase">
                           {log.appId}
                         </td>
                         <td className="px-4 py-3">
                           {isSuccess ? (
-                            <Badge color="green" className="gap-1">
-                              <IconCheck className="h-3 w-3" />
-                              {log.responseStatus ? `${log.responseStatus} OK` : 'Success'}
-                            </Badge>
+                            <Tooltip
+                              label={`Delivered at ${date(log.createdAt).format(
+                                'YYYY-MM-DD HH:mm:ss'
+                              )}`}
+                            >
+                              <span>
+                                <Badge color="green" className="cursor-help gap-1">
+                                  <IconCheck className="h-3 w-3" />
+                                  {log.responseStatus ? `${log.responseStatus} OK` : 'Success'}
+                                </Badge>
+                              </span>
+                            </Tooltip>
+                          ) : isResolvedOnRetry ? (
+                            <Tooltip
+                              label={`Resolved: Successfully delivered on subsequent retry at ${date(
+                                resolution.resolvedAt
+                              ).format('YYYY-MM-DD HH:mm:ss')} (${dayjs(
+                                resolution.resolvedAt
+                              ).fromNow()}).`}
+                            >
+                              <span>
+                                <Badge color="green" className="cursor-help gap-1">
+                                  <IconCheck className="h-3 w-3" />
+                                  Resolved on Retry
+                                </Badge>
+                              </span>
+                            </Tooltip>
                           ) : (
-                            <Badge color="red" className="gap-1">
-                              <IconAlertCircle className="h-3 w-3" />
-                              {log.responseStatus ? `${log.responseStatus} Failed` : 'Failed'}
-                            </Badge>
+                            <Tooltip label="Unresolved failure: All delivery attempts failed. Manual replay required.">
+                              <span>
+                                <Badge color="red" className="cursor-help gap-1">
+                                  <IconAlertCircle className="h-3 w-3" />
+                                  {log.responseStatus
+                                    ? `${log.responseStatus} Failed`
+                                    : 'Failed (Unresolved)'}
+                                </Badge>
+                              </span>
+                            </Tooltip>
                           )}
                         </td>
                         <td className="text-secondary px-4 py-3 font-mono text-xs">
@@ -277,15 +327,31 @@ export default function DeliveryLogsModal() {
                           >
                             {isSelected ? 'Close' : 'Inspect'}
                           </Button.Ghost>
-                          {!isSuccess && (
+                          {!isSuccess && isResolvedOnRetry && (
+                            <span className="text-secondary inline-flex items-center gap-1.5 text-xs">
+                              <span className="inline-flex items-center gap-1 font-medium text-emerald-600">
+                                <IconCheck className="h-3.5 w-3.5" />
+                                Delivered
+                              </span>
+                              <Button.Ghost
+                                size="sm"
+                                className="text-secondary hover:text-primary !px-2 !py-1 text-xs"
+                                loading={retryingId === log.id}
+                                onClick={() => handleRetry(log)}
+                              >
+                                Re-send
+                              </Button.Ghost>
+                            </span>
+                          )}
+                          {!isSuccess && !isResolvedOnRetry && (
                             <Button.Ghost
                               size="sm"
-                              className="border-error/30 text-error hover:bg-error/10 flex-inline items-center gap-1 !px-2.5 !py-1 text-xs"
+                              className="border-error/40 text-error hover:bg-error/10 shadow-xs inline-flex items-center gap-1 !px-2.5 !py-1 text-xs font-semibold"
                               loading={retryingId === log.id}
                               onClick={() => handleRetry(log)}
                             >
-                              <IconRotateClockwise2 className="h-3 w-3" />
-                              Replay
+                              <IconRotateClockwise2 className="h-3.5 w-3.5" />
+                              Replay Now
                             </Button.Ghost>
                           )}
                         </td>
@@ -316,6 +382,10 @@ export default function DeliveryLogsModal() {
                         ({selectedLog.executionDurationMs}ms)
                       </span>
                     )}
+                    <span className="text-secondary font-mono text-xs">
+                      • {date(selectedLog.createdAt).format('YYYY-MM-DD HH:mm:ss')} (
+                      {dayjs(selectedLog.createdAt).fromNow()})
+                    </span>
                   </div>
                   <Button.Link
                     size="sm"
@@ -409,8 +479,18 @@ export default function DeliveryLogsModal() {
                   {activeTab === 'response' && (
                     <div className="space-y-3">
                       {selectedLog.errorMessage && (
-                        <div className="border-error/20 bg-error/10 text-error rounded-lg border p-3 font-mono text-xs">
-                          <strong>Error:</strong> {selectedLog.errorMessage}
+                        <div className="border-error/20 bg-error/10 text-error space-y-1 rounded-lg border p-3 font-mono text-xs">
+                          <div className="text-error/80 border-error/20 flex items-center justify-between border-b pb-1 text-[11px]">
+                            <span>
+                              Failure recorded at:{' '}
+                              {date(selectedLog.createdAt).format('YYYY-MM-DD HH:mm:ss')} (
+                              {dayjs(selectedLog.createdAt).fromNow()})
+                            </span>
+                            <span>Attempt #{selectedLog.attempts}</span>
+                          </div>
+                          <div className="pt-1">
+                            <strong>Error:</strong> {selectedLog.errorMessage}
+                          </div>
                         </div>
                       )}
                       <div className="text-secondary flex items-center justify-between text-xs">
@@ -452,6 +532,37 @@ export default function DeliveryLogsModal() {
 
                   {activeTab === 'details' && (
                     <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+                      <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
+                        <span className="text-secondary font-medium">Recorded Timestamp:</span>
+                        <div className="text-primary font-mono font-medium">
+                          {date(selectedLog.createdAt).format('YYYY-MM-DD HH:mm:ss')} (
+                          {dayjs(selectedLog.createdAt).fromNow()})
+                        </div>
+                        <div className="text-secondary font-mono text-[11px]">
+                          UTC: {new Date(selectedLog.createdAt).toISOString()}
+                        </div>
+                      </div>
+                      <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
+                        <span className="text-secondary font-medium">Delivery Resolution:</span>
+                        <div className="text-primary flex items-center gap-1.5 pt-0.5 font-medium">
+                          {selectedLog.status === 'success' ? (
+                            <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                              <IconCheck className="h-4 w-4" /> Delivered successfully
+                            </span>
+                          ) : resolvedSubmissions.has(
+                              `${selectedLog.submissionId}:${selectedLog.appId}`
+                            ) ? (
+                            <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                              <IconCheck className="h-4 w-4" /> Resolved on subsequent retry
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 font-semibold text-rose-600">
+                              <IconAlertCircle className="h-4 w-4" /> Unresolved — Manual replay
+                              needed
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <div className="border-accent-light bg-accent-light/20 space-y-1 rounded-lg border p-3">
                         <span className="text-secondary font-medium">Target Endpoint:</span>
                         <div className="text-primary break-all font-mono">
