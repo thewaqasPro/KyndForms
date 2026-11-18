@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="48" height="48">
+  <rect width="100" height="100" rx="20" fill="#0E2338"/>
+  <!-- Stylized Podium 'P' monogram -->
+  <path fill="#2E7CF6" d="M30 22h24c13.255 0 24 10.745 24 24s-10.745 24-24 24H44v14H30V22z"/>
+  <circle cx="44" cy="46" r="10" fill="#FFFFFF"/>
+</svg>
