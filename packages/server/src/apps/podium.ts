@@ -8,6 +8,7 @@ import { FormModel, SubmissionModel } from '@model'
 export interface PodiumConfig {
   apiToken: string
   locationUid: string
+  customTag?: string
 }
 
 interface RunArgs {
@@ -22,6 +23,9 @@ export interface PodiumContactPayload {
   phoneNumber?: string
   locations: string[]
   tags?: string[]
+  contactStatus?: {
+    name: string
+  }
   attributes?: Array<{
     name: string
     value: string
@@ -112,15 +116,24 @@ export function buildPodiumContactPayload(
   }
 
   const cleanLocationUid = config.locationUid.trim()
-  const tags: string[] = ['Website Lead']
-  if (form?.name) {
+  const tags: string[] = ['Website Lead', 'KyndFrom Diamond Quiz']
+  if (config.customTag?.trim()) {
+    const custom = config.customTag.trim()
+    if (!tags.includes(custom)) {
+      tags.push(custom)
+    }
+  }
+  if (form?.name && !tags.includes(form.name)) {
     tags.push(form.name)
   }
 
   const payload: PodiumContactPayload = {
     name: fullName,
     locations: [cleanLocationUid],
-    tags
+    tags,
+    contactStatus: {
+      name: 'New Lead'
+    }
   }
 
   if (email) {
@@ -164,6 +177,15 @@ export default {
       required: true,
       description:
         'The Location UID from your Podium account URL (e.g. 0f732703-b9a1-5dc4-a05d-387669bdc574).'
+    },
+    {
+      type: 'text',
+      name: 'customTag',
+      label: 'Automation Trigger Tag',
+      placeholder: 'KyndFrom Diamond Quiz',
+      required: false,
+      description:
+        'Tag to apply to the contact in Podium (defaults to "KyndFrom Diamond Quiz" to trigger your $1,500 gift card automation).'
     }
   ],
   run: async ({ config, submission, form }: RunArgs) => {

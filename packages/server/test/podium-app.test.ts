@@ -8,7 +8,7 @@ function testPodiumAppDefinition() {
   assert.strictEqual(podium.name, 'Podium')
   assert.strictEqual(podium.icon, '/static/podium.svg')
   assert.ok(podium.description.includes('Podium'))
-  assert.strictEqual(podium.settings.length, 2)
+  assert.strictEqual(podium.settings.length, 3)
 
   const tokenSetting = podium.settings[0]
   assert.strictEqual(tokenSetting.name, 'apiToken')
@@ -17,6 +17,10 @@ function testPodiumAppDefinition() {
   const locationSetting = podium.settings[1]
   assert.strictEqual(locationSetting.name, 'locationUid')
   assert.strictEqual(locationSetting.required, true)
+
+  const tagSetting = podium.settings[2]
+  assert.strictEqual(tagSetting.name, 'customTag')
+  assert.strictEqual(tagSetting.required, false)
 }
 
 function testPodiumPayloadBuilder() {
@@ -54,7 +58,8 @@ function testPodiumPayloadBuilder() {
 
   const config = {
     apiToken: 'test_token_123',
-    locationUid: '0f732703-b9a1-5dc4-a05d-387669bdc574'
+    locationUid: '0f732703-b9a1-5dc4-a05d-387669bdc574',
+    customTag: 'KyndFrom Diamond Quiz'
   }
 
   const payload = buildPodiumContactPayload(config, mockSubmission, mockForm)
@@ -64,7 +69,9 @@ function testPodiumPayloadBuilder() {
   assert.strictEqual(payload.phoneNumber, '+15551234567')
   assert.deepStrictEqual(payload.locations, ['0f732703-b9a1-5dc4-a05d-387669bdc574'])
   assert.ok(payload.tags?.includes('Website Lead'))
+  assert.ok(payload.tags?.includes('KyndFrom Diamond Quiz'))
   assert.ok(payload.tags?.includes('Find Your Dream Ring'))
+  assert.strictEqual(payload.contactStatus?.name, 'New Lead')
 
   // Check attributes
   const styleAttr = payload.attributes?.find(a => a.name === 'Style Preference')
