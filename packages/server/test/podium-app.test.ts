@@ -68,15 +68,15 @@ function testPodiumPayloadBuilder() {
   assert.strictEqual(payload.email, 'alice@example.com')
   assert.strictEqual(payload.phoneNumber, '+15551234567')
   assert.deepStrictEqual(payload.locations, ['0f732703-b9a1-5dc4-a05d-387669bdc574'])
-  assert.ok(payload.tags?.includes('Website Lead'))
-  assert.ok(payload.tags?.includes('KyndFrom Diamond Quiz'))
-  assert.ok(payload.tags?.includes('Find Your Dream Ring'))
   assert.strictEqual(payload.contactStatus?.name, 'New Lead')
 
-  // Check attributes
-  const styleAttr = payload.attributes?.find(a => a.name === 'Style Preference')
-  assert.ok(styleAttr)
-  assert.strictEqual(styleAttr.value, 'Vintage Halo')
+  // Verify UUID tags are passed
+  const uuidConfig = {
+    ...config,
+    customTag: 'b3f27f05-992a-4bc4-9d41-0b5cbe83072f'
+  }
+  const payloadWithTag = buildPodiumContactPayload(uuidConfig, mockSubmission, mockForm)
+  assert.deepStrictEqual(payloadWithTag?.tags, ['b3f27f05-992a-4bc4-9d41-0b5cbe83072f'])
 }
 
 function testFallbackNameWhenMissing() {

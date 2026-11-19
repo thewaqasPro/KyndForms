@@ -108,7 +108,7 @@ export function buildPodiumContactPayload(
     return null
   }
 
-  const { email, fullName, phone, attributes } = extractPodiumData(submission)
+  const { email, fullName, phone } = extractPodiumData(submission)
 
   // Podium requires at least an email or a phone number to create/upsert a contact
   if (!email && !phone) {
@@ -116,24 +116,19 @@ export function buildPodiumContactPayload(
   }
 
   const cleanLocationUid = config.locationUid.trim()
-  const tags: string[] = ['Website Lead', 'KyndFrom Diamond Quiz']
-  if (config.customTag?.trim()) {
-    const custom = config.customTag.trim()
-    if (!tags.includes(custom)) {
-      tags.push(custom)
-    }
-  }
-  if (form?.name && !tags.includes(form.name)) {
-    tags.push(form.name)
-  }
 
   const payload: PodiumContactPayload = {
     name: fullName,
     locations: [cleanLocationUid],
-    tags,
     contactStatus: {
       name: 'New Lead'
     }
+  }
+
+  // In Podium v4, tags must be UUIDs. If a valid UUID tag is supplied, send it.
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (config.customTag?.trim() && uuidRegex.test(config.customTag.trim())) {
+    payload.tags = [config.customTag.trim()]
   }
 
   if (email) {
@@ -144,10 +139,6 @@ export function buildPodiumContactPayload(
     // E.164 cleaning: retain leading + and digits
     const cleanedPhone = phone.replace(/[^\d+]/g, '')
     payload.phoneNumber = cleanedPhone.startsWith('+') ? cleanedPhone : `+1${cleanedPhone}`
-  }
-
-  if (attributes.length > 0) {
-    payload.attributes = attributes
   }
 
   return payload
