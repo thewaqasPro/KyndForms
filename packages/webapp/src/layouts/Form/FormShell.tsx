@@ -64,6 +64,11 @@ export const FormShell: FC<ComponentProps> = ({ children }) => {
         to: `/workspace/${workspaceId}/project/${projectId}/form/${formId}/integrations`
       },
       {
+        value: 'logs',
+        label: t('form.logs.title', 'Logs'),
+        to: `/workspace/${workspaceId}/project/${projectId}/form/${formId}/logs`
+      },
+      {
         value: 'share',
         label: t('form.share.title'),
         to: `/workspace/${workspaceId}/project/${projectId}/form/${formId}/share`

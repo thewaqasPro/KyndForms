@@ -16,6 +16,7 @@ import SignUp from '@/pages/auth/SignUp'
 import VerifyEmail from '@/pages/auth/VerifyEmail'
 import FormAnalytics from '@/pages/form/Analytics'
 import FormBuilder from '@/pages/form/Builder'
+import FormLogs from '@/pages/form/DeliveryLogs'
 import FormIntegrations from '@/pages/form/Integrations'
 import FormRender from '@/pages/form/Render'
 import FormSettings from '@/pages/form/Settings'
@@ -196,6 +197,16 @@ const routes = [
       formShell: true,
       loginRequired: true,
       title: 'form.integrations.title'
+    }
+  },
+  {
+    path: '/workspace/:workspaceId/project/:projectId/form/:formId/logs',
+    layout: WorkspaceLayout,
+    component: FormLogs,
+    options: {
+      formShell: true,
+      loginRequired: true,
+      title: 'form.logs.title'
     }
   },
   {

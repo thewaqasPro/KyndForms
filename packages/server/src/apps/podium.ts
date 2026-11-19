@@ -9,6 +9,9 @@ export interface PodiumConfig {
   apiToken: string
   locationUid: string
   customTag?: string
+  refreshToken?: string
+  clientId?: string
+  clientSecret?: string
 }
 
 interface RunArgs {
@@ -102,7 +105,7 @@ export function extractPodiumData(submission: SubmissionModel) {
 export function buildPodiumContactPayload(
   config: PodiumConfig,
   submission: SubmissionModel,
-  form: FormModel
+  _form: FormModel
 ): PodiumContactPayload | null {
   if (!config?.apiToken || !config?.locationUid) {
     return null
@@ -172,18 +175,42 @@ export default {
     {
       type: 'text',
       name: 'customTag',
-      label: 'Automation Trigger Tag',
-      placeholder: 'KyndFrom Diamond Quiz',
+      label: 'Automation Trigger Tag (UUID)',
+      placeholder: '00000000-0000-0000-0000-000000000000',
+      required: false,
+      description: 'Optional Podium tag UID to assign to contacts for targeted automations.'
+    },
+    {
+      type: 'text',
+      name: 'refreshToken',
+      label: 'OAuth Refresh Token',
+      placeholder: '49c48039c0dfcc7...',
       required: false,
       description:
-        'Tag to apply to the contact in Podium (defaults to "KyndFrom Diamond Quiz" to trigger your $1,500 gift card automation).'
+        'Used to automatically generate a fresh access token whenever the current token expires.'
+    },
+    {
+      type: 'text',
+      name: 'clientId',
+      label: 'OAuth Client ID',
+      placeholder: '01a1f072-c542-...',
+      required: false,
+      description: 'Your Podium Developer App Client ID for automatic token refresh.'
+    },
+    {
+      type: 'text',
+      name: 'clientSecret',
+      label: 'OAuth Client Secret',
+      placeholder: '311364ae...',
+      required: false,
+      description: 'Your Podium Developer App Client Secret for automatic token refresh.'
     }
   ],
   run: async ({ config, submission, form }: RunArgs) => {
     if (!config?.apiToken || !config?.locationUid) return
 
-    const token = config.apiToken.trim()
-    const authToken = token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`
+    let token = config.apiToken.trim()
+    let authToken = token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`
 
     const headers = {
       Authorization: authToken,
@@ -203,13 +230,74 @@ export default {
         json: payload,
         responseType: 'json',
         timeout: 15000,
-        retry: 1
+        retry: 0
       })
     } catch (err: any) {
-      err.diagnosticUrl = endpointUrl
-      err.diagnosticMethod = 'POST'
-      err.diagnosticPayload = payload
-      throw err
+      // If token expired (401) and we have refresh credentials, auto-refresh and retry once
+      if (
+        err?.response?.statusCode === 401 &&
+        config.refreshToken &&
+        config.clientId &&
+        config.clientSecret
+      ) {
+        try {
+          const refreshRes: any = await got.post('https://api.podium.com/oauth/token', {
+            json: {
+              grant_type: 'refresh_token',
+              client_id: config.clientId,
+              client_secret: config.clientSecret,
+              refresh_token: config.refreshToken
+            },
+            responseType: 'json',
+            timeout: 10000
+          })
+
+          if (refreshRes?.body?.access_token) {
+            token = refreshRes.body.access_token
+            config.apiToken = token
+            if (refreshRes.body.refresh_token) {
+              config.refreshToken = refreshRes.body.refresh_token
+            }
+
+            try {
+              const { IntegrationModel } = require('@model')
+              const formIdentifier = (form as any)?.url || (form as any)?._id
+              await IntegrationModel.updateOne(
+                { formId: formIdentifier, appId: 'podium' },
+                {
+                  $set: {
+                    'config.apiToken': config.apiToken,
+                    'config.refreshToken': config.refreshToken
+                  }
+                }
+              )
+            } catch {}
+
+            authToken = `Bearer ${token}`
+            res = await got.post(endpointUrl, {
+              headers: {
+                Authorization: authToken,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              json: payload,
+              responseType: 'json',
+              timeout: 15000
+            })
+          }
+        } catch {
+          // If refresh fails, fall through to rethrow the original 401 error
+          err.diagnosticUrl = endpointUrl
+          err.diagnosticMethod = 'POST'
+          err.diagnosticPayload = payload
+          throw err
+        }
+      } else {
+        err.diagnosticUrl = endpointUrl
+        err.diagnosticMethod = 'POST'
+        err.diagnosticPayload = payload
+        throw err
+      }
     }
 
     return {

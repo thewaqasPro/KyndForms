@@ -8,7 +8,7 @@ function testPodiumAppDefinition() {
   assert.strictEqual(podium.name, 'Podium')
   assert.strictEqual(podium.icon, '/static/podium.svg')
   assert.ok(podium.description.includes('Podium'))
-  assert.strictEqual(podium.settings.length, 3)
+  assert.strictEqual(podium.settings.length, 6)
 
   const tokenSetting = podium.settings[0]
   assert.strictEqual(tokenSetting.name, 'apiToken')
@@ -21,6 +21,10 @@ function testPodiumAppDefinition() {
   const tagSetting = podium.settings[2]
   assert.strictEqual(tagSetting.name, 'customTag')
   assert.strictEqual(tagSetting.required, false)
+
+  const refreshSetting = podium.settings[3]
+  assert.strictEqual(refreshSetting.name, 'refreshToken')
+  assert.strictEqual(refreshSetting.required, false)
 }
 
 function testPodiumPayloadBuilder() {

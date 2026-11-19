@@ -3,6 +3,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconDatabase,
+  IconFileText,
   IconListDetails,
   IconPlayerPlay,
   IconSend2,
@@ -210,6 +211,17 @@ export default function BuilderNavBar() {
               onClick={() => handleNavigateTo('integrations')}
             >
               <IconBolt className="h-5 w-5" />
+            </Button.Link>
+          </Tooltip>
+
+          <Tooltip label={t('form.logs.title', 'Logs')}>
+            <Button.Link
+              className="hidden sm:block"
+              size="md"
+              iconOnly
+              onClick={() => handleNavigateTo('logs')}
+            >
+              <IconFileText className="h-5 w-5" />
             </Button.Link>
           </Tooltip>
 
