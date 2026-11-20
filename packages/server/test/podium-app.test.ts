@@ -106,10 +106,38 @@ function testFallbackNameWhenMissing() {
   assert.strictEqual(payload.email, 'john.doe@example.com')
 }
 
+function testFirstNameFromIntroQuestion() {
+  const mockSubmission = {
+    answers: [
+      {
+        kind: 'short_text',
+        title: 'Find The Perfect Engagement Ring For Your Style*',
+        value: 'Gary'
+      },
+      {
+        kind: FieldKindEnum.EMAIL,
+        title: 'Email Address',
+        value: 'rubeljeweler@gmail.com'
+      }
+    ]
+  } as any
+
+  const config = {
+    apiToken: 'test_token',
+    locationUid: '0f732703-b9a1-5dc4-a05d-387669bdc574'
+  }
+
+  const payload = buildPodiumContactPayload(config, mockSubmission, {} as any)
+  assert.ok(payload)
+  assert.strictEqual(payload.name, 'Gary')
+  assert.strictEqual(payload.email, 'rubeljeweler@gmail.com')
+}
+
 async function run() {
   testPodiumAppDefinition()
   testPodiumPayloadBuilder()
   testFallbackNameWhenMissing()
+  testFirstNameFromIntroQuestion()
   console.log('podium-app tests passed!')
 }
 

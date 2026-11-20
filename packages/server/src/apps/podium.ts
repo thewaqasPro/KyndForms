@@ -61,8 +61,9 @@ export function extractPodiumData(submission: SubmissionModel) {
       } else if (
         !fullName &&
         a.title &&
-        /(your|full)?\s*name/i.test(a.title) &&
-        typeof a.value === 'string'
+        (/(your|full|first)?\s*name/i.test(a.title) || /find\s+the\s+perfect/i.test(a.title)) &&
+        typeof a.value === 'string' &&
+        a.value.trim() !== ''
       ) {
         fullName = a.value.trim()
       }
@@ -86,6 +87,21 @@ export function extractPodiumData(submission: SubmissionModel) {
           }
         }
       }
+    }
+  }
+
+  // If name was not explicitly tagged as FULL_NAME or name, check the very first answer
+  // (e.g. introductory name questions like "Find The Perfect Engagement Ring For Your Style")
+  if (!fullName && Array.isArray(submission.answers) && submission.answers.length > 0) {
+    const firstAnswer = submission.answers[0]
+    if (
+      firstAnswer &&
+      typeof firstAnswer.value === 'string' &&
+      firstAnswer.value.trim() !== '' &&
+      !helper.isEmail(firstAnswer.value) &&
+      firstAnswer.kind !== FieldKindEnum.EMAIL
+    ) {
+      fullName = firstAnswer.value.trim()
     }
   }
 
