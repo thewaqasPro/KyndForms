@@ -34,7 +34,10 @@ export class UpdateIntegrationSettingsResolver {
 
     await this.integrationService.createOrUpdate(input.formId, app.id, {
       config: input.config,
-      status: IntegrationStatusEnum.ACTIVE
+      status: IntegrationStatusEnum.ACTIVE,
+      consecutiveFailures: 0,
+      lastErrorMessage: undefined,
+      lastFailureAt: undefined
     })
 
     return true

@@ -35,6 +35,9 @@ export class GetIntegrationLogsInput extends FormDetailInput {
   @Field({ nullable: true })
   integrationId?: string
 
+  @Field({ nullable: true })
+  appId?: string
+
   @Field({ nullable: true, defaultValue: 50 })
   limit?: number
 

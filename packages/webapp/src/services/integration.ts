@@ -573,7 +573,13 @@ export class IntegrationService {
     })
   }
 
-  static async getLogs(formId: string, integrationId?: string, limit = 50, skip = 0) {
+  static async getLogs(
+    formId: string,
+    integrationId?: string,
+    limit = 50,
+    skip = 0,
+    appId?: string
+  ) {
     const input: Record<string, any> = {
       formId,
       limit,
@@ -581,6 +587,9 @@ export class IntegrationService {
     }
     if (integrationId && typeof integrationId === 'string' && integrationId.trim() !== '') {
       input.integrationId = integrationId.trim()
+    }
+    if (appId && typeof appId === 'string' && appId.trim() !== '') {
+      input.appId = appId.trim()
     }
 
     return apollo.query<{

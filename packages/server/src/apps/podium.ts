@@ -334,10 +334,11 @@ export default {
     }
 
     // If contact was created and a custom tag was configured but omitted/deferred, attempt tagging
-    const contactIdentifier = payload.email || payload.phoneNumber
-    if (res && config.customTag?.trim() && contactIdentifier) {
+    const contactUid =
+      res?.body?.data?.uid || res?.body?.uid || payload.email || payload.phoneNumber
+    if (res && config.customTag?.trim() && contactUid) {
       const tagUid = config.customTag.trim()
-      const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactIdentifier)}/tags/${tagUid}`
+      const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactUid)}/tags/${tagUid}`
       try {
         await got.post(tagEndpoint, {
           headers: {

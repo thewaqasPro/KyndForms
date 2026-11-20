@@ -17,7 +17,8 @@ export class GetIntegrationLogsResolver {
       input.formId,
       input.integrationId,
       input.limit,
-      input.skip
+      input.skip,
+      input.appId
     )
 
     return {

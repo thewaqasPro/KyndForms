@@ -134,9 +134,16 @@ export class IntegrationService {
   public async retryDelivery(
     form: FormModel,
     submissionId: string,
-    integrationId: string
+    integrationId: string,
+    appId?: string
   ): Promise<boolean> {
-    const integration = await this.integrationModel.findById(integrationId)
+    let integration = await this.integrationModel.findById(integrationId)
+    if (!integration && appId) {
+      integration = await this.integrationModel.findOne({
+        formId: form.id,
+        appId
+      })
+    }
     if (!integration) {
       return false
     }

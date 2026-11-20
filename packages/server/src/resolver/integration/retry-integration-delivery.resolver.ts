@@ -29,6 +29,11 @@ export class RetryIntegrationDeliveryResolver {
       throw new BadRequestException('Form not found')
     }
 
-    return this.integrationService.retryDelivery(form, log.submissionId, log.integrationId)
+    return this.integrationService.retryDelivery(
+      form,
+      log.submissionId,
+      log.integrationId,
+      log.appId
+    )
   }
 }

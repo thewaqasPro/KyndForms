@@ -200,10 +200,13 @@ export class IntegrationDeliveryService {
     }
   }
 
-  async getLogs(formId: string, integrationId?: string, limit = 50, skip = 0) {
+  async getLogs(formId: string, integrationId?: string, limit = 50, skip = 0, appId?: string) {
     const query: Record<string, any> = { formId }
     if (integrationId && typeof integrationId === 'string' && integrationId.trim() !== '') {
       query.integrationId = integrationId.trim()
+    }
+    if (appId && typeof appId === 'string' && appId.trim() !== '') {
+      query.appId = appId.trim()
     }
 
     const [logs, total] = await Promise.all([

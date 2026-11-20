@@ -62,12 +62,13 @@ export default function DeliveryLogsModal() {
 
   const integrationId = payload?.integrationId
   const app = payload?.app
+  const appId = payload?.appId || app?.id
 
   async function fetchLogs() {
     if (!formId) return
     setLoading(true)
     try {
-      const res = await IntegrationService.getLogs(formId, integrationId, 50, 0)
+      const res = await IntegrationService.getLogs(formId, integrationId, 50, 0, appId)
       if (res?.logs) {
         setLogs(res.logs as DeliveryLogItem[])
         setTotal(res.total)

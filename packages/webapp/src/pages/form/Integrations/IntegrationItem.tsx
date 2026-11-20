@@ -15,7 +15,7 @@ import { cn, useParam } from '@/utils'
 import { dayjs } from '@/utils/date'
 import { date, helper } from '@kyndform/utils'
 
-import { Badge, Button, Image, Switch, Tooltip } from '@/components'
+import { Badge, Button, Image, Switch, Tooltip, useAlert, useToast } from '@/components'
 import { APP_STATUS_ENUM, INTEGRATION_STATUS_ENUM } from '@/consts'
 import { useAppStore, useFormStore } from '@/store'
 import { IntegratedAppType } from '@/types'
@@ -31,6 +31,9 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
   const { openModal } = useAppStore()
   const { updateIntegration, deleteIntegration } = useFormStore()
   const [hasIconError, setHasIconError] = useState(false)
+
+  const alert = useAlert()
+  const toast = useToast()
 
   const active = useMemo(
     () =>
@@ -54,14 +57,40 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
 
   const { loading: deleteLoading, run: deleteRun } = useRequest(
     async () => {
-      await IntegrationService.deleteSettings(formId, app.id)
-      deleteIntegration(app.id)
+      try {
+        await IntegrationService.deleteSettings(formId, app.id)
+        deleteIntegration(app.id)
+        toast({
+          title: 'Integration Deleted',
+          message: `${app.name} integration settings have been removed.`
+        })
+      } catch (err: any) {
+        toast({
+          title: 'Failed to Delete',
+          message: err?.message || 'Could not delete integration settings.'
+        })
+      }
     },
     {
       manual: true,
       refreshDeps: [formId, app.id]
     }
   )
+
+  function handleDelete() {
+    alert({
+      title: `Delete ${app.name} Integration?`,
+      description: `Are you sure you want to delete the ${app.name} integration? Automated outbound submissions will stop for this app.`,
+      confirmProps: {
+        label: t('components.delete'),
+        className: 'bg-error text-primary-light dark:text-primary hover:bg-error'
+      },
+      cancelProps: {
+        label: t('components.cancel')
+      },
+      onConfirm: deleteRun
+    })
+  }
 
   function handleConnect() {
     openModal('IntegrationSettingsModal', { app })
@@ -90,7 +119,7 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
             </Tooltip>
 
             <Tooltip label={t('components.delete')}>
-              <Button.Link size="sm" loading={deleteLoading} iconOnly onClick={deleteRun}>
+              <Button.Link size="sm" loading={deleteLoading} iconOnly onClick={handleDelete}>
                 <IconTrash className="h-5 w-5" />
               </Button.Link>
             </Tooltip>
@@ -104,12 +133,13 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
           </Button>
         )
     }
-  }, [handleConnect, t, deleteLoading])
+  }, [handleConnect, handleDelete, handleEdit, t, deleteLoading, active, toggleLoading, toggleRun])
 
   function handleOpenLogs() {
     openModal('DeliveryLogsModal', {
       app,
-      integrationId: app.integration?.id
+      integrationId: app.integration?.id,
+      appId: app.id
     })
   }
 
