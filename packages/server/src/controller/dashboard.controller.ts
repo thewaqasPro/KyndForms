@@ -59,6 +59,12 @@ export class DashboardController {
   @Redirect('/static/embed.js', 302)
   embedJs() {}
 
+  @Get('/robots.txt')
+  robots(@Res() res: Response) {
+    res.type('text/plain')
+    return res.send('User-agent: *\nDisallow: /workspace/\nDisallow: /admin/\nAllow: /\n')
+  }
+
   @Get('/sign-up')
   async signUp(@Req() req: Request, @Res() res: Response) {
     const isAllowed = await this.systemSettingService.isRegistrationAllowed()

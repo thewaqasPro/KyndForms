@@ -15,9 +15,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
 
   catch(exception: Error, host: ArgumentsHost): any {
-    this.logger.error(exception, (exception as any).stack)
-
     const status = exception instanceof HttpException ? exception.getStatus() : 500
+
+    if (status === 404) {
+      try {
+        const req = host.switchToHttp().getRequest()
+        this.logger.warn(`NotFound (404): ${req?.method || 'GET'} ${req?.url || ''}`)
+      } catch {
+        this.logger.warn(`NotFound (404): ${exception.message}`)
+      }
+    } else {
+      this.logger.error(exception, (exception as any).stack)
+    }
+
     const httpException =
       exception instanceof HttpException && status >= 400 && status < 500
         ? exception
