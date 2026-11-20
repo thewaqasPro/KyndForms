@@ -233,8 +233,26 @@ export default {
         retry: 0
       })
     } catch (err: any) {
+      // If Podium returns 500 due to an invalid/non-existent tag UID, retry without the tag
+      if (err?.response?.statusCode === 500 && payload.tags?.length) {
+        try {
+          const fallbackPayload = { ...payload }
+          delete fallbackPayload.tags
+          res = await got.post(endpointUrl, {
+            headers,
+            json: fallbackPayload,
+            responseType: 'json',
+            timeout: 15000,
+            retry: 0
+          })
+        } catch {
+          // If fallback fails, continue to normal error handling
+        }
+      }
+
       // If token expired (401) and we have refresh credentials, auto-refresh and retry once
       if (
+        !res &&
         err?.response?.statusCode === 401 &&
         config.refreshToken &&
         config.clientId &&
@@ -286,17 +304,35 @@ export default {
             })
           }
         } catch {
-          // If refresh fails, fall through to rethrow the original 401 error
           err.diagnosticUrl = endpointUrl
           err.diagnosticMethod = 'POST'
           err.diagnosticPayload = payload
           throw err
         }
-      } else {
+      } else if (!res) {
         err.diagnosticUrl = endpointUrl
         err.diagnosticMethod = 'POST'
         err.diagnosticPayload = payload
         throw err
+      }
+    }
+
+    // If contact was created and a custom tag was configured but omitted/deferred, attempt tagging
+    const contactIdentifier = payload.email || payload.phoneNumber
+    if (res && config.customTag?.trim() && contactIdentifier) {
+      const tagUid = config.customTag.trim()
+      const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactIdentifier)}/tags/${tagUid}`
+      try {
+        await got.post(tagEndpoint, {
+          headers: {
+            Authorization: authToken,
+            Accept: 'application/json'
+          },
+          responseType: 'json',
+          timeout: 10000
+        })
+      } catch {
+        // Tagging errors (e.g. tag doesn't exist in Podium) are non-fatal
       }
     }
 

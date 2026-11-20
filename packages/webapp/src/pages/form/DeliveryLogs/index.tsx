@@ -15,6 +15,7 @@ import { dayjs } from '@/utils/date'
 import { date } from '@kyndform/utils'
 
 import { Badge, Button, EmptyState, Loader, Tooltip } from '@/components'
+import { useFormStore } from '@/store'
 
 export interface DeliveryLogItem {
   id: string
@@ -47,6 +48,8 @@ function tryFormatJson(val?: string): string {
 
 export default function FormLogs() {
   const { formId } = useParam()
+  const { form } = useFormStore()
+  const targetFormId = formId || (form as any)?.id || (form as any)?._id
 
   const [loading, setLoading] = useState(false)
   const [retryingId, setRetryingId] = useState<string | null>(null)
@@ -58,10 +61,11 @@ export default function FormLogs() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   async function fetchLogs() {
-    if (!formId) return
+    const id = targetFormId
+    if (!id) return
     setLoading(true)
     try {
-      const res = await IntegrationService.getLogs(formId, undefined, 50, 0)
+      const res = await IntegrationService.getLogs(id, undefined, 50, 0)
       if (res?.logs) {
         setLogs(res.logs as DeliveryLogItem[])
         setTotal(res.total)
@@ -78,13 +82,14 @@ export default function FormLogs() {
     setSelectedLog(null)
     setFilter('all')
     setActiveTab('request')
-  }, [formId])
+  }, [targetFormId])
 
   async function handleRetry(log: DeliveryLogItem) {
-    if (!formId || retryingId) return
+    const id = targetFormId
+    if (!id || retryingId) return
     setRetryingId(log.id)
     try {
-      const res = await IntegrationService.retryDelivery(formId, log.id)
+      const res = await IntegrationService.retryDelivery(id, log.id)
       if (res) {
         await fetchLogs()
       }

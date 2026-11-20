@@ -574,6 +574,15 @@ export class IntegrationService {
   }
 
   static async getLogs(formId: string, integrationId?: string, limit = 50, skip = 0) {
+    const input: Record<string, any> = {
+      formId,
+      limit,
+      skip
+    }
+    if (integrationId && typeof integrationId === 'string' && integrationId.trim() !== '') {
+      input.integrationId = integrationId.trim()
+    }
+
     return apollo.query<{
       logs: Array<{
         id: string
@@ -596,12 +605,7 @@ export class IntegrationService {
       query: GET_INTEGRATION_LOGS_GQL,
       fetchPolicy: 'no-cache',
       variables: {
-        input: {
-          formId,
-          integrationId,
-          limit,
-          skip
-        }
+        input
       }
     })
   }
