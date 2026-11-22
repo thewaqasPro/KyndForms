@@ -18,6 +18,7 @@ interface RunArgs {
   config: PodiumConfig
   submission: SubmissionModel
   form: FormModel
+  onConfigUpdate?: (updates: Record<string, any>) => Promise<void>
 }
 
 export interface PodiumContactPayload {
@@ -61,7 +62,7 @@ export function extractPodiumData(submission: SubmissionModel) {
       } else if (
         !fullName &&
         a.title &&
-        (/(your|full|first)?\s*name/i.test(a.title) || /find\s+the\s+perfect/i.test(a.title)) &&
+        /(your|full|first)?\s*name/i.test(a.title) &&
         typeof a.value === 'string' &&
         a.value.trim() !== ''
       ) {
@@ -90,21 +91,6 @@ export function extractPodiumData(submission: SubmissionModel) {
     }
   }
 
-  // If name was not explicitly tagged as FULL_NAME or name, check the very first answer
-  // (e.g. introductory name questions like "Find The Perfect Engagement Ring For Your Style")
-  if (!fullName && Array.isArray(submission.answers) && submission.answers.length > 0) {
-    const firstAnswer = submission.answers[0]
-    if (
-      firstAnswer &&
-      typeof firstAnswer.value === 'string' &&
-      firstAnswer.value.trim() !== '' &&
-      !helper.isEmail(firstAnswer.value) &&
-      firstAnswer.kind !== FieldKindEnum.EMAIL
-    ) {
-      fullName = firstAnswer.value.trim()
-    }
-  }
-
   // Gracefully fallback to email username or 'Website Lead' if submitter didn't provide name
   if (!fullName) {
     if (email) {
@@ -127,7 +113,7 @@ export function buildPodiumContactPayload(
     return null
   }
 
-  const { email, fullName, phone } = extractPodiumData(submission)
+  const { email, fullName, phone, attributes } = extractPodiumData(submission)
 
   // Podium requires at least an email or a phone number to create/upsert a contact
   if (!email && !phone) {
@@ -144,6 +130,10 @@ export function buildPodiumContactPayload(
     }
   }
 
+  if (attributes.length > 0) {
+    payload.attributes = attributes
+  }
+
   // In Podium v4, tags must be UUIDs. If a valid UUID tag is supplied, send it.
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (config.customTag?.trim() && uuidRegex.test(config.customTag.trim())) {
@@ -155,9 +145,17 @@ export function buildPodiumContactPayload(
   }
 
   if (phone) {
-    // E.164 cleaning: retain leading + and digits
+    // E.164 cleaning: retain leading + and digits; only default to +1 for 10-digit US/CA numbers
     const cleanedPhone = phone.replace(/[^\d+]/g, '')
-    payload.phoneNumber = cleanedPhone.startsWith('+') ? cleanedPhone : `+1${cleanedPhone}`
+    if (cleanedPhone.startsWith('+')) {
+      payload.phoneNumber = cleanedPhone
+    } else if (cleanedPhone.length === 10) {
+      payload.phoneNumber = `+1${cleanedPhone}`
+    } else if (cleanedPhone.length === 11 && cleanedPhone.startsWith('1')) {
+      payload.phoneNumber = `+${cleanedPhone}`
+    } else if (cleanedPhone.length >= 7) {
+      payload.phoneNumber = `+${cleanedPhone}`
+    }
   }
 
   return payload
@@ -222,11 +220,13 @@ export default {
       description: 'Your Podium Developer App Client Secret for automatic token refresh.'
     }
   ],
-  run: async ({ config, submission, form }: RunArgs) => {
-    if (!config?.apiToken || !config?.locationUid) return
+  run: async ({ config, submission, form, onConfigUpdate }: RunArgs) => {
+    if (!config?.apiToken || !config?.locationUid) {
+      return { skipped: true, reason: 'Missing Podium API token or location UID' }
+    }
 
-    let token = config.apiToken.trim()
-    let authToken = token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`
+    let token = config.apiToken.trim().replace(/^Bearer\s+/i, '')
+    let authToken = `Bearer ${token}`
 
     const headers = {
       Authorization: authToken,
@@ -235,10 +235,14 @@ export default {
     }
 
     const payload = buildPodiumContactPayload(config, submission, form)
-    if (!payload) return
+    if (!payload) {
+      return { skipped: true, reason: 'Submission has neither email nor phone number' }
+    }
 
     const endpointUrl = 'https://api.podium.com/v4/contacts'
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     let res: any
+    let tagsAppliedOnCreate = Boolean(payload.tags?.length)
 
     try {
       res = await got.post(endpointUrl, {
@@ -261,6 +265,7 @@ export default {
             timeout: 15000,
             retry: 0
           })
+          tagsAppliedOnCreate = false
         } catch {
           // If fallback fails, continue to normal error handling
         }
@@ -270,42 +275,56 @@ export default {
       if (
         !res &&
         err?.response?.statusCode === 401 &&
-        config.refreshToken &&
-        config.clientId &&
-        config.clientSecret
+        config.refreshToken?.trim() &&
+        config.clientId?.trim() &&
+        config.clientSecret?.trim()
       ) {
+        const clientId = config.clientId.trim()
+        const clientSecret = config.clientSecret.trim()
+        const refreshToken = config.refreshToken.trim()
+
         try {
-          const refreshRes: any = await got.post('https://api.podium.com/oauth/token', {
-            json: {
-              grant_type: 'refresh_token',
-              client_id: config.clientId,
-              client_secret: config.clientSecret,
-              refresh_token: config.refreshToken
-            },
-            responseType: 'json',
-            timeout: 10000
-          })
+          let refreshRes: any
+          try {
+            // Standard OAuth 2.0 uses application/x-www-form-urlencoded
+            refreshRes = await got.post('https://api.podium.com/oauth/token', {
+              form: {
+                grant_type: 'refresh_token',
+                client_id: clientId,
+                client_secret: clientSecret,
+                refresh_token: refreshToken
+              },
+              responseType: 'json',
+              timeout: 10000
+            })
+          } catch (formErr: any) {
+            // Fallback to json if form-urlencoded fails
+            refreshRes = await got.post('https://api.podium.com/oauth/token', {
+              json: {
+                grant_type: 'refresh_token',
+                client_id: clientId,
+                client_secret: clientSecret,
+                refresh_token: refreshToken
+              },
+              responseType: 'json',
+              timeout: 10000
+            })
+          }
 
           if (refreshRes?.body?.access_token) {
-            token = refreshRes.body.access_token
+            token = String(refreshRes.body.access_token)
+              .trim()
+              .replace(/^Bearer\s+/i, '')
             config.apiToken = token
+            const tokenUpdates: Record<string, any> = { apiToken: config.apiToken }
             if (refreshRes.body.refresh_token) {
-              config.refreshToken = refreshRes.body.refresh_token
+              config.refreshToken = String(refreshRes.body.refresh_token).trim()
+              tokenUpdates.refreshToken = config.refreshToken
             }
 
-            try {
-              const { IntegrationModel } = require('@model')
-              const formIdentifier = (form as any)?.url || (form as any)?._id
-              await IntegrationModel.updateOne(
-                { formId: formIdentifier, appId: 'podium' },
-                {
-                  $set: {
-                    'config.apiToken': config.apiToken,
-                    'config.refreshToken': config.refreshToken
-                  }
-                }
-              )
-            } catch {}
+            if (onConfigUpdate) {
+              await onConfigUpdate(tokenUpdates)
+            }
 
             authToken = `Bearer ${token}`
             res = await got.post(endpointUrl, {
@@ -319,13 +338,23 @@ export default {
               timeout: 15000
             })
           }
-        } catch {
+        } catch (refreshErr: any) {
+          const detail =
+            refreshErr?.response?.body?.message ||
+            refreshErr?.response?.body?.error_description ||
+            refreshErr?.message ||
+            'unknown error'
+          err.message = `Podium access token expired and auto-refresh failed (${detail}). Please verify OAuth Refresh Token credentials in integration settings.`
           err.diagnosticUrl = endpointUrl
           err.diagnosticMethod = 'POST'
           err.diagnosticPayload = payload
           throw err
         }
       } else if (!res) {
+        if (err?.response?.statusCode === 401) {
+          err.message =
+            'Podium API access token has expired (401 Unauthorized). Please update the access token in integration settings, or configure OAuth Client ID, Secret, and Refresh Token for automatic token renewal.'
+        }
         err.diagnosticUrl = endpointUrl
         err.diagnosticMethod = 'POST'
         err.diagnosticPayload = payload
@@ -333,12 +362,12 @@ export default {
       }
     }
 
-    // If contact was created and a custom tag was configured but omitted/deferred, attempt tagging
+    // Only attempt separate tagging if a valid UUID tag was configured and not already applied on create
     const contactUid =
       res?.body?.data?.uid || res?.body?.uid || payload.email || payload.phoneNumber
-    if (res && config.customTag?.trim() && contactUid) {
-      const tagUid = config.customTag.trim()
-      const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactUid)}/tags/${tagUid}`
+    const tagUid = config.customTag?.trim()
+    if (res && !tagsAppliedOnCreate && tagUid && uuidRegex.test(tagUid) && contactUid) {
+      const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactUid)}/tags/${encodeURIComponent(tagUid)}`
       try {
         await got.post(tagEndpoint, {
           headers: {
