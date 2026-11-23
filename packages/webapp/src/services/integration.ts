@@ -5,6 +5,7 @@ import {
   AIRTABLE_OAUTH_GQL,
   AIRTABLE_TABLES_GQL,
   DELETE_INTEGRATION_SETTINGS_GQL,
+  DELETE_WORKSPACE_INTEGRATION_SETTINGS_GQL,
   DROPBOX_FOLDERS_GQL,
   DROPBOX_OAUTH_GQL,
   GET_INTEGRATION_LOGS_GQL,
@@ -43,7 +44,10 @@ import {
   SUPPORTPAL_STATUS_GQL,
   THIRD_PARTY_OAUTH_URL_GQL,
   UPDATE_INTEGRATION_SETTINGS_GQL,
-  UPDATE_INTEGRATION_STATUS_GQL
+  UPDATE_INTEGRATION_STATUS_GQL,
+  UPDATE_WORKSPACE_INTEGRATION_SETTINGS_GQL,
+  WORKSPACE_INTEGRATIONS_GQL,
+  WORKSPACE_INTEGRATION_GQL
 } from '@/consts'
 
 export class IntegrationService {
@@ -93,6 +97,44 @@ export class IntegrationService {
           appId,
           config
         }
+      }
+    })
+  }
+
+  static async getWorkspaceIntegration(teamId: string, appId: string) {
+    const res = await apollo.query({
+      query: WORKSPACE_INTEGRATION_GQL,
+      variables: {
+        input: { teamId, appId }
+      },
+      fetchPolicy: 'network-only'
+    })
+    return res.data?.workspaceIntegration
+  }
+
+  static async getWorkspaceIntegrations(teamId: string) {
+    const res = await apollo.query({
+      query: WORKSPACE_INTEGRATIONS_GQL,
+      variables: { teamId },
+      fetchPolicy: 'network-only'
+    })
+    return res.data?.workspaceIntegrations || []
+  }
+
+  static async updateWorkspaceSettings(teamId: string, appId: string, config: AnyMap) {
+    return apollo.mutate({
+      mutation: UPDATE_WORKSPACE_INTEGRATION_SETTINGS_GQL,
+      variables: {
+        input: { teamId, appId, config }
+      }
+    })
+  }
+
+  static async deleteWorkspaceSettings(teamId: string, appId: string) {
+    return apollo.mutate({
+      mutation: DELETE_WORKSPACE_INTEGRATION_SETTINGS_GQL,
+      variables: {
+        input: { teamId, appId }
       }
     })
   }

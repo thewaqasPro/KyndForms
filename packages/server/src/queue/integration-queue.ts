@@ -61,7 +61,15 @@ export class IntegrationQueue extends BaseQueue {
 
         const isGlobalEnabled =
           formConfig.useGlobalConnection !== false && Object.keys(workspaceConfig).length > 0
-        const config = isGlobalEnabled ? { ...workspaceConfig, ...formConfig } : formConfig
+        let config = formConfig
+        if (isGlobalEnabled) {
+          config = { ...workspaceConfig }
+          for (const [k, v] of Object.entries(formConfig)) {
+            if (v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) {
+              config[k] = v
+            }
+          }
+        }
 
         const endpointUrl =
           (config as any)?.webhookUrl || (config as any)?.url || (config as any)?.endpoint

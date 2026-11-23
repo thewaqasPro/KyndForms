@@ -1104,6 +1104,44 @@ export const UPDATE_INTEGRATION_SETTINGS_GQL = gql`
   }
 `
 
+export const WORKSPACE_INTEGRATION_GQL = gql`
+  query workspaceIntegration($input: WorkspaceIntegrationInput!) {
+    workspaceIntegration(input: $input) {
+      id
+      teamId
+      appId
+      config
+      createdAt
+      updatedAt
+    }
+  }
+`
+
+export const WORKSPACE_INTEGRATIONS_GQL = gql`
+  query workspaceIntegrations($teamId: String!) {
+    workspaceIntegrations(teamId: $teamId) {
+      id
+      teamId
+      appId
+      config
+      createdAt
+      updatedAt
+    }
+  }
+`
+
+export const UPDATE_WORKSPACE_INTEGRATION_SETTINGS_GQL = gql`
+  mutation updateWorkspaceIntegrationSettings($input: UpdateWorkspaceIntegrationInput!) {
+    updateWorkspaceIntegrationSettings(input: $input)
+  }
+`
+
+export const DELETE_WORKSPACE_INTEGRATION_SETTINGS_GQL = gql`
+  mutation deleteWorkspaceIntegrationSettings($input: WorkspaceIntegrationInput!) {
+    deleteWorkspaceIntegrationSettings(input: $input)
+  }
+`
+
 export const UPDATE_INTEGRATION_STATUS_GQL = gql`
   mutation updateIntegrationStatus($input: UpdateIntegrationStatusInput!) {
     updateIntegrationStatus(input: $input)

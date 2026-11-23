@@ -5,6 +5,7 @@ import WorkspaceBranding from './Branding'
 import WorkspaceDeletion from './Deletion'
 import WorkspaceDeletionModal from './DeletionModal'
 import WorkspaceGeneral from './General'
+import WorkspaceIntegrations from './Integrations'
 
 export default function WorkspaceSettings() {
   const { t } = useTranslation()
@@ -21,6 +22,7 @@ export default function WorkspaceSettings() {
             <div className="flex-1 p-6">
               <WorkspaceGeneral />
               <WorkspaceBranding />
+              <WorkspaceIntegrations />
               <WorkspaceDeletion />
             </div>
           </div>

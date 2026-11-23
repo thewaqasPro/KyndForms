@@ -8,7 +8,14 @@ function mergeEffectiveConfig(
 ): Record<string, any> {
   const isGlobalEnabled =
     formConfig.useGlobalConnection !== false && Object.keys(workspaceConfig).length > 0
-  return isGlobalEnabled ? { ...workspaceConfig, ...formConfig } : formConfig
+  if (!isGlobalEnabled) return formConfig
+  const merged = { ...workspaceConfig }
+  for (const [k, v] of Object.entries(formConfig)) {
+    if (v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) {
+      merged[k] = v
+    }
+  }
+  return merged
 }
 
 function testWorkspaceConfigInheritance() {
@@ -52,6 +59,25 @@ function testFormLocationOverrideTakesPrecedence() {
   assert.strictEqual(effective.locationUid, 'custom-branch-location-uuid')
   assert.strictEqual(effective.defaultLeadName, 'Branch Lead')
   assert.strictEqual(effective.apiToken, 'ws_token_123')
+}
+
+function testBlankStringDoesNotOverrideWorkspaceValue() {
+  const workspaceConfig = {
+    apiToken: 'ws_token_123',
+    locationUid: '0f732703-b9a1-5dc4-a05d-387669bdc574'
+  }
+
+  const formConfig = {
+    locationUid: '   ',
+    apiToken: '',
+    defaultLeadName: 'Quiz Lead'
+  }
+
+  const effective = mergeEffectiveConfig(formConfig, workspaceConfig)
+
+  assert.strictEqual(effective.locationUid, '0f732703-b9a1-5dc4-a05d-387669bdc574')
+  assert.strictEqual(effective.apiToken, 'ws_token_123')
+  assert.strictEqual(effective.defaultLeadName, 'Quiz Lead')
 }
 
 function testDisabledGlobalConnectionIgnoresWorkspace() {
@@ -110,6 +136,7 @@ async function testTokenRefreshUpdatesWorkspaceAndForm() {
 async function run() {
   testWorkspaceConfigInheritance()
   testFormLocationOverrideTakesPrecedence()
+  testBlankStringDoesNotOverrideWorkspaceValue()
   testDisabledGlobalConnectionIgnoresWorkspace()
   await testTokenRefreshUpdatesWorkspaceAndForm()
   console.log('workspace-integration tests passed!')
