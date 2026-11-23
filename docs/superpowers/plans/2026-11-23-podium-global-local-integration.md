@@ -35,14 +35,14 @@
 - Modify: `packages/server/src/apps/podium.ts`
 - Modify: `packages/server/test/podium-app.test.ts`
 
-- [ ] **Step 1: Write failing unit test for `defaultLeadName`, multi-tag UUIDs, and custom attribute mappings**
+- [x] **Step 1: Write failing unit test for `defaultLeadName`, multi-tag UUIDs, and custom attribute mappings**
   Add unit tests in `packages/server/test/podium-app.test.ts`:
   - `testCustomDefaultLeadName()`: Verifies that when a submission contains no name, `config.defaultLeadName` (e.g. `"Diamond Quiz Lead"`) is used instead of email or "Website Lead".
   - `testFormNameFallbackWhenDefaultLeadNameOmitted()`: Verifies that if `defaultLeadName` is omitted, `${form.name} Lead` is used.
   - `testMultipleTagUidsParsing()`: Verifies that comma-separated tag UUIDs in `customTag` or `customTags` are parsed and added to `payload.tags`.
   - `testCustomAttributeMapping()`: Verifies that `config.attributeMappings` maps question titles to Podium attribute UIDs in `{ uid, value }`.
 
-- [ ] **Step 2: Update `PodiumConfig` and `podium.ts` settings schema**
+- [x] **Step 2: Update `PodiumConfig` and `podium.ts` settings schema**
   In `packages/server/src/apps/podium.ts`:
   - Extend `PodiumConfig`:
     ```typescript
@@ -72,7 +72,7 @@
     ```
   - Update `customTag` description and label to clarify multi-tag UUID support.
 
-- [ ] **Step 3: Update `buildPodiumContactPayload` logic**
+- [x] **Step 3: Update `buildPodiumContactPayload` logic**
   - Implement name resolution priority:
     1. If `fullName` extracted from submission answers exists -> use it.
     2. Else if `config.defaultLeadName?.trim()` -> use it.
@@ -84,10 +84,10 @@
   - Process `attributeMappings`:
     - For each answer in submission, if `config.attributeMappings` matches the answer's title or clean key, map to `{ uid: config.attributeMappings[title], value: parsedValue }`.
 
-- [ ] **Step 4: Run unit tests and verify**
+- [x] **Step 4: Run unit tests and verify**
   Run `pnpm --filter ./packages/server exec ts-node --transpile-only -r tsconfig-paths/register test/podium-app.test.ts`.
 
-- [ ] **Step 5: Commit changes**
+- [x] **Step 5: Commit changes**
   `git commit -m "feat(podium): add custom default lead name, multi-tag parsing, and attribute mapping"`
 
 ---
@@ -101,7 +101,7 @@
 - Modify: `packages/server/src/queue/integration-queue.ts`
 - Create/Modify: `packages/server/src/resolver/workspace/workspace-integration.resolver.ts`
 
-- [ ] **Step 1: Define Workspace Integration Model**
+- [x] **Step 1: Define Workspace Integration Model**
   Create `packages/server/src/model/workspace-integration.model.ts`:
   ```typescript
   @Schema({ timestamps: true })
@@ -121,12 +121,12 @@
   ```
   Register in `packages/server/src/model/module.ts`.
 
-- [ ] **Step 2: Add Workspace Integration Service methods**
+- [x] **Step 2: Add Workspace Integration Service methods**
   In `packages/server/src/service/integration.service.ts`:
   - `getWorkspaceIntegration(teamId: string, appId: string)`: Retrieves global connection credentials.
   - `updateWorkspaceIntegration(teamId: string, appId: string, config: Record<string, any>)`: Upserts global credentials.
 
-- [ ] **Step 3: Update `IntegrationQueue` to merge Global & Local configs**
+- [x] **Step 3: Update `IntegrationQueue` to merge Global & Local configs**
   In `packages/server/src/queue/integration-queue.ts`:
   - When preparing `config` for `app.run`:
     - Check if `form.teamId` has a global workspace integration for `appId`.
@@ -143,14 +143,14 @@
         - Update `workspaceIntegration` so **all forms** immediately benefit from the fresh tokens.
         - Also update the triggering form integration.
 
-- [ ] **Step 4: Add GraphQL Query & Mutation for Workspace Integrations**
+- [x] **Step 4: Add GraphQL Query & Mutation for Workspace Integrations**
   - Query: `workspaceIntegration(teamId: string, appId: string)`
   - Mutation: `updateWorkspaceIntegration(teamId: string, appId: string, config: JSONObject)`
 
-- [ ] **Step 5: Write unit tests verifying configuration merging & token persistence**
+- [x] **Step 5: Write unit tests verifying configuration merging & token persistence**
   Add unit tests in `packages/server/test/workspace-integration.test.ts`.
 
-- [ ] **Step 6: Commit changes**
+- [x] **Step 6: Commit changes**
   `git commit -m "feat(server): support workspace-level global integration credentials with auto-refresh"`
 
 ---
@@ -161,7 +161,7 @@
 - Modify: `packages/webapp/src/pages/form/Integrations/IntegrationSettingsModal.tsx`
 - Modify: `packages/webapp/src/pages/form/Integrations/IntegrationSettingsItem.tsx`
 
-- [ ] **Step 1: Add Global Connection Indicator in Form Settings Modal**
+- [x] **Step 1: Add Global Connection Indicator in Form Settings Modal**
   In `packages/webapp/src/pages/form/Integrations/IntegrationSettingsModal.tsx`:
   - Check if the workspace has a connected global integration for this app.
   - If a global connection exists:
@@ -170,13 +170,13 @@
     - Provide a toggle: `[✓] Use Workspace Connection`.
     - When enabled, hide the redundant credential fields (`apiToken`, `refreshToken`, `clientId`, `clientSecret`) and display the local fields (`defaultLeadName`, `customTags`, `attributeMappings`, `overrideLocationUid`).
 
-- [ ] **Step 2: Add Custom Attribute Mapping UI component**
+- [x] **Step 2: Add Custom Attribute Mapping UI component**
   - Add a key-value or select-to-input mapper allowing merchants to associate form question titles with Podium attribute UUIDs.
 
-- [ ] **Step 3: Test UI reactivity and save behavior**
+- [x] **Step 3: Test UI reactivity and save behavior**
   Verify in browser preview that toggling workspace connection correctly saves the form integration config.
 
-- [ ] **Step 4: Commit changes**
+- [x] **Step 4: Commit changes**
   `git commit -m "feat(webapp): provide workspace connection toggle and local custom field inputs in modal"`
 
 ---
@@ -188,7 +188,7 @@
 - Modify: `packages/webapp/src/pages/workspace/Settings/index.tsx`
 - Modify: `packages/webapp/src/router/routes.tsx`
 
-- [ ] **Step 1: Create Workspace Integrations page**
+- [x] **Step 1: Create Workspace Integrations page**
   In `packages/webapp/src/pages/workspace/Settings/Integrations.tsx`:
   - Render an Integrations Hub listing supported global apps (Podium, Klaviyo, Google Sheets).
   - Clicking "Configure" on Podium opens the global credential form:
@@ -199,22 +199,22 @@
     - API Access Token
   - Displays connection health and allows test verification.
 
-- [ ] **Step 2: Add "Integrations" tab to Workspace Settings navigation**
+- [x] **Step 2: Add "Integrations" tab to Workspace Settings navigation**
   Update `packages/webapp/src/pages/workspace/Settings/index.tsx` to include an "Integrations" sidebar/tab option alongside General, Branding, BrandKit, and Members.
 
-- [ ] **Step 3: Commit changes**
+- [x] **Step 3: Commit changes**
   `git commit -m "feat(webapp): add dedicated Integrations hub in Workspace Settings"`
 
 ---
 
 ### Task 5: Verification & End-to-End Testing
 
-- [ ] **Step 1: Execute KyndForm integrity verification**
+- [x] **Step 1: Execute KyndForm integrity verification**
   Run `pnpm run verify:integrity` and confirm all 14 architectural checks pass.
-- [ ] **Step 2: Type check entire workspace**
+- [x] **Step 2: Type check entire workspace**
   Run `pnpm run type-check` across all workspace projects.
-- [ ] **Step 3: Run all unit and integration test suites**
+- [x] **Step 3: Run all unit and integration test suites**
   Run `pnpm test` and server integration tests.
-- [ ] **Step 4: Verify linting**
+- [x] **Step 4: Verify linting**
   Run `pnpm lint` and ensure 0 errors across all files.
-- [ ] **Step 5: Final review and handoff**
+- [x] **Step 5: Final review and handoff**
