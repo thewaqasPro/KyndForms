@@ -40,6 +40,7 @@ export { DeleteIntegrationSettingsResolver } from './integration/delete-integrat
 export { UpdateIntegrationStatusResolver } from './integration/update-integration-status.resolver'
 export { GetIntegrationLogsResolver } from './integration/get-integration-logs.resolver'
 export { RetryIntegrationDeliveryResolver } from './integration/retry-integration-delivery.resolver'
+export { WorkspaceIntegrationResolver } from './integration/workspace-integration.resolver'
 
 export { FormsResolver } from './form/forms.resolver'
 export { SearchFormsResolver } from './form/search-forms.resolver'

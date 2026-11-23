@@ -110,3 +110,39 @@ export class IntegrationLogsResultType {
   @Field()
   total: number
 }
+
+@InputType()
+export class WorkspaceIntegrationInput {
+  @Field()
+  teamId: string
+
+  @Field()
+  appId: string
+}
+
+@InputType()
+export class UpdateWorkspaceIntegrationInput extends WorkspaceIntegrationInput {
+  @Field(type => GraphQLJSONObject)
+  config: Record<string, any>
+}
+
+@ObjectType()
+export class WorkspaceIntegrationType {
+  @Field()
+  id: string
+
+  @Field()
+  teamId: string
+
+  @Field()
+  appId: string
+
+  @Field(type => GraphQLJSONObject, { nullable: true })
+  config?: Record<string, any>
+
+  @Field({ nullable: true })
+  createdAt?: Date
+
+  @Field({ nullable: true })
+  updatedAt?: Date
+}

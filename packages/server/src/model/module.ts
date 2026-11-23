@@ -54,7 +54,9 @@ import {
   UserModel,
   UserSchema,
   UserSocialAccountModel,
-  UserSocialAccountSchema
+  UserSocialAccountSchema,
+  WorkspaceIntegrationModel,
+  WorkspaceIntegrationSchema
 } from './index'
 
 export const ModelModule = MongooseModule.forFeature([
@@ -87,5 +89,6 @@ export const ModelModule = MongooseModule.forFeature([
   { name: ProjectMemberModel.name, schema: ProjectMemberSchema },
   { name: BrandKitModel.name, schema: BrandKitSchema },
   { name: MediaModel.name, schema: MediaSchema },
-  { name: SystemSettingModel.name, schema: SystemSettingSchema }
+  { name: SystemSettingModel.name, schema: SystemSettingSchema },
+  { name: WorkspaceIntegrationModel.name, schema: WorkspaceIntegrationSchema }
 ])

@@ -5,13 +5,20 @@ import { Queue } from 'bull'
 import { Model } from 'mongoose'
 import * as apps from 'src/apps'
 
-import { FormModel, IntegrationModel, IntegrationStatusEnum } from '@model'
+import {
+  FormModel,
+  IntegrationModel,
+  IntegrationStatusEnum,
+  WorkspaceIntegrationModel
+} from '@model'
 
 @Injectable()
 export class IntegrationService {
   constructor(
     @InjectModel(IntegrationModel.name)
     private readonly integrationModel: Model<IntegrationModel>,
+    @InjectModel(WorkspaceIntegrationModel.name)
+    private readonly workspaceIntegrationModel: Model<WorkspaceIntegrationModel>,
     @InjectQueue('IntegrationQueue') private readonly integrationQueue: Queue,
     @InjectQueue('SubmissionNotificationQueue') private readonly submissionNotificationQueue: Queue
   ) {}
@@ -85,6 +92,51 @@ export class IntegrationService {
       appId
     })
     return (result.deletedCount ?? 0) > 0
+  }
+
+  public async findWorkspaceIntegration(
+    teamId: string,
+    appId: string
+  ): Promise<WorkspaceIntegrationModel | null> {
+    return this.workspaceIntegrationModel.findOne({ teamId, appId })
+  }
+
+  public async findAllWorkspaceIntegrations(teamId: string): Promise<WorkspaceIntegrationModel[]> {
+    return this.workspaceIntegrationModel.find({ teamId })
+  }
+
+  public async updateWorkspaceIntegration(
+    teamId: string,
+    appId: string,
+    configUpdates: Record<string, any>
+  ): Promise<WorkspaceIntegrationModel | null> {
+    const setPayload: Record<string, any> = {}
+    for (const [key, value] of Object.entries(configUpdates)) {
+      setPayload[`config.${key}`] = value
+    }
+
+    return this.workspaceIntegrationModel.findOneAndUpdate(
+      { teamId, appId },
+      { $set: setPayload, $setOnInsert: { teamId, appId, isActive: true } },
+      { upsert: true, new: true }
+    )
+  }
+
+  public async setWorkspaceIntegrationConfig(
+    teamId: string,
+    appId: string,
+    config: Record<string, any>
+  ): Promise<WorkspaceIntegrationModel | null> {
+    return this.workspaceIntegrationModel.findOneAndUpdate(
+      { teamId, appId },
+      { config, isActive: true },
+      { upsert: true, new: true }
+    )
+  }
+
+  public async deleteWorkspaceIntegration(teamId: string, appId: string): Promise<boolean> {
+    const res = await this.workspaceIntegrationModel.deleteOne({ teamId, appId })
+    return (res.deletedCount ?? 0) > 0
   }
 
   private findAppById(appId: string) {

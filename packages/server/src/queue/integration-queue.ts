@@ -45,7 +45,24 @@ export class IntegrationQueue extends BaseQueue {
       ])
 
       if (integration && submission && form) {
-        const config = mapToObject(integration.config)
+        const formConfig = mapToObject(integration.config)
+
+        let workspaceConfig: Record<string, any> = {}
+        let workspaceIntegration: any = null
+        if (form.teamId) {
+          workspaceIntegration = await this.integrationService.findWorkspaceIntegration(
+            form.teamId,
+            appId
+          )
+          if (workspaceIntegration?.config) {
+            workspaceConfig = mapToObject(workspaceIntegration.config)
+          }
+        }
+
+        const isGlobalEnabled =
+          formConfig.useGlobalConnection !== false && Object.keys(workspaceConfig).length > 0
+        const config = isGlobalEnabled ? { ...workspaceConfig, ...formConfig } : formConfig
+
         const endpointUrl =
           (config as any)?.webhookUrl || (config as any)?.url || (config as any)?.endpoint
         const startTime = Date.now()
@@ -57,6 +74,10 @@ export class IntegrationQueue extends BaseQueue {
               setPayload[`config.${key}`] = value
             }
             await this.integrationService.update(integrationId, { $set: setPayload })
+
+            if (isGlobalEnabled && form.teamId) {
+              await this.integrationService.updateWorkspaceIntegration(form.teamId, appId, updates)
+            }
           }
 
           const runResult = await app.run({
