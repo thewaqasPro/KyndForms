@@ -5,14 +5,7 @@ import { AppService } from '../src/service/app.service'
 import { smtpSendMail } from '../src/utils/smtp'
 
 import emailApp from '../src/apps/email'
-
-const bufferMod = require('buffer')
-if (!bufferMod.SlowBuffer) {
-  bufferMod.SlowBuffer = Buffer
-}
-if (typeof (global as any).SlowBuffer === 'undefined') {
-  ;(global as any).SlowBuffer = Buffer
-}
+import './polyfill-node26'
 
 function testAppServiceLookupByKebabCaseId() {
   const appService = new AppService()

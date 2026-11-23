@@ -9,6 +9,10 @@ export interface PodiumConfig {
   apiToken: string
   locationUid: string
   customTag?: string
+  customTags?: string
+  defaultLeadName?: string
+  attributeMappings?: Record<string, string>
+  useGlobalConnection?: boolean
   refreshToken?: string
   clientId?: string
   clientSecret?: string
@@ -41,11 +45,12 @@ export function cleanPropertyKey(title: string): string {
   return title.replace(/\s*\*+\s*$/, '').trim()
 }
 
-export function extractPodiumData(submission: SubmissionModel) {
+export function extractPodiumData(submission: SubmissionModel, config?: PodiumConfig) {
   let email = ''
   let fullName = ''
   let phone = ''
   const attributes: Array<{ uid?: string; name: string; value: string }> = []
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
   if (Array.isArray(submission.answers)) {
     for (const a of submission.answers) {
@@ -87,24 +92,23 @@ export function extractPodiumData(submission: SubmissionModel) {
               name: cleanTitle.slice(0, 100),
               value: String(valueToSave).slice(0, 500)
             }
-            const possibleUid = (a as any).uid || (a as any).attributeUid
-            if (possibleUid && typeof possibleUid === 'string') {
-              attrObj.uid = possibleUid
+            const possibleUid =
+              (a as any).uid ||
+              (a as any).attributeUid ||
+              config?.attributeMappings?.[cleanTitle] ||
+              config?.attributeMappings?.[a.title]
+
+            if (
+              possibleUid &&
+              typeof possibleUid === 'string' &&
+              uuidRegex.test(possibleUid.trim())
+            ) {
+              attrObj.uid = possibleUid.trim()
             }
             attributes.push(attrObj)
           }
         }
       }
-    }
-  }
-
-  // Gracefully fallback to email username or 'Website Lead' if submitter didn't provide name
-  if (!fullName) {
-    if (email) {
-      const username = email.split('@')[0]
-      fullName = username.charAt(0).toUpperCase() + username.slice(1)
-    } else {
-      fullName = 'Website Lead'
     }
   }
 
@@ -114,13 +118,13 @@ export function extractPodiumData(submission: SubmissionModel) {
 export function buildPodiumContactPayload(
   config: PodiumConfig,
   submission: SubmissionModel,
-  _form: FormModel
+  form?: FormModel
 ): PodiumContactPayload | null {
   if (!config?.apiToken || !config?.locationUid) {
     return null
   }
 
-  const { email, fullName, phone, attributes } = extractPodiumData(submission)
+  const { email, fullName, phone, attributes } = extractPodiumData(submission, config)
 
   // Podium requires at least an email or a phone number to create/upsert a contact
   if (!email && !phone) {
@@ -129,8 +133,28 @@ export function buildPodiumContactPayload(
 
   const cleanLocationUid = config.locationUid.trim()
 
+  // Determine lead name with prioritized fallback:
+  // 1. Explicitly answered name in form
+  // 2. Custom default lead name from integration settings
+  // 3. Submitter email username prefix
+  // 4. Form Name + " Lead"
+  // 5. "Website Lead"
+  let leadName = fullName
+  if (!leadName) {
+    if (config.defaultLeadName?.trim()) {
+      leadName = config.defaultLeadName.trim()
+    } else if (email) {
+      const username = email.split('@')[0]
+      leadName = username.charAt(0).toUpperCase() + username.slice(1)
+    } else if (form?.name?.trim()) {
+      leadName = `${form.name.trim()} Lead`
+    } else {
+      leadName = 'Website Lead'
+    }
+  }
+
   const payload: PodiumContactPayload = {
-    name: fullName,
+    name: leadName,
     locations: [cleanLocationUid],
     contactStatus: {
       name: 'New Lead'
@@ -146,10 +170,21 @@ export function buildPodiumContactPayload(
     payload.attributes = validAttributes
   }
 
-  // In Podium v4, tags must be UUIDs. If a valid UUID tag is supplied, send it.
+  // In Podium v4, tags must be UUIDs. Parse single or multiple comma-separated UUID tags.
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  if (config.customTag?.trim() && uuidRegex.test(config.customTag.trim())) {
-    payload.tags = [config.customTag.trim()]
+  const rawTags = [config.customTag, config.customTags].filter(Boolean).join(',')
+  if (rawTags.trim()) {
+    const parsedTags = Array.from(
+      new Set(
+        rawTags
+          .split(/[\s,]+/)
+          .map(t => t.trim())
+          .filter(t => uuidRegex.test(t))
+      )
+    )
+    if (parsedTags.length > 0) {
+      payload.tags = parsedTags
+    }
   }
 
   if (email) {
@@ -200,11 +235,21 @@ export default {
     },
     {
       type: 'text',
+      name: 'defaultLeadName',
+      label: 'Default Lead Name (Fallback)',
+      placeholder: 'e.g. Diamond Quiz Lead',
+      required: false,
+      description:
+        'Custom contact name used when the form has no name field. If left blank, defaults to "{Form Name} Lead".'
+    },
+    {
+      type: 'text',
       name: 'customTag',
-      label: 'Automation Trigger Tag (UUID)',
+      label: 'Automation Trigger Tag(s) (UUID)',
       placeholder: '00000000-0000-0000-0000-000000000000',
       required: false,
-      description: 'Optional Podium tag UID to assign to contacts for targeted automations.'
+      description:
+        'Podium Tag UID(s) to assign to contacts for targeted automations. Supports multiple comma-separated UUIDs.'
     },
     {
       type: 'text',
@@ -383,23 +428,33 @@ export default {
       }
     }
 
-    // Only attempt separate tagging if a valid UUID tag was configured and not already applied on create
+    // Only attempt separate tagging if valid UUID tags were configured and not already applied on create
     const contactUid =
       res?.body?.data?.uid || res?.body?.uid || payload.email || payload.phoneNumber
-    const tagUid = config.customTag?.trim()
-    if (res && !tagsAppliedOnCreate && tagUid && uuidRegex.test(tagUid) && contactUid) {
-      const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactUid)}/tags/${encodeURIComponent(tagUid)}`
-      try {
-        await got.post(tagEndpoint, {
-          headers: {
-            Authorization: authToken,
-            Accept: 'application/json'
-          },
-          responseType: 'json',
-          timeout: 10000
-        })
-      } catch {
-        // Tagging errors (e.g. tag doesn't exist in Podium) are non-fatal
+    const rawTags = [config.customTag, config.customTags].filter(Boolean).join(',')
+    if (res && !tagsAppliedOnCreate && rawTags.trim() && contactUid) {
+      const parsedTags = Array.from(
+        new Set(
+          rawTags
+            .split(/[\s,]+/)
+            .map(t => t.trim())
+            .filter(t => uuidRegex.test(t))
+        )
+      )
+      for (const tagUid of parsedTags) {
+        const tagEndpoint = `https://api.podium.com/v4/contacts/${encodeURIComponent(contactUid)}/tags/${encodeURIComponent(tagUid)}`
+        try {
+          await got.post(tagEndpoint, {
+            headers: {
+              Authorization: authToken,
+              Accept: 'application/json'
+            },
+            responseType: 'json',
+            timeout: 10000
+          })
+        } catch {
+          // Tagging errors (e.g. tag doesn't exist in Podium) are non-fatal
+        }
       }
     }
 
