@@ -87,6 +87,10 @@ export class IntegrationService {
     return (result.deletedCount ?? 0) > 0
   }
 
+  private findAppById(appId: string) {
+    return Object.values(apps).find(app => app?.id === appId) || apps[appId]
+  }
+
   public async addQueue(form: FormModel, submissionId: string): Promise<void> {
     // Email notification Queue
     if ((form.settings as any)?.enableEmailNotification) {
@@ -99,18 +103,14 @@ export class IntegrationService {
     const integrations = await this.integrationModel.find({
       formId: form.id,
       status: {
-        $in: [
-          IntegrationStatusEnum.ACTIVE,
-          IntegrationStatusEnum.DEGRADED,
-          IntegrationStatusEnum.BROKEN
-        ]
+        $in: [IntegrationStatusEnum.ACTIVE, IntegrationStatusEnum.DEGRADED]
       }
     })
 
     for (const integration of integrations) {
-      const app = apps[integration.appId]
+      const app = this.findAppById(integration.appId)
 
-      if (app) {
+      if (app && typeof (app as any).run === 'function') {
         this.integrationQueue.add(
           {
             appId: integration.appId,
@@ -148,8 +148,8 @@ export class IntegrationService {
       return false
     }
 
-    const app = apps[integration.appId]
-    if (!app) {
+    const app = this.findAppById(integration.appId)
+    if (!app || typeof (app as any).run !== 'function') {
       return false
     }
 

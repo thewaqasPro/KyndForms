@@ -2,13 +2,12 @@ import { IconCircleCheck, IconFileText, IconPlug } from '@tabler/icons-react'
 import { useMemo } from 'react'
 
 import { AppService, FormService } from '@/services'
-import { useParam } from '@/utils'
+import { useParam, useRouter } from '@/utils'
 
 import { Async, Badge, Button, Repeat } from '@/components'
 import { APP_STATUS_ENUM } from '@/consts'
-import { useAppStore, useFormStore } from '@/store'
+import { useFormStore } from '@/store'
 
-import DeliveryLogsModal from './DeliveryLogsModal'
 import IntegrationItem from './IntegrationItem'
 import IntegrationSettingsModal from './IntegrationSettingsModal'
 
@@ -35,9 +34,9 @@ const Skeleton = (
 )
 
 export default function FormIntegrations() {
-  const { formId } = useParam()
+  const { workspaceId, projectId, formId } = useParam()
+  const router = useRouter()
   const { integratedApps, setApps, setIntegrations } = useFormStore()
-  const { openModal } = useAppStore()
 
   async function fetch() {
     const [apps, integrations] = await Promise.all([
@@ -52,7 +51,7 @@ export default function FormIntegrations() {
   }
 
   function handleViewAllLogs() {
-    openModal('DeliveryLogsModal', { formId })
+    router.push(`/workspace/${workspaceId}/project/${projectId}/form/${formId}/logs`)
   }
 
   const activeApps = useMemo(
@@ -126,7 +125,6 @@ export default function FormIntegrations() {
       </div>
 
       <IntegrationSettingsModal />
-      <DeliveryLogsModal />
     </>
   )
 }

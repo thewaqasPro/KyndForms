@@ -8,6 +8,7 @@ import { FormModel, SubmissionModel } from '@model'
 export interface KlaviyoConfig {
   apiKey: string
   listId: string
+  subscribeToMarketing?: boolean | string
 }
 
 interface RunArgs {
@@ -63,6 +64,20 @@ export interface KlaviyoSubscribePayload {
 export function cleanPropertyKey(title: string): string {
   if (!title) return ''
   return title.replace(/\s*\*+\s*$/, '').trim()
+}
+
+export function normalizeKlaviyoPhone(phone: string): string | undefined {
+  if (!phone) return undefined
+  const cleaned = phone.replace(/[^\d+]/g, '')
+  let e164 = ''
+  if (cleaned.startsWith('+')) {
+    e164 = cleaned
+  } else if (cleaned.length === 10) {
+    e164 = `+1${cleaned}`
+  } else if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    e164 = `+${cleaned}`
+  }
+  return /^\+[1-9]\d{6,14}$/.test(e164) ? e164 : undefined
 }
 
 export function extractKlaviyoData(submission: SubmissionModel) {
@@ -124,7 +139,8 @@ export function buildKlaviyoProfilePayload(
   const attributes: KlaviyoProfilePayload['data']['attributes'] = { email }
   if (firstName) attributes.first_name = firstName
   if (lastName) attributes.last_name = lastName
-  if (phone) attributes.phone_number = phone
+  const normalizedPhone = normalizeKlaviyoPhone(phone)
+  if (normalizedPhone) attributes.phone_number = normalizedPhone
   if (Object.keys(customProperties).length > 0) {
     attributes.properties = customProperties
   }
@@ -216,10 +232,21 @@ export default {
       required: true,
       description:
         'The 6-character List ID from your Klaviyo Audience > Lists & Segments list settings'
+    },
+    {
+      type: 'text',
+      name: 'subscribeToMarketing',
+      label: 'Subscribe to Email Marketing (true/false)',
+      placeholder: 'true',
+      required: false,
+      description:
+        'Set to false to import profiles without automatically setting email marketing consent to SUBSCRIBED.'
     }
   ],
   run: async ({ config, submission }: RunArgs) => {
-    if (!config?.apiKey || !config?.listId) return
+    if (!config?.apiKey || !config?.listId) {
+      return { skipped: true, reason: 'Missing Klaviyo API key or List ID' }
+    }
 
     const apiKey = config.apiKey.trim()
     const headers = {
@@ -230,7 +257,9 @@ export default {
     }
 
     const profilePayload = buildKlaviyoProfilePayload(submission)
-    if (!profilePayload) return
+    if (!profilePayload) {
+      return { skipped: true, reason: 'Submission does not contain a valid email address' }
+    }
 
     let profileRes: any
     // 1. Upsert profile with full details (Name, Phone, Custom Form Answers)
@@ -249,9 +278,32 @@ export default {
       throw err
     }
 
+    const shouldSubscribe =
+      config.subscribeToMarketing !== false &&
+      String(config.subscribeToMarketing ?? 'true')
+        .trim()
+        .toLowerCase() !== 'false'
+
+    if (!shouldSubscribe) {
+      return {
+        endpointUrl: 'https://a.klaviyo.com/api/profile-import/',
+        requestMethod: 'POST',
+        requestPayload: {
+          profileImport: profilePayload
+        },
+        responseStatus: profileRes?.statusCode || 200,
+        responseBody: {
+          profileImportStatus: profileRes?.statusCode || 200,
+          profileImport: profileRes?.body
+        }
+      }
+    }
+
     // 2. Subscribe profile to the specified list with marketing consent
     const subscribePayload = buildKlaviyoSubscribePayload(config, submission)
-    if (!subscribePayload) return
+    if (!subscribePayload) {
+      return { skipped: true, reason: 'Unable to build Klaviyo subscription payload' }
+    }
 
     let subscribeRes: any
     try {
@@ -279,6 +331,7 @@ export default {
         profileImport: profilePayload,
         listSubscription: subscribePayload
       },
+      responseStatus: subscribeRes?.statusCode || 202,
       responseBody: {
         profileImportStatus: profileRes?.statusCode || 200,
         listSubscriptionStatus: subscribeRes?.statusCode || 202,

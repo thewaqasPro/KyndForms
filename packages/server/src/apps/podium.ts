@@ -31,7 +31,7 @@ export interface PodiumContactPayload {
     name: string
   }
   attributes?: Array<{
-    name: string
+    uid: string
     value: string
   }>
 }
@@ -45,7 +45,7 @@ export function extractPodiumData(submission: SubmissionModel) {
   let email = ''
   let fullName = ''
   let phone = ''
-  const attributes: Array<{ name: string; value: string }> = []
+  const attributes: Array<{ uid?: string; name: string; value: string }> = []
 
   if (Array.isArray(submission.answers)) {
     for (const a of submission.answers) {
@@ -62,7 +62,9 @@ export function extractPodiumData(submission: SubmissionModel) {
       } else if (
         !fullName &&
         a.title &&
-        /(your|full|first)?\s*name/i.test(a.title) &&
+        (/(your|full|first)?\s*name/i.test(a.title) ||
+          /find\s+the\s+perfect/i.test(a.title) ||
+          /dream\s+style/i.test(a.title)) &&
         typeof a.value === 'string' &&
         a.value.trim() !== ''
       ) {
@@ -81,10 +83,15 @@ export function extractPodiumData(submission: SubmissionModel) {
         if (valueToSave !== undefined && valueToSave !== null && valueToSave !== '') {
           const cleanTitle = cleanPropertyKey(a.title)
           if (cleanTitle) {
-            attributes.push({
+            const attrObj: { uid?: string; name: string; value: string } = {
               name: cleanTitle.slice(0, 100),
               value: String(valueToSave).slice(0, 500)
-            })
+            }
+            const possibleUid = (a as any).uid || (a as any).attributeUid
+            if (possibleUid && typeof possibleUid === 'string') {
+              attrObj.uid = possibleUid
+            }
+            attributes.push(attrObj)
           }
         }
       }
@@ -130,8 +137,13 @@ export function buildPodiumContactPayload(
     }
   }
 
-  if (attributes.length > 0) {
-    payload.attributes = attributes
+  // In Podium v4, attributes require an existing Podium attribute UUID { uid: string, value: string }.
+  // Plain { name, value } objects are rejected by Podium with "/attributes/0/uid has Missing field: uid".
+  const validAttributes = attributes
+    .filter((a): a is { uid: string; name: string; value: string } => Boolean(a?.uid))
+    .map(a => ({ uid: a.uid, value: a.value }))
+  if (validAttributes.length > 0) {
+    payload.attributes = validAttributes
   }
 
   // In Podium v4, tags must be UUIDs. If a valid UUID tag is supplied, send it.
@@ -253,11 +265,20 @@ export default {
         retry: 0
       })
     } catch (err: any) {
-      // If Podium returns 500 due to an invalid/non-existent tag UID, retry without the tag
-      if (err?.response?.statusCode === 500 && payload.tags?.length) {
+      // If Podium returns 400 (e.g. invalid tag/attribute) or 500, retry with a clean payload without tags or attributes
+      if (
+        (err?.response?.statusCode === 400 || err?.response?.statusCode === 500) &&
+        (payload.tags?.length || payload.attributes?.length)
+      ) {
         try {
-          const fallbackPayload = { ...payload }
-          delete fallbackPayload.tags
+          const fallbackPayload: PodiumContactPayload = {
+            name: payload.name,
+            locations: payload.locations,
+            contactStatus: payload.contactStatus
+          }
+          if (payload.email) fallbackPayload.email = payload.email
+          if (payload.phoneNumber) fallbackPayload.phoneNumber = payload.phoneNumber
+
           res = await got.post(endpointUrl, {
             headers,
             json: fallbackPayload,

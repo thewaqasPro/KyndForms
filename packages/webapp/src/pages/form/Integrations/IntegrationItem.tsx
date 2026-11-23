@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 
 import { getIntegrationDescription } from './utils'
 import { IntegrationService } from '@/services'
-import { cn, useParam } from '@/utils'
+import { cn, useParam, useRouter } from '@/utils'
 import { dayjs } from '@/utils/date'
 import { date, helper } from '@kyndform/utils'
 
@@ -27,7 +27,8 @@ interface IntegrationItemProps {
 const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
   const { t } = useTranslation()
 
-  const { formId } = useParam()
+  const { workspaceId, projectId, formId } = useParam()
+  const router = useRouter()
   const { openModal } = useAppStore()
   const { updateIntegration, deleteIntegration } = useFormStore()
   const [hasIconError, setHasIconError] = useState(false)
@@ -133,14 +134,22 @@ const IntegrationItem: FC<IntegrationItemProps> = ({ app }) => {
           </Button>
         )
     }
-  }, [handleConnect, handleDelete, handleEdit, t, deleteLoading, active, toggleLoading, toggleRun])
+  }, [
+    app.status,
+    handleConnect,
+    handleDelete,
+    handleEdit,
+    t,
+    deleteLoading,
+    active,
+    toggleLoading,
+    toggleRun
+  ])
 
   function handleOpenLogs() {
-    openModal('DeliveryLogsModal', {
-      app,
-      integrationId: app.integration?.id,
-      appId: app.id
-    })
+    router.push(
+      `/workspace/${workspaceId}/project/${projectId}/form/${formId}/logs?appId=${encodeURIComponent(app.id)}`
+    )
   }
 
   const statusBadge = useMemo(() => {

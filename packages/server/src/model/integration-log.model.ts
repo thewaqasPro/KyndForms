@@ -3,7 +3,8 @@ import { Document } from 'mongoose'
 
 export enum IntegrationDeliveryStatusEnum {
   SUCCESS = 'success',
-  FAILED = 'failed'
+  FAILED = 'failed',
+  SKIPPED = 'skipped'
 }
 
 @Schema({

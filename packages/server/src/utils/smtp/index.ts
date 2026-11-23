@@ -41,7 +41,7 @@ function getOrCreateTransport(options: SmtpOptions): nodemailer.Transporter {
       },
       tls: {
         servername: options.servername,
-        rejectUnauthorized: options.ignoreCert ?? false
+        rejectUnauthorized: !(options.ignoreCert ?? false)
       },
       pool: options.pool ?? true,
       maxConnections: 1,

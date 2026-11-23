@@ -83,7 +83,7 @@ export class IntegrationDeliveryService {
           }
         }
       )
-    } else {
+    } else if (status === IntegrationDeliveryStatusEnum.FAILED) {
       const updated = await this.integrationModel.findByIdAndUpdate(
         integrationId,
         {
@@ -172,7 +172,7 @@ export class IntegrationDeliveryService {
         return false
       }
 
-      const link = `${APP_HOMEPAGE_URL}/form/${form.id}/settings/integrations`
+      const link = `${APP_HOMEPAGE_URL}/workspace/${form.teamId}/project/${form.projectId}/form/${form.id}/integrations`
       const appName = appId.charAt(0).toUpperCase() + appId.slice(1)
       const timestamp = new Date().toUTCString()
 

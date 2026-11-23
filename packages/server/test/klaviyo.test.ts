@@ -13,6 +13,7 @@ function testAppDefinition() {
   const settingNames = klaviyo.settings.map(s => s.name)
   assert.ok(settingNames.includes('apiKey'))
   assert.ok(settingNames.includes('listId'))
+  assert.ok(settingNames.includes('subscribeToMarketing'))
 }
 
 function testBuildPayloadWithCompleteSubmission() {
@@ -39,7 +40,7 @@ function testBuildPayloadWithCompleteSubmission() {
       {
         kind: FieldKindEnum.PHONE_NUMBER,
         title: 'Mobile',
-        value: '+15551234567'
+        value: '(555) 123-4567'
       },
       {
         kind: FieldKindEnum.SHORT_TEXT,
@@ -101,6 +102,27 @@ function testBuildPayloadWithCompleteSubmission() {
   // Verify strict compliance: no first_name or properties on subscription payload
   assert.strictEqual((profile.attributes as any).first_name, undefined)
   assert.strictEqual((profile.attributes as any).properties, undefined)
+}
+
+function testInvalidPhoneOmittedFromProfilePayload() {
+  const submission: any = {
+    answers: [
+      {
+        kind: FieldKindEnum.EMAIL,
+        title: 'Email',
+        value: 'valid@example.com'
+      },
+      {
+        kind: FieldKindEnum.PHONE_NUMBER,
+        title: 'Phone',
+        value: 'not-a-phone'
+      }
+    ]
+  }
+
+  const profilePayload = klaviyoApp.buildKlaviyoProfilePayload(submission)
+  assert.ok(profilePayload)
+  assert.strictEqual(profilePayload.data.attributes.phone_number, undefined)
 }
 
 function testBuildPayloadWithoutEmailReturnsNull() {
@@ -176,16 +198,17 @@ async function testKlaviyoRunDispatchesNetworkRequest() {
   try {
     ;(got as any).post = async (url: string, options: any) => {
       calls.push({ url, options })
-      return { statusCode: 200, body: {} }
+      return { statusCode: url.includes('subscription') ? 202 : 200, body: {} }
     }
 
-    const runResult = await klaviyo.run({
+    const runResult: any = await klaviyo.run({
       config,
       submission,
       form: { id: 'form_123' } as any
     })
 
     assert.ok(runResult)
+    assert.strictEqual(runResult.responseStatus, 202)
     assert.strictEqual(
       runResult.endpointUrl,
       'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/'
@@ -227,6 +250,17 @@ async function testKlaviyoRunDispatchesNetworkRequest() {
         .marketing.consent,
       'SUBSCRIBED'
     )
+
+    // Test subscribeToMarketing: false only imports profile
+    calls.length = 0
+    const profileOnlyRes: any = await klaviyo.run({
+      config: { ...config, subscribeToMarketing: 'false' },
+      submission,
+      form: { id: 'form_123' } as any
+    })
+    assert.strictEqual(calls.length, 1)
+    assert.strictEqual(profileOnlyRes.responseStatus, 200)
+    assert.strictEqual(profileOnlyRes.endpointUrl, 'https://a.klaviyo.com/api/profile-import/')
   } finally {
     ;(got as any).post = originalPost
   }
@@ -235,6 +269,7 @@ async function testKlaviyoRunDispatchesNetworkRequest() {
 async function run() {
   testAppDefinition()
   testBuildPayloadWithCompleteSubmission()
+  testInvalidPhoneOmittedFromProfilePayload()
   testBuildPayloadWithoutEmailReturnsNull()
   testBuildPayloadWithCustomEmailFieldTitle()
   await testKlaviyoRunDispatchesNetworkRequest()

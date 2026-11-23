@@ -24,6 +24,10 @@ export class UpdateIntegrationSettingsResolver {
   ): Promise<boolean> {
     const app = this.appService.findById(input.appId)
 
+    if (!app) {
+      throw new BadRequestException(`Integration app "${input.appId}" not found`)
+    }
+
     if (helper.isEmpty(input.config)) {
       throw new BadRequestException('Invalid attributes arguments')
     }

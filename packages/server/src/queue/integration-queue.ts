@@ -51,13 +51,23 @@ export class IntegrationQueue extends BaseQueue {
         const startTime = Date.now()
 
         try {
+          const onConfigUpdate = async (updates: Record<string, any>) => {
+            const setPayload: Record<string, any> = {}
+            for (const [key, value] of Object.entries(updates)) {
+              setPayload[`config.${key}`] = value
+            }
+            await this.integrationService.update(integrationId, { $set: setPayload })
+          }
+
           const runResult = await app.run({
             submission,
             form,
-            config
+            config,
+            onConfigUpdate
           })
 
           const durationMs = Date.now() - startTime
+          const isSkipped = Boolean(runResult && typeof runResult === 'object' && runResult.skipped)
 
           await this.deliveryService.recordAttempt({
             formId,
@@ -71,15 +81,18 @@ export class IntegrationQueue extends BaseQueue {
                 ? runResult.requestPayload
                 : JSON.stringify(runResult.requestPayload, null, 2)
               : undefined,
-            responseStatus: runResult?.responseStatus || 200,
+            responseStatus: isSkipped ? undefined : runResult?.responseStatus || 200,
             responseBody: runResult?.responseBody
               ? typeof runResult.responseBody === 'string'
                 ? runResult.responseBody
                 : JSON.stringify(runResult.responseBody, null, 2)
               : undefined,
+            errorMessage: isSkipped ? runResult?.reason || 'Delivery skipped' : undefined,
             executionDurationMs: durationMs,
             attempts: job.attemptsMade + 1,
-            status: IntegrationDeliveryStatusEnum.SUCCESS,
+            status: isSkipped
+              ? IntegrationDeliveryStatusEnum.SKIPPED
+              : IntegrationDeliveryStatusEnum.SUCCESS,
             form,
             integration
           })

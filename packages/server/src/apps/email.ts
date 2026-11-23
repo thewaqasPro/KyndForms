@@ -1,6 +1,7 @@
 import { SmtpOptionsFactory } from '@config'
 import { SMTP_FROM } from '@environments'
 import { answersToHtml } from '@kyndform/answer-utils'
+import { helper } from '@kyndform/utils'
 import { FormModel, SubmissionModel } from '@model'
 import { smtpSendMail } from '@utils'
 
@@ -13,6 +14,15 @@ interface RunArgs {
   config: EmailConfig
   submission: SubmissionModel
   form: FormModel
+}
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 export default {
@@ -40,22 +50,33 @@ export default {
     }
   ],
   run: async ({ config, submission, form }: RunArgs) => {
-    if (!config?.emails) return
+    if (!config?.emails) {
+      return { skipped: true, reason: 'No recipient email addresses configured' }
+    }
 
-    const recipients = config.emails
-      .split(',')
-      .map(e => e.trim())
-      .filter(Boolean)
+    const recipients = Array.from(
+      new Set(
+        config.emails
+          .split(',')
+          .map(e => e.trim())
+          .filter(e => helper.isEmail(e))
+      )
+    )
 
-    if (recipients.length === 0) return
+    if (recipients.length === 0) {
+      return { skipped: true, reason: 'No valid recipient email addresses configured' }
+    }
 
-    const subject = config.subject || `New submission for ${form.name}`
+    const rawSubject = config.subject || `New submission for ${form.name || 'Untitled Form'}`
+    const subject = rawSubject.replace(/[\r\n]+/g, ' ').trim()
     const htmlAnswers = answersToHtml(submission.answers || [])
+    const safeFormName = escapeHtml(form.name || 'Untitled Form')
+    const safeSubmissionId = escapeHtml(submission.id)
 
     const htmlBody = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 8px; font-size: 20px;">New Submission for ${form.name}</h2>
-        <p style="color: #64748b; font-size: 13px; margin-top: 0; margin-bottom: 20px;">Submission ID: ${submission.id}</p>
+        <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 8px; font-size: 20px;">New Submission for ${safeFormName}</h2>
+        <p style="color: #64748b; font-size: 13px; margin-top: 0; margin-bottom: 20px;">Submission ID: ${safeSubmissionId}</p>
         <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 14px; line-height: 1.6;">
           ${htmlAnswers}
         </div>
@@ -66,14 +87,24 @@ export default {
     `
 
     const smtpOptions = SmtpOptionsFactory()
+    const messageId = await smtpSendMail(smtpOptions, {
+      from: SMTP_FROM,
+      to: recipients.join(', '),
+      subject,
+      html: htmlBody
+    })
 
-    for (const to of recipients) {
-      await smtpSendMail(smtpOptions, {
-        from: SMTP_FROM,
-        to,
-        subject,
-        html: htmlBody
-      })
+    return {
+      endpointUrl: `smtp://${smtpOptions.host}:${smtpOptions.port}`,
+      requestMethod: 'SMTP',
+      requestPayload: {
+        to: recipients,
+        subject
+      },
+      responseStatus: 250,
+      responseBody: {
+        messageId
+      }
     }
   }
 }

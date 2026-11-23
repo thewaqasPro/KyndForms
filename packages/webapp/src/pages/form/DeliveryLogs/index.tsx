@@ -3,18 +3,20 @@ import {
   IconCheck,
   IconClock,
   IconCopy,
+  IconMinus,
   IconRefresh,
   IconRotateClockwise2,
   IconX
 } from '@tabler/icons-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { IntegrationService } from '@/services'
 import { cn, useParam } from '@/utils'
 import { dayjs } from '@/utils/date'
 import { date } from '@kyndform/utils'
 
-import { Badge, Button, EmptyState, Loader, Tooltip } from '@/components'
+import { Badge, Button, EmptyState, Loader, Tooltip, useToast } from '@/components'
 import { useFormStore } from '@/store'
 
 export interface DeliveryLogItem {
@@ -36,6 +38,8 @@ export interface DeliveryLogItem {
   createdAt: string
 }
 
+const PAGE_SIZE = 50
+
 function tryFormatJson(val?: string): string {
   if (!val) return ''
   try {
@@ -49,40 +53,63 @@ function tryFormatJson(val?: string): string {
 export default function FormLogs() {
   const { formId } = useParam()
   const { form } = useFormStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const toast = useToast()
+  const retryRefreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const targetFormId = formId || (form as any)?.id || (form as any)?._id
+  const appIdFilter = searchParams.get('appId') || undefined
 
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [retryingId, setRetryingId] = useState<string | null>(null)
   const [logs, setLogs] = useState<DeliveryLogItem[]>([])
   const [total, setTotal] = useState(0)
   const [selectedLog, setSelectedLog] = useState<DeliveryLogItem | null>(null)
   const [activeTab, setActiveTab] = useState<'request' | 'response' | 'details'>('request')
-  const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all')
+  const [filter, setFilter] = useState<'all' | 'success' | 'failed' | 'skipped'>('all')
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
-  async function fetchLogs() {
+  async function fetchLogs(append = false) {
     const id = targetFormId
     if (!id) return
-    setLoading(true)
+    if (append) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
-      const res = await IntegrationService.getLogs(id, undefined, 50, 0)
+      const skip = append ? logs.length : 0
+      const res = await IntegrationService.getLogs(id, undefined, PAGE_SIZE, skip, appIdFilter)
       if (res?.logs) {
-        setLogs(res.logs as DeliveryLogItem[])
+        setLogs(prev =>
+          append ? [...prev, ...(res.logs as DeliveryLogItem[])] : (res.logs as DeliveryLogItem[])
+        )
         setTotal(res.total)
       }
     } catch (err) {
       console.error('Failed to fetch delivery logs:', err)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }
 
   useEffect(() => {
-    fetchLogs()
+    fetchLogs(false)
     setSelectedLog(null)
     setFilter('all')
     setActiveTab('request')
-  }, [targetFormId])
+  }, [targetFormId, appIdFilter])
+
+  useEffect(() => {
+    return () => {
+      if (retryRefreshTimer.current) {
+        clearTimeout(retryRefreshTimer.current)
+      }
+    }
+  }, [])
 
   async function handleRetry(log: DeliveryLogItem) {
     const id = targetFormId
@@ -91,13 +118,29 @@ export default function FormLogs() {
     try {
       const res = await IntegrationService.retryDelivery(id, log.id)
       if (res) {
-        await fetchLogs()
+        toast({
+          title: 'Retry Queued',
+          message: `Re-queued ${log.appId} delivery for submission ${log.submissionId}.`
+        })
+        await fetchLogs(false)
+        if (retryRefreshTimer.current) {
+          clearTimeout(retryRefreshTimer.current)
+        }
+        retryRefreshTimer.current = setTimeout(() => {
+          fetchLogs(false)
+        }, 1500)
       }
     } catch (err) {
       console.error('Failed to retry integration delivery:', err)
     } finally {
       setRetryingId(null)
     }
+  }
+
+  function clearAppFilter() {
+    const next = new URLSearchParams(searchParams)
+    next.delete('appId')
+    setSearchParams(next)
   }
 
   function copyToClipboard(text: string, key: string) {
@@ -110,7 +153,11 @@ export default function FormLogs() {
   }
 
   const successCount = useMemo(() => logs.filter(l => l.status === 'success').length, [logs])
-  const failedCount = useMemo(() => logs.filter(l => l.status !== 'success').length, [logs])
+  const skippedCount = useMemo(() => logs.filter(l => l.status === 'skipped').length, [logs])
+  const failedCount = useMemo(
+    () => logs.filter(l => l.status !== 'success' && l.status !== 'skipped').length,
+    [logs]
+  )
 
   const resolvedSubmissions = useMemo(() => {
     const map = new Map<string, { resolvedAt: string; attempt: number }>()
@@ -127,7 +174,9 @@ export default function FormLogs() {
 
   const filteredLogs = useMemo(() => {
     if (filter === 'success') return logs.filter(l => l.status === 'success')
-    if (filter === 'failed') return logs.filter(l => l.status !== 'success')
+    if (filter === 'skipped') return logs.filter(l => l.status === 'skipped')
+    if (filter === 'failed')
+      return logs.filter(l => l.status !== 'success' && l.status !== 'skipped')
     return logs
   }, [logs, filter])
 
@@ -141,15 +190,27 @@ export default function FormLogs() {
             failed submissions.
           </p>
         </div>
-        <Button.Ghost
-          size="sm"
-          loading={loading}
-          onClick={fetchLogs}
-          className="flex items-center gap-1.5"
-        >
-          <IconRefresh className="h-4 w-4" />
-          Refresh Logs
-        </Button.Ghost>
+        <div className="flex items-center gap-2">
+          {appIdFilter && (
+            <Button.Ghost
+              size="sm"
+              onClick={clearAppFilter}
+              className="flex items-center gap-1 text-xs"
+            >
+              App: <span className="font-semibold uppercase">{appIdFilter}</span>
+              <IconX className="h-3.5 w-3.5" />
+            </Button.Ghost>
+          )}
+          <Button.Ghost
+            size="sm"
+            loading={loading}
+            onClick={() => fetchLogs(false)}
+            className="flex items-center gap-1.5"
+          >
+            <IconRefresh className="h-4 w-4" />
+            Refresh Logs
+          </Button.Ghost>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -162,7 +223,11 @@ export default function FormLogs() {
           <EmptyState
             icon={<IconClock className="text-secondary h-10 w-10" />}
             headline="No delivery logs found"
-            subHeadline="Outbound webhook and third-party deliveries will be recorded here whenever a form submission is processed."
+            subHeadline={
+              appIdFilter
+                ? `No outbound deliveries recorded for ${appIdFilter} yet.`
+                : 'Outbound webhook and third-party deliveries will be recorded here whenever a form submission is processed.'
+            }
           />
         ) : (
           <div className="space-y-4">
@@ -206,6 +271,21 @@ export default function FormLogs() {
                   <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
                   Failed ({failedCount})
                 </button>
+                {skippedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setFilter('skipped')}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors',
+                      filter === 'skipped'
+                        ? 'bg-foreground text-primary shadow-sm'
+                        : 'text-secondary hover:text-primary'
+                    )}
+                  >
+                    <span className="inline-block h-2 w-2 rounded-full bg-slate-400" />
+                    Skipped ({skippedCount})
+                  </button>
+                )}
               </div>
 
               <span className="text-secondary">
@@ -228,6 +308,7 @@ export default function FormLogs() {
                 <tbody className="divide-accent-light divide-y">
                   {filteredLogs.map(log => {
                     const isSuccess = log.status === 'success'
+                    const isSkipped = log.status === 'skipped'
                     const isRetrying = retryingId === log.id
                     const isSelected = selectedLog?.id === log.id
 
@@ -235,6 +316,7 @@ export default function FormLogs() {
                     const resolution = resolvedSubmissions.get(submissionKey)
                     const isResolvedByLaterAttempt =
                       !isSuccess &&
+                      !isSkipped &&
                       resolution &&
                       new Date(resolution.resolvedAt).getTime() > new Date(log.createdAt).getTime()
 
@@ -270,6 +352,18 @@ export default function FormLogs() {
                               <IconCheck className="h-3 w-3" />
                               Delivered {log.responseStatus ? `(${log.responseStatus})` : ''}
                             </span>
+                          ) : isSkipped ? (
+                            <Tooltip
+                              label={
+                                log.errorMessage ||
+                                'Delivery skipped (missing required submission data)'
+                              }
+                            >
+                              <span className="inline-flex cursor-help items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                <IconMinus className="h-3 w-3" />
+                                Skipped
+                              </span>
+                            </Tooltip>
                           ) : isResolvedByLaterAttempt ? (
                             <div className="flex flex-col items-start gap-0.5">
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700 opacity-60 dark:bg-rose-950/50 dark:text-rose-400">
@@ -291,7 +385,7 @@ export default function FormLogs() {
                           {log.executionDurationMs != null ? `${log.executionDurationMs}ms` : '-'}
                         </td>
                         <td className="text-secondary whitespace-nowrap px-4 py-3 text-xs">
-                          {log.attempts || 1} / 3
+                          #{log.attempts || 1}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -305,7 +399,7 @@ export default function FormLogs() {
                             >
                               {isSelected ? 'Close' : 'Details'}
                             </Button.Ghost>
-                            {!isSuccess && !isResolvedByLaterAttempt && (
+                            {!isSuccess && !isSkipped && !isResolvedByLaterAttempt && (
                               <Button.Ghost
                                 size="sm"
                                 loading={isRetrying}
@@ -324,6 +418,19 @@ export default function FormLogs() {
                 </tbody>
               </table>
             </div>
+
+            {logs.length < total && (
+              <div className="flex justify-center pt-2">
+                <Button.Ghost
+                  size="sm"
+                  loading={loadingMore}
+                  onClick={() => fetchLogs(true)}
+                  className="text-xs"
+                >
+                  Load More ({total - logs.length} remaining)
+                </Button.Ghost>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -338,8 +445,20 @@ export default function FormLogs() {
                   <h3 className="text-primary text-base font-semibold">
                     Diagnostic Payload Details
                   </h3>
-                  <Badge color={selectedLog.status === 'success' ? 'green' : 'red'}>
-                    {selectedLog.status === 'success' ? 'Delivered' : 'Failed'}
+                  <Badge
+                    color={
+                      selectedLog.status === 'success'
+                        ? 'green'
+                        : selectedLog.status === 'skipped'
+                          ? 'zinc'
+                          : 'red'
+                    }
+                  >
+                    {selectedLog.status === 'success'
+                      ? 'Delivered'
+                      : selectedLog.status === 'skipped'
+                        ? 'Skipped'
+                        : 'Failed'}
                   </Badge>
                 </div>
                 <p className="text-secondary text-xs">
@@ -440,7 +559,9 @@ export default function FormLogs() {
                 <div className="space-y-4 text-xs">
                   {selectedLog.errorMessage && (
                     <div className="space-y-1">
-                      <span className="text-secondary font-semibold uppercase">Error Message</span>
+                      <span className="text-secondary font-semibold uppercase">
+                        {selectedLog.status === 'skipped' ? 'Skip Reason' : 'Error Message'}
+                      </span>
                       <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-3 font-mono text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
                         {selectedLog.errorMessage}
                       </div>
@@ -471,7 +592,7 @@ export default function FormLogs() {
                     </div>
                   </div>
 
-                  {selectedLog.status !== 'success' && (
+                  {selectedLog.status !== 'success' && selectedLog.status !== 'skipped' && (
                     <div className="pt-2">
                       <Button
                         size="sm"
